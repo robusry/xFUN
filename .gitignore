@@ -23,6 +23,15 @@ node_modules/
 .turbo/
 *.tsbuildinfo
 
+# Local database. The skeleton's SQLite file is disposable: ./scripts/demo.sh
+# rebuilds it from fixtures.
+.data/
+
+# Generated from contracts/openapi.yaml by `pnpm client:generate`. Not committed
+# on purpose -- checking it in would create a second place for the API's shape to
+# live, and it would drift.
+packages/clients/ts/src/generated.d.ts
+
 # Environment and secrets
 .env
 .env.*
