@@ -1,0 +1,36 @@
+# Local tool settings — machine-specific, never shared.
+# Note: .claude/skills/ and .claude/commands/ ARE tracked deliberately.
+# They are OpenSpec-generated instruction files and are part of the shared
+# standards every contributor works from. Same applies to equivalent
+# generated instruction files for other AI tools.
+.claude/settings.local.json
+
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+*.egg-info/
+dist/
+build/
+
+# Node / TypeScript
+node_modules/
+.next/
+.turbo/
+*.tsbuildinfo
+
+# Environment and secrets
+.env
+.env.*
+!.env.example
+
+# OS and editor noise
+.DS_Store
+Thumbs.db
+*.swp
+.idea/
+.vscode/
