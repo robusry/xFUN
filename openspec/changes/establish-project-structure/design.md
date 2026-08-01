@@ -173,17 +173,27 @@ The goal of this first change is comprehension, not capability: collaborators ne
 
 *Alternative considered.* TypeScript for the API, which would share a language with web and future mobile. Rejected because the data-side gravity is stronger — the API is a thin read layer over calibration and composition, both of which live in Python.
 
+### D16. Decisions are made by the team, with pull request approval as the deciding gate
+
+No individual is named as owner or arbiter for any part of this project — not for `contracts/`, not for entry into the `default` composition, not for the reconciliation pass. The team decides as a group, and whether a pull request merges is the final decider.
+
+The mechanism that makes this concrete rather than aspirational is `CODEOWNERS` naming the **team** on high-stakes paths. `contracts/` still cannot be changed without review; the review requirement simply attaches to the team instead of a person. The merge gate supplies the scrutiny an individual owner otherwise would.
+
+*Alternatives considered.* Naming individual owners for `contracts/`, the `default` composition, and the reconciliation pass. Rejected by the team: on a group this size it adds bottlenecks and single points of failure, and pull request approval already functions as a decision procedure.
+
+*Cost accepted, and where to watch it.* Group decisions resolve *who* decides but not *on what basis*. For the reconciliation pass, the exposure is diffusion of responsibility — a shared activity with no assignee can quietly stop happening, so the countable `spec-debt` backlog (D11) is the instrument that makes that visible. For composition weights, the exposure is that a group without shared evidence settles arguments by persistence rather than merit, which is the strongest argument for building the evaluation harness early. Neither cost is a reason to name owners now; both are reasons to watch specific signals.
+
 ## Risks / Trade-offs
 
 - **Read-time calibration becomes slow at scale** → Workloads are bounded by matches per cohort; cache materialized results keyed by (cohort, recipe, raw-score generation) and invalidate on new raw rows. Revisit only with measurements.
 - **Runtime cohort selection confuses consumers** — the same match legitimately scores 91 and 64 under different cohorts → Every response states its cohort and cohort size; documentation leads with the concept; a sensible default is applied when unspecified.
-- **Composition weights get decided by whoever argues hardest** → This is the strongest argument for prioritizing the evaluation harness and a ground-truth label soon after the first model. Until a leaderboard exists, name a single owner who arbitrates entry into `default`.
+- **Composition weights get decided by whoever argues hardest** → Decisions are made by the team, with pull request approval as the deciding gate rather than an individual arbiter. That resolves who decides, but not on what basis, which makes the evaluation harness and a ground-truth label the highest-value follow-up: without a leaderboard, a group has no shared evidence to settle a weighting argument with.
 - **Main spec files conflict when changes are archived concurrently** → Keep capabilities narrow, and rebase before the archive commit (D12) so conflicts surface inside the pull request rather than after merge.
 - **Long-lived branches drift from main** — a consequence of spanning planning and implementation on one branch (D12) → Keep changes small; rebase regularly; treat a branch that stays open a long time as evidence the change is over-scoped and should be split.
-- **Spec debt accumulates and is never paid** → The recurring reconciliation pass needs a named owner and a real slot, not good intentions. If the backlog grows monotonically for a few cycles, the zone boundaries are wrong and should be narrowed rather than the process abandoned.
+- **Spec debt accumulates and is never paid** → The reconciliation pass is a shared team activity with no individual owner, which is the team's explicit choice; the mitigation is therefore a real recurring slot and a visible, countable backlog rather than an assignee. If the backlog grows monotonically for a few cycles, that is the signal to act — either the zone boundaries are too wide and should be narrowed, or the pass needs someone to drive it after all.
 - **Polyglot CI complexity slows everyone** → Path-filtered workflows from day one; contract and spec validation are the only universal jobs.
 - **Broadcast availability data goes stale silently** → Modeled as a separate concern with its own cadence and an explicit "unknown" state. A confidently wrong provider is worse than an honest gap.
-- **`contracts/` rots under shared ownership** → It is the highest-stakes directory and the one nobody owns by default; assign a required reviewer on that path.
+- **`contracts/` rots under shared ownership** → It is the highest-stakes directory and the one nobody owns by default. A `CODEOWNERS` entry naming the team makes review of that path mandatory without assigning it to a person, so the merge gate supplies the scrutiny that an owner otherwise would.
 
 ## Migration Plan
 
@@ -207,6 +217,5 @@ Greenfield — this is a build order rather than a migration, and per D14 it pro
 - **Default calibration cohort** once more than one cohort exists. The skeleton defaults to `window` because it is the only resolver implemented; whether that remains the default, and whether the website's default differs from the API's, is deferred to `complete-calibration-cohorts`.
 - **Minimum cohort size** below which percentile calibration is not meaningful, and whether the fallback widens the cohort or marks the score low-confidence. Deferred to `complete-calibration-cohorts`.
 - **Is `default` given a stability promise for third parties**, or is pinning the only way to get determinism?
-- **Who owns `contracts/`** as required reviewer, and **who arbitrates entry into `default`** before an evaluation leaderboard exists?
-- **Reconciliation cadence** — weekly, or per sprint — and its named owner.
+- **Reconciliation cadence** — weekly, or per sprint. Ownership is settled: the pass is a shared team activity, per D16.
 - **League scope**, which is upstream of ingestion work and unresolved: audience size versus entertainment density. Deferred to its own change.

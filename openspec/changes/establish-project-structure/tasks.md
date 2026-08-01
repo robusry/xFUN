@@ -96,9 +96,9 @@
 - [ ] 12.3 Add the PR template with the workflow checklist and the Zone A/B behavior-change question
 - [ ] 12.4 Create the `spec-debt` label and automation flagging unspecced Zone A/B pull requests, warning rather than blocking
 - [ ] 12.5 Add Conventional Commits linting for commit messages and pull request titles, with `spec` in the permitted type list
-- [ ] 12.6 Add a required-reviewer rule on `contracts/`
+- [ ] 12.6 Add a `CODEOWNERS` entry requiring team review on `contracts/`, naming the team rather than an individual
 - [ ] 12.7 Add a CI check verifying the OpenSpec CLI version matches the pinned version
-- [ ] 12.8 Establish the recurring reconciliation pass: cadence, named owner, and the procedure for clearing `spec-debt` items using `openspec doctor` and `openspec list --specs`
+- [ ] 12.8 Establish the recurring reconciliation pass as a shared team activity: cadence and the procedure for clearing `spec-debt` items using `openspec doctor` and `openspec list --specs`
 
 ## 13. Documentation
 

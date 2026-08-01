@@ -76,7 +76,7 @@ Automation that detects missing specs SHALL NOT block merges outright; it SHALL 
 
 ### Requirement: A recurring reconciliation pass clears spec debt
 
-The team SHALL run a recurring reconciliation pass with a named owner, which enumerates outstanding `spec-debt` pull requests, writes and archives the corresponding capture changes, and reviews repository spec health using `openspec doctor` and `openspec list --specs`.
+The team SHALL run a recurring reconciliation pass, which enumerates outstanding `spec-debt` pull requests, writes and archives the corresponding capture changes, and reviews repository spec health using `openspec doctor` and `openspec list --specs`. The pass SHALL be a shared team activity rather than an individual's assignment; the resulting capture changes reach `main` through the same pull request review as any other change.
 
 #### Scenario: The reconciliation pass runs
 
