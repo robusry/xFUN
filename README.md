@@ -50,9 +50,14 @@ Read [`docs/architecture.md`](docs/architecture.md) for why.
 | OpenSpec | **pinned, see `.openspec-version`** | `npm install -g @fission-ai/openspec@1.6.0` |
 
 ```bash
-uv sync          # Python workspace
-pnpm install     # TypeScript workspace
+uv sync --all-packages   # Python workspace — all members, not just the root
+pnpm install             # TypeScript workspace
 ```
+
+Both dependency trees are pinned — `uv.lock` and `pnpm-lock.yaml` are committed, and
+CI installs with `--locked` / `--frozen-lockfile` so a stale lock fails rather than
+silently resolving something different. After changing a dependency, run `uv lock`
+and commit the result.
 
 **The OpenSpec version is pinned deliberately.** Artifact templates, workflow schemas,
 and validation rules ship with the CLI rather than this repository, so contributors on

@@ -43,7 +43,7 @@ jobs:
         with:
           enable-cache: true
 
-      - run: uv sync --all-packages --dev
+      - run: uv sync --all-packages --dev --locked
 
       # Runs first: a tier boundary violation makes the test results misleading.
       - name: Tier boundaries (model purity, model independence, API runs no model)
