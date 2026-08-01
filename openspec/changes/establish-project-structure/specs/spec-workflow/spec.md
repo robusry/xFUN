@@ -248,6 +248,27 @@ Before merging, the branch SHALL be rebased on the current `main`, and `openspec
 - **WHEN** a pull request containing an OpenSpec change is ready to merge but the change has not been archived
 - **THEN** the merge is blocked until the archive commit is present, so that `main` specs never lag `main` code
 
+### Requirement: Pull requests merge by squash-merge, as a documented convention
+
+Contributors SHALL merge pull requests using squash-merge, so that each change reaches `main` as a single commit that is independently revertable.
+
+This is a documented team convention rather than an enforced constraint. The repository's merge settings SHALL be left at their defaults and SHALL NOT be locked down to a single strategy. The convention SHALL be documented in `docs/workflow.md`. Whether to enforce it through repository configuration SHALL be revisited only if the convention fails to hold in practice.
+
+#### Scenario: A change is merged
+
+- **WHEN** a pull request containing planning, implementation, and archive commits is squash-merged
+- **THEN** `main` receives one commit for that change, and the individual branch commit messages are retained in that commit's body
+
+#### Scenario: A contributor uses a different merge strategy
+
+- **WHEN** a contributor merges using a merge commit or a rebase-merge
+- **THEN** the merge is not blocked, because the convention is documented rather than enforced, and the deviation is addressed in review rather than by tooling
+
+#### Scenario: The squashed commit subject is derived
+
+- **WHEN** a pull request is squash-merged
+- **THEN** the resulting commit subject conforms to Conventional Commits, because both pull request titles and individual commit messages are required to conform
+
 ### Requirement: Commit messages follow Conventional Commits
 
 Commit messages SHALL follow the Conventional Commits format `<type>(<scope>): <subject>`. Pull request titles SHALL follow the same format, since the title becomes the commit subject under a squashing merge strategy. Both SHALL be validated automatically.

@@ -5,8 +5,8 @@
 - [ ] 1.3 Set up TypeScript workspace tooling covering `web`, `clients/ts`, and a reserved `mobile` slot
 - [ ] 1.4 Write `docs/architecture.md` summarizing the tier diagram, the batch-scoring seam, and the truth-vs-derived split
 - [ ] 1.5 Write `docs/zones.md` documenting the Zone A/B/C table and both contribution paths
-- [ ] 1.6 Enable branch protection on `main`: reject direct pushes, require a pull request, require passing checks (do this before any other work merges)
-- [ ] 1.7 Write `docs/workflow.md` covering the branch-first rule, branch naming prefixes, draft-PR-at-plan-stage, and rebase-then-archive-then-merge
+- [ ] 1.6 Request branch protection on `main` from the repository owner: reject direct pushes, require a pull request, require passing checks (needs owner access; do not lock down merge strategy)
+- [ ] 1.7 Write `docs/workflow.md` covering the branch-first rule, branch naming prefixes, draft-PR-at-plan-stage, rebase-then-archive-before-merge, and squash-merge as the merge convention
 - [ ] 1.8 Add `.gitkeep` to `openspec/specs/` and `openspec/changes/archive/` so both survive a clone
 - [ ] 1.9 Write the root `.gitignore` excluding per-tool local settings overrides (e.g. `.claude/settings.local.json`) while tracking generated tool instruction files
 - [ ] 1.10 Record the pinned OpenSpec CLI version in the repository and document how contributors install it
@@ -114,7 +114,7 @@
 - [ ] 11.12 Document the conflict-resolution procedure for a rebase where another change archived the same capability first
 - [ ] 11.13 Add a CI check verifying the OpenSpec CLI version in use matches the pinned version
 - [ ] 11.14 Add Conventional Commits linting for commit messages and pull request titles, with the permitted type list including `spec`
-- [ ] 11.15 Decide and configure the merge strategy (see design open questions) and align commit linting with it
+- [ ] 11.15 Document squash-merge as the team convention in `docs/workflow.md`, noting explicitly that repository merge settings are left at defaults and the convention is not enforced
 
 ## 12. Follow-up changes to propose
 

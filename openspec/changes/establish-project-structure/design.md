@@ -129,6 +129,20 @@ The pull request opens as a **draft as soon as the planning artifacts exist**, b
 
 *Cost accepted.* Branches live longer than in a merge-early workflow, since they span planning and implementation. Mitigated by keeping changes small and rebasing regularly — and long-lived branches are a direct signal that a change is over-scoped and should have been split.
 
+### D13. Squash-merge by convention, with repository settings left at defaults
+
+Changes reach `main` as a single squashed commit per pull request. This is documented in `docs/workflow.md` and specified as a convention — the repository's merge settings stay at GitHub's defaults, with all three merge strategies available, and nothing prevents a contributor from merging another way.
+
+Two questions were initially conflated here: what the team should do, and whether tooling should enforce it. Separating them makes the second one easy to defer, and deferring it costs little given nothing is enforced today anyway.
+
+*On the strategy.* An earlier draft of this decision selected rebase-merge, reasoning that committing planning artifacts separately from implementation is only worthwhile if that separation survives the merge. That reasoning was weaker than it appeared, for two reasons. First, **the plan's durable record is `openspec/changes/archive/`, not git history** — the proposal, design, specs, and tasks are archived into the repository as files, making git history a redundant second copy. Second, GitHub's default squash message setting concatenates the branch's commit messages into the squashed commit body, so the sequence is flattened rather than lost. Against that, rebase-only imposes real costs on a team with mixed git fluency: every commit must be curated because every commit lands on `main`, conflicts resolve per-commit during rebase, and force-pushing after a rebase is intimidating to contributors who aren't fluent. Squash also yields one revertable unit per change, which is arguably better revert granularity than a scatter of commits.
+
+*On enforcement.* Locking a strategy down requires repository settings that the team does not control — the repository owner would have to disable two merge options. Requesting that has a cost and buys little while the team is small and the convention is new. Branch protection preventing direct pushes to `main` is worth requesting on its own merits; constraining which merge button is used is not, yet.
+
+*Alternatives considered.* Rebase-merge only, rejected above. Merge commits, rejected for making `main`'s history a graph rather than a sequence. Allowing squash and rebase at the author's discretion, rejected for producing inconsistent history and adding a decision to every pull request.
+
+*Cost accepted.* Nothing prevents a contributor from merging a different way, so `main`'s history may end up mixed. That is recoverable and low-stakes; if it becomes a real annoyance, enforcement is two toggles away.
+
 ## Risks / Trade-offs
 
 - **Read-time calibration becomes slow at scale** → Workloads are bounded by matches per cohort; cache materialized results keyed by (cohort, recipe, raw-score generation) and invalidate on new raw rows. Revisit only with measurements.
@@ -165,5 +179,4 @@ Greenfield — this is a build order rather than a migration.
 - **Is `default` given a stability promise for third parties**, or is pinning the only way to get determinism?
 - **Who owns `contracts/`** as required reviewer, and **who arbitrates entry into `default`** before an evaluation leaderboard exists?
 - **Reconciliation cadence** — weekly, or per sprint — and its named owner.
-- **Merge strategy**, which interacts directly with the Conventional Commits decision. Rebase-merge preserves each conventional commit and keeps the plan → implementation → archive sequence legible in `main`'s history, which is the point of committing planning artifacts separately. Squash-merge collapses a change to one commit, making the pull request title the only message that survives and discarding that sequence. Leaning rebase-merge; not decided.
 - **League scope**, which is upstream of ingestion work and unresolved: audience size versus entertainment density. Deferred to its own change.
