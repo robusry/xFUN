@@ -22,12 +22,12 @@ ROOT = Path(__file__).resolve().parent.parent
 for src in sorted(ROOT.glob("packages/*/src")) + sorted(ROOT.glob("packages/models/*/src")):
     sys.path.insert(0, str(src))
 
-from xfun_composition import AliasResolver, compose_all, load_recipes  # noqa: E402
-from xfun_ingestion import FixtureFileAdapter, ingest  # noqa: E402
-from xfun_model_odds_spread import MODEL as ODDS_SPREAD  # noqa: E402
-from xfun_model_over_under_lean import MODEL as OVER_UNDER_LEAN  # noqa: E402
-from xfun_runtime import Registry, calibrate, run_models  # noqa: E402
-from xfun_store import (  # noqa: E402
+from xfun_composition import AliasResolver, compose_all, load_recipes
+from xfun_ingestion import FixtureFileAdapter, ingest
+from xfun_model_odds_spread import MODEL as ODDS_SPREAD
+from xfun_model_over_under_lean import MODEL as OVER_UNDER_LEAN
+from xfun_runtime import Registry, calibrate, run_models
+from xfun_store import (
     connect,
     latest_scores,
     load_snapshots,

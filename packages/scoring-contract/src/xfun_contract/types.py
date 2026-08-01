@@ -7,12 +7,13 @@ attaches identity and provenance, so a model cannot get its own metadata wrong.
 
 from __future__ import annotations
 
+from collections.abc import Iterable, Mapping
 from dataclasses import dataclass, field
-from typing import Any, Iterable, Mapping
+from typing import Any
 
 from .hashing import snapshot_hash
 
-__all__ = ["MatchSnapshot", "ScoreResult", "ModelScore", "MISSING"]
+__all__ = ["MISSING", "MatchSnapshot", "ModelScore", "ScoreResult"]
 
 MISSING = object()
 """Sentinel distinguishing 'feature absent' from 'feature present and null'."""

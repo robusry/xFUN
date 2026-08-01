@@ -11,9 +11,10 @@ run. That is what lets the API keep serving when every model package is broken.
 from __future__ import annotations
 
 import json
+from collections.abc import Sequence
 from dataclasses import dataclass
 from functools import lru_cache
-from typing import Any, Sequence
+from typing import Any
 
 from xfun_composition import (
     Alias,

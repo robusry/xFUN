@@ -13,15 +13,15 @@ indistinguishable from a model that ran and returned nothing.
 
 from __future__ import annotations
 
+from collections.abc import Iterable
 from dataclasses import dataclass, field
-from datetime import datetime, timezone
-from typing import Iterable
+from datetime import UTC, datetime
 
 from xfun_contract import MatchSnapshot, ModelScore
 
 from .registry import Registry
 
-__all__ = ["Skip", "RunResult", "run_models"]
+__all__ = ["RunResult", "Skip", "run_models"]
 
 
 @dataclass(frozen=True)
@@ -57,7 +57,7 @@ def run_models(
     `computed_at` is injected rather than read from the clock inside a model,
     because models must be deterministic. The runner is where time enters.
     """
-    stamp = computed_at or datetime.now(timezone.utc).isoformat(timespec="seconds")
+    stamp = computed_at or datetime.now(UTC).isoformat(timespec="seconds")
     result = RunResult()
 
     for snapshot in snapshots:

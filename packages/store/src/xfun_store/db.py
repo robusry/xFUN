@@ -11,12 +11,12 @@ size one would be more machinery than the problem deserves.
 from __future__ import annotations
 
 import sqlite3
+from collections.abc import Iterator
 from pathlib import Path
-from typing import Iterator
 
 from xfun_runtime.paths import data_dir, repo_root
 
-__all__ = ["connect", "migrate", "applied_migrations", "DB_PATH"]
+__all__ = ["DB_PATH", "applied_migrations", "connect", "migrate"]
 
 DB_PATH = "xfun.db"
 

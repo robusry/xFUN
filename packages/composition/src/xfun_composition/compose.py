@@ -10,14 +10,14 @@ makes "we changed our minds about the blend again" cheap.
 
 from __future__ import annotations
 
+from collections.abc import Iterable, Mapping, Sequence
 from dataclasses import dataclass
-from typing import Iterable, Mapping, Sequence
 
 from xfun_runtime.calibration import CalibratedScore
 
 from .recipe import IMPLEMENTED_POLICIES, PolicyNotImplemented, Recipe
 
-__all__ = ["Contributor", "ComposedScore", "compose_match", "compose_all"]
+__all__ = ["ComposedScore", "Contributor", "compose_all", "compose_match"]
 
 
 @dataclass(frozen=True)

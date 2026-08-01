@@ -3,14 +3,12 @@
 from __future__ import annotations
 
 import json
-from pathlib import Path
 
 import pytest
-
 from xfun_contract import MatchSnapshot, ScoreResult
 from xfun_model_odds_spread import MODEL as ODDS_SPREAD
 from xfun_model_over_under_lean import MODEL as OVER_UNDER_LEAN
-from xfun_runtime import Registry, RegistrationError, calibrate, run_models
+from xfun_runtime import RegistrationError, Registry, calibrate, run_models
 from xfun_runtime.calibration import CohortNotImplemented
 from xfun_runtime.paths import fixtures_dir
 

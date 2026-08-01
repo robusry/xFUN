@@ -11,14 +11,15 @@ from __future__ import annotations
 
 import json
 import re
+from collections.abc import Iterable, Mapping
 from dataclasses import dataclass
-from typing import Any, Iterable, Mapping
+from typing import Any
 
 from xfun_contract import Model
 
 from .paths import schemas_dir
 
-__all__ = ["Registry", "RegisteredModel", "RegistrationError", "snapshot_feature_paths"]
+__all__ = ["RegisteredModel", "RegistrationError", "Registry", "snapshot_feature_paths"]
 
 _ID_PATTERN = re.compile(r"^[a-z0-9-]+$")
 _VERSION_PATTERN = re.compile(r"^\d+\.\d+\.\d+$")

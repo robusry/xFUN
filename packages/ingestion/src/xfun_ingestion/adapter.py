@@ -11,7 +11,8 @@ a source never touches the scoring path.
 
 from __future__ import annotations
 
-from typing import Any, Iterator, Mapping, Protocol, runtime_checkable
+from collections.abc import Iterator, Mapping
+from typing import Any, Protocol, runtime_checkable
 
 __all__ = ["SourceAdapter"]
 

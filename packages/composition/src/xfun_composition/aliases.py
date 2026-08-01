@@ -11,12 +11,13 @@ deferrable indefinitely.
 
 from __future__ import annotations
 
+from collections.abc import Mapping
 from dataclasses import dataclass
-from typing import Literal, Mapping
+from typing import Literal
 
 from .recipe import Recipe
 
-__all__ = ["Alias", "AliasResolver", "AliasNotFound"]
+__all__ = ["Alias", "AliasNotFound", "AliasResolver"]
 
 
 class AliasNotFound(KeyError):

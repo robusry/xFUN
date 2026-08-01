@@ -9,7 +9,7 @@ from __future__ import annotations
 
 from pathlib import Path
 
-__all__ = ["repo_root", "contracts_dir", "schemas_dir", "fixtures_dir", "data_dir"]
+__all__ = ["contracts_dir", "data_dir", "fixtures_dir", "repo_root", "schemas_dir"]
 
 _MARKERS = ("contracts", "openspec", "pyproject.toml")
 

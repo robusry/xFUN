@@ -16,7 +16,8 @@ and implements real fixture and odds adapters. See docs/STUBS.md.
 from __future__ import annotations
 
 import json
-from typing import Any, Iterator, Mapping
+from collections.abc import Iterator, Mapping
+from typing import Any
 
 from xfun_runtime.paths import fixtures_dir
 

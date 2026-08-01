@@ -13,7 +13,8 @@ from __future__ import annotations
 
 import hashlib
 import json
-from typing import Any, Mapping
+from collections.abc import Mapping
+from typing import Any
 
 __all__ = ["canonical_json", "snapshot_hash"]
 

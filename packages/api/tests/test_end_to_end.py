@@ -8,7 +8,6 @@ quietly breaking, which no unit test can see.
 from __future__ import annotations
 
 import pytest
-
 from xfun_composition import AliasResolver, load_recipes
 from xfun_ingestion import FixtureFileAdapter, ingest
 from xfun_model_odds_spread import MODEL as ODDS_SPREAD
@@ -45,9 +44,8 @@ def api_client(tmp_path, monkeypatch):
     )
     conn.close()
 
-    from fastapi.testclient import TestClient
-
     import xfun_api.context as context_module
+    from fastapi.testclient import TestClient
 
     context_module._build_context.cache_clear()
     from xfun_api import app

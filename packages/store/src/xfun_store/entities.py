@@ -11,11 +11,12 @@ produces a snapshot with no `odds` key, and models requiring odds skip it.
 from __future__ import annotations
 
 import sqlite3
-from typing import Any, Iterable, Mapping
+from collections.abc import Iterable, Mapping
+from typing import Any
 
 from xfun_contract import MatchSnapshot
 
-__all__ = ["write_snapshot_payload", "load_snapshots", "match_leagues"]
+__all__ = ["load_snapshots", "match_leagues", "write_snapshot_payload"]
 
 
 def write_snapshot_payload(conn: sqlite3.Connection, payload: Mapping[str, Any]) -> None:

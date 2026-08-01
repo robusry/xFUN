@@ -22,11 +22,9 @@ from typing import Annotated, Any, Literal
 from fastapi import Depends, FastAPI, HTTPException, Query
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
-
 from xfun_composition import (
     AliasNotFound,
     PolicyNotImplemented,
-    compose_match,
 )
 from xfun_runtime.calibration import CohortNotImplemented, calibrate
 

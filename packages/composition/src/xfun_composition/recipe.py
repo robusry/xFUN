@@ -8,18 +8,18 @@ policy.
 
 from __future__ import annotations
 
+from collections.abc import Mapping
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Mapping
 
 import yaml
 
 __all__ = [
-    "MISSING_POLICIES",
     "IMPLEMENTED_POLICIES",
+    "MISSING_POLICIES",
+    "PolicyNotImplemented",
     "Recipe",
     "RecipeError",
-    "PolicyNotImplemented",
     "load_recipe",
     "load_recipes",
     "recipes_dir",

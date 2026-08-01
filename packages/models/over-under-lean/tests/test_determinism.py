@@ -9,12 +9,9 @@ from __future__ import annotations
 
 import json
 
-import pytest
-
 from xfun_contract import MatchSnapshot
-from xfun_runtime.paths import fixtures_dir
-
 from xfun_model_over_under_lean import MODEL
+from xfun_runtime.paths import fixtures_dir
 
 
 def _scoreable() -> list[MatchSnapshot]:

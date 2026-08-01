@@ -17,8 +17,8 @@ Only `window` is implemented in the skeleton. See docs/STUBS.md.
 
 from __future__ import annotations
 
+from collections.abc import Iterable, Mapping, Sequence
 from dataclasses import dataclass
-from typing import Iterable, Mapping, Sequence
 
 from xfun_contract import ModelScore
 
@@ -26,10 +26,10 @@ __all__ = [
     "COHORT_DEFINITIONS",
     "IMPLEMENTED_COHORTS",
     "MIN_COHORT_SIZE",
-    "CohortInfo",
-    "CohortNotImplemented",
     "CalibratedScore",
     "CalibrationResult",
+    "CohortInfo",
+    "CohortNotImplemented",
     "calibrate",
     "resolve_cohort",
 ]
