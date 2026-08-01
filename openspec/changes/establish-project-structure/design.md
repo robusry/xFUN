@@ -117,13 +117,15 @@ Automation flags Zone A/B pull requests lacking spec changes and requires a `spe
 
 Debt that can be counted is debt. Drift that cannot be seen is rot.
 
-### D12. Branch first, PR at plan stage, archive as the final commit
+### D12. Branch first, one PR per change, opened when the change is complete
 
 Every change gets a branch created **before any file is touched** — including before `openspec new change` scaffolds its directory. `main` is protected; nothing reaches it except through a pull request. One change means one branch and one pull request.
 
-The pull request opens as a **draft as soon as the planning artifacts exist**, before implementation. This is the decision that makes spec-first review real rather than nominal: reviewers argue with the proposal and specs in the pull request while it is still cheap to change them. Implementation commits then land on the same branch, and the pull request is marked ready once the work is done — so the plan and the code each get reviewed at the moment feedback is worth the most, while `main` still sees a single merge.
+The pull request opens **only once the change is complete** — artifacts, implementation, and archive commit all present. Plan and implementation are reviewed together in one pass, so the reviewer assesses the specs against the code that implements them rather than in the abstract. Work in progress is still pushed to the remote branch for backup and visibility; the absence of a pull request is what signals "not ready."
 
-*Alternatives considered.* Two pull requests — plan merged separately, then implementation — gives the cleanest separation of concerns but leaves `main` carrying specs for unbuilt behavior and doubles the process overhead. A single pull request opened only when everything is finished is simplest, but the plan is then reviewed after the code exists, which is precisely the failure spec-driven development is meant to prevent.
+*Alternatives considered.* Opening a draft pull request at the planning stage, so the plan is challenged before implementation effort is spent, was the initial choice and was reversed. It buys early plan feedback, but only when the gap between plan approval and completed implementation is short; on a change of any size the draft sits open for weeks, and the team preferred a single review event over two. Two separate pull requests — plan merged first, then implementation — gives the cleanest separation but leaves `main` carrying specs for unbuilt behavior and doubles the process overhead.
+
+*Cost accepted.* A reviewer who rejects a design decision is rejecting it after the code implementing it exists, so some rework is discarded. This puts real weight on keeping changes small: the larger a change, the more expensive a late design objection becomes. It also makes over-scoped changes more painful, which is a useful pressure in the right direction.
 
 *Archive is the final commit on the branch*, after rebasing on the current `main`. This is what keeps `main`'s specs in permanent agreement with `main`'s code — there is no window where they disagree, and no second step that can be forgotten under pressure. It also relocates the spec merge-conflict problem to where it is cheapest to solve: the rebase surfaces a conflicting concurrent archive inside the pull request, with both changes' authors and context available, instead of after merge.
 

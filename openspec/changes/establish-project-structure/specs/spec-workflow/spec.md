@@ -197,37 +197,43 @@ Each OpenSpec change SHALL correspond to exactly one branch and exactly one pull
 - **WHEN** work in progress turns out to require behavior outside the change's stated scope
 - **THEN** the additional work becomes its own change on its own branch rather than expanding the current one
 
-### Requirement: The pull request is opened at the planning stage, before implementation
+### Requirement: The pull request is opened once the change is complete
 
-A pull request SHALL be opened as a draft as soon as the planning artifacts are written and validated, before implementation begins. The plan SHALL be reviewed in that pull request while it is a draft. Implementation commits SHALL be pushed to the same branch afterwards, and the pull request SHALL be marked ready for review only once implementation is complete.
+A pull request SHALL be opened only when the change's planning artifacts, implementation, and archive commit are all complete. Reviewers SHALL review the plan and the implementation together in that single pull request, so that specs and the code implementing them are assessed against each other.
 
 ```
 branch: change/<change-id>
   commit   proposal.md
   commit   specs/, design.md, tasks.md
-  ──────── open PR as draft ────────   ← plan reviewed here
   commit   implementation
   commit   implementation
   ──────── rebase on main ────────
   commit   openspec archive
-  ──────── mark ready for review ────────   ← code reviewed here
+  ──────── open PR ────────   ← plan and code reviewed together
   merge
 ```
 
-#### Scenario: Planning artifacts are complete
+Work in progress SHALL be pushed to the remote branch for backup and visibility, but the absence of a pull request SHALL indicate that the change is not yet ready for review.
+
+#### Scenario: Planning artifacts are complete but implementation has not started
 
 - **WHEN** a change's proposal, specs, design, and tasks are written and `openspec validate` passes
-- **THEN** a draft pull request is opened before any implementation code is written, so reviewers can challenge the plan before effort is spent building it
+- **THEN** no pull request is opened yet, and work continues on the branch
 
-#### Scenario: A reviewer rejects an approach during plan review
+#### Scenario: A change is ready for review
 
-- **WHEN** a reviewer objects to the design while the pull request is still a draft
-- **THEN** the artifacts are revised on the same branch and no implementation work is discarded
+- **WHEN** a change's tasks are complete and its archive commit is present
+- **THEN** a pull request is opened containing the planning artifacts, the implementation, and the archive, and the reviewer assesses the plan and the code together
 
-#### Scenario: A pull request is marked ready
+#### Scenario: A reviewer objects to the design
 
-- **WHEN** a pull request is moved out of draft
-- **THEN** its tasks are complete, its change has been archived, and it is ready for code review
+- **WHEN** a reviewer challenges a design decision in the pull request
+- **THEN** the planning artifacts and the affected implementation are both revised on the same branch before merge, since the change is reviewed as a single unit
+
+#### Scenario: Work in progress is pushed
+
+- **WHEN** a contributor pushes incomplete work to the remote branch
+- **THEN** the push is expected and no pull request is opened, because a pull request signals readiness for review
 
 ### Requirement: A change is rebased on main and archived as the final commit before merge
 
@@ -245,7 +251,7 @@ Before merging, the branch SHALL be rebased on the current `main`, and `openspec
 
 #### Scenario: A merge is proposed without archiving
 
-- **WHEN** a pull request containing an OpenSpec change is ready to merge but the change has not been archived
+- **WHEN** a pull request containing an OpenSpec change is opened but the change has not been archived
 - **THEN** the merge is blocked until the archive commit is present, so that `main` specs never lag `main` code
 
 ### Requirement: Pull requests merge by squash-merge, as a documented convention

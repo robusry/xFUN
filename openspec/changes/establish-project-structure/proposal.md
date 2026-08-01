@@ -20,7 +20,7 @@ This change establishes the project's structure, the contracts between tiers, th
 - **Individual model scores exposed alongside composites**, so consumers can compose their own blends and so the composition decision stays deferrable indefinitely.
 - **A spec workflow with explicit zones**, defining where specs are required, where they are required only on behavior change, and where hand edits are free — plus a named path for capturing hand-edited work back into specs after the fact.
 - **Version-controlled OpenSpec standards**: config, specs, changes, archive, and the generated AI tool instruction files are tracked so every contributor works from identical standards, with the OpenSpec CLI version pinned and verified in CI.
-- **A branch-and-pull-request workflow**: `main` is protected, a branch is created before any file is touched, one change maps to one branch and one pull request, the pull request opens as a draft at the planning stage so the plan is reviewed before implementation, and the change is rebased and archived as the final commit before merge.
+- **A branch-and-pull-request workflow**: `main` is protected, a branch is created before any file is touched, one change maps to one branch and one pull request, the pull request is opened only once the change is complete so the plan and implementation are reviewed together, and the change is rebased and archived before that pull request is opened.
 
 ## Capabilities
 

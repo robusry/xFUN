@@ -6,7 +6,7 @@
 - [ ] 1.4 Write `docs/architecture.md` summarizing the tier diagram, the batch-scoring seam, and the truth-vs-derived split
 - [ ] 1.5 Write `docs/zones.md` documenting the Zone A/B/C table and both contribution paths
 - [ ] 1.6 Request branch protection on `main` from the repository owner: reject direct pushes, require a pull request, require passing checks (needs owner access; do not lock down merge strategy)
-- [ ] 1.7 Write `docs/workflow.md` covering the branch-first rule, branch naming prefixes, draft-PR-at-plan-stage, rebase-then-archive-before-merge, and squash-merge as the merge convention
+- [ ] 1.7 Write `docs/workflow.md` covering the branch-first rule, branch naming prefixes, PR-when-complete, rebase-then-archive-before-opening-the-PR, and squash-merge as the merge convention
 - [ ] 1.8 Add `.gitkeep` to `openspec/specs/` and `openspec/changes/archive/` so both survive a clone
 - [ ] 1.9 Write the root `.gitignore` excluding per-tool local settings overrides (e.g. `.claude/settings.local.json`) while tracking generated tool instruction files
 - [ ] 1.10 Record the pinned OpenSpec CLI version in the repository and document how contributors install it
@@ -110,7 +110,7 @@
 - [ ] 11.8 Run `openspec doctor` and record its output as the baseline spec-health reading
 - [ ] 11.9 Add a CI check that a pull request touching `openspec/changes/<id>/` has a branch name matching `change/<id>` or `capture/<id>`
 - [ ] 11.10 Add a merge check that blocks a pull request containing an unarchived OpenSpec change, so `main` specs never lag `main` code
-- [ ] 11.11 Extend the PR template with the workflow checklist: plan reviewed while draft, tasks complete, rebased on `main`, archived
+- [ ] 11.11 Extend the PR template with the workflow checklist: tasks complete, rebased on `main`, archived, plan and implementation both present for review
 - [ ] 11.12 Document the conflict-resolution procedure for a rebase where another change archived the same capability first
 - [ ] 11.13 Add a CI check verifying the OpenSpec CLI version in use matches the pinned version
 - [ ] 11.14 Add Conventional Commits linting for commit messages and pull request titles, with the permitted type list including `spec`
