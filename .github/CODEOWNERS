@@ -1,0 +1,26 @@
+# Required reviewers.
+#
+# Ownership is assigned to the TEAM, never an individual. The team decides as a
+# group and pull request approval is the deciding gate -- but the highest-stakes
+# paths still cannot change without someone looking, because a directory nobody
+# owns by default is a directory that rots.
+#
+# Replace @robusry/xfun with the actual team slug once it exists. Until then this
+# file documents intent; GitHub silently ignores unresolvable owners, so verify
+# the rule is actually taking effect on a test pull request.
+
+# The seam every tier depends on. Breaking it breaks everyone.
+/contracts/                      @robusry/xfun
+
+# The model interface and the machinery that turns raw scores into comparable
+# ones. Silent semantics that affect every score in the system.
+/packages/scoring-contract/      @robusry/xfun
+/packages/scoring-runtime/       @robusry/xfun
+
+# The composition MECHANISM. Note the path: recipe *values* in
+# packages/composition/recipes/ are Zone C config and deliberately not listed.
+/packages/composition/src/       @robusry/xfun
+
+# The rules themselves.
+/openspec/specs/                 @robusry/xfun
+/.github/                        @robusry/xfun

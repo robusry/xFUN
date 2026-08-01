@@ -1,0 +1,56 @@
+name: contracts
+
+# Runs on EVERY pull request, regardless of which paths changed.
+# contracts/ is the seam every tier depends on; spec validity and contract
+# conformance are the two checks that are never path-filtered.
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+jobs:
+  validate-contracts:
+    name: fixtures conform to schemas
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: astral-sh/setup-uv@v5
+        with:
+          enable-cache: true
+
+      - name: Install dependencies
+        run: uv sync --all-extras --dev
+
+      - name: Validate fixtures and OpenAPI document
+        run: uv run python scripts/validate_contracts.py
+
+  validate-specs:
+    name: openspec artifacts are valid
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Install the pinned OpenSpec CLI
+        run: |
+          PINNED="$(tr -d '[:space:]' < .openspec-version)"
+          echo "Pinned OpenSpec version: $PINNED"
+          npm install -g "@fission-ai/openspec@${PINNED}"
+
+      - name: Verify the installed version matches the pin
+        run: |
+          PINNED="$(tr -d '[:space:]' < .openspec-version)"
+          ACTUAL="$(openspec --version | tr -d '[:space:]')"
+          if [ "$PINNED" != "$ACTUAL" ]; then
+            echo "::error::OpenSpec version mismatch. Pinned $PINNED, got $ACTUAL."
+            echo "Artifact templates and validation rules ship with the CLI, so"
+            echo "a version mismatch produces divergent artifacts."
+            exit 1
+          fi
+
+      - name: Validate all changes and specs
+        run: openspec validate --all --strict

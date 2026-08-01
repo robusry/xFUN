@@ -1,0 +1,92 @@
+name: ci
+
+# Path-filtered: a change to the website does not run the Python suites, and vice
+# versa. Contract and spec validation are NOT filtered -- they live in
+# contracts.yml and run on everything.
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+jobs:
+  changes:
+    runs-on: ubuntu-latest
+    outputs:
+      python: ${{ steps.filter.outputs.python }}
+      web: ${{ steps.filter.outputs.web }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dorny/paths-filter@v3
+        id: filter
+        with:
+          filters: |
+            python:
+              - 'packages/**/*.py'
+              - 'packages/**/pyproject.toml'
+              - 'scripts/**'
+              - 'infra/migrations/**'
+              - 'pyproject.toml'
+              - 'conftest.py'
+            web:
+              - 'packages/web/**'
+              - 'packages/clients/ts/**'
+              - 'package.json'
+              - 'pnpm-workspace.yaml'
+
+  python:
+    needs: changes
+    if: needs.changes.outputs.python == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v5
+        with:
+          enable-cache: true
+
+      - run: uv sync --all-extras --dev
+
+      # Runs first: a tier boundary violation makes the test results misleading.
+      - name: Tier boundaries (model purity, model independence, API runs no model)
+        run: uv run python scripts/check_dependencies.py
+
+      - name: Lint
+        run: uv run ruff check .
+
+      - name: Tests
+        run: uv run pytest -q
+
+      - name: End-to-end pipeline on fixtures
+        run: uv run python scripts/pipeline.py --quiet
+
+      # contracts/openapi.yaml is the source of truth. Without this the claim is
+      # aspirational: the document and the implementation could drift apart and
+      # the only symptom would be a client breaking later.
+      - name: API responses conform to the contract
+        run: uv run python scripts/check_api_conformance.py
+
+  web:
+    needs: changes
+    if: needs.changes.outputs.web == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 9
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: pnpm
+
+      - run: pnpm install --frozen-lockfile
+
+      # Types come from contracts/openapi.yaml. If the contract and the client
+      # disagree, this is where it surfaces.
+      - name: Generate the client from the contract
+        run: pnpm client:generate
+
+      - name: Typecheck
+        run: pnpm -r typecheck
+
+      - name: Build
+        run: pnpm web:build
