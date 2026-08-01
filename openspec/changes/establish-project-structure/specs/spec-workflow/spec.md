@@ -74,14 +74,28 @@ Automation that detects missing specs SHALL NOT block merges outright; it SHALL 
 - **WHEN** a contributor applies the `spec-debt` label to an unspecced Zone B change
 - **THEN** the merge proceeds and the debt is recorded for later capture
 
-### Requirement: A recurring reconciliation pass clears spec debt
+### Requirement: Spec debt is enumerable at any time and cleared opportunistically
 
-The team SHALL run a recurring reconciliation pass, which enumerates outstanding `spec-debt` pull requests, writes and archives the corresponding capture changes, and reviews repository spec health using `openspec doctor` and `openspec list --specs`. The pass SHALL be a shared team activity rather than an individual's assignment; the resulting capture changes reach `main` through the same pull request review as any other change.
+Outstanding spec debt SHALL be enumerable at any time by querying pull requests carrying the `spec-debt` label, and repository spec health SHALL be inspectable via `openspec doctor` and `openspec list --specs`.
 
-#### Scenario: The reconciliation pass runs
+The team SHALL clear that debt opportunistically rather than on a fixed schedule: no reconciliation cadence, ritual, or assigned owner is required. Clearing an item means writing and archiving a capture change, or explicitly recording that the item needs no specs. Capture changes reach `main` through the same pull request review as any other change.
 
-- **WHEN** the recurring reconciliation is performed
-- **THEN** each outstanding spec-debt item is either captured into specs and its label cleared, or explicitly recorded as not requiring specs
+The countable backlog is the control, not a calendar. A backlog that grows steadily over time is the signal that the zone boundaries are too wide, or that the team needs a deliberate pass after all.
+
+#### Scenario: Someone asks how much spec debt exists
+
+- **WHEN** a team member queries for outstanding spec debt
+- **THEN** the labelled pull requests are enumerable, giving a countable backlog rather than an unknown amount of drift
+
+#### Scenario: A spec-debt item is cleared
+
+- **WHEN** a contributor picks up an outstanding spec-debt item
+- **THEN** it is either captured into specs and its label removed, or explicitly recorded as not requiring specs
+
+#### Scenario: No reconciliation has happened recently
+
+- **WHEN** no spec-debt item has been cleared for some time
+- **THEN** nothing is blocked and no process has been violated, because clearing debt is opportunistic; the growing backlog is the signal to act
 
 ### Requirement: Capabilities are kept narrow to limit archive conflicts
 
