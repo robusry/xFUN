@@ -1,0 +1,80 @@
+:root {
+  --bg: #0f1115;
+  --fg: #e6e8ec;
+  --muted: #8b93a1;
+  --line: #242833;
+  --hot: #ff7a45;
+  --warm: #ffc53d;
+  --cool: #4a9eff;
+  --warn: #ffd666;
+  color-scheme: dark;
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--fg);
+  font: 15px/1.5 ui-sans-serif, system-ui, -apple-system, sans-serif;
+}
+
+main { max-width: 46rem; margin: 0 auto; padding: 2.5rem 1.25rem 4rem; }
+
+h1 { font-size: 2rem; margin: 0 0 .25rem; letter-spacing: -0.02em; }
+
+.muted { color: var(--muted); margin: .25rem 0; }
+.error { color: var(--hot); }
+
+.banner {
+  margin: 1rem 0 0;
+  padding: .6rem .8rem;
+  border-left: 3px solid var(--warn);
+  background: rgba(255, 214, 102, .08);
+  color: var(--warn);
+  font-size: .85rem;
+}
+
+.cohort {
+  margin: 1.75rem 0 1rem;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid var(--line);
+  color: var(--muted);
+  font-size: .85rem;
+}
+
+.matches { list-style: none; margin: 0; padding: 0; }
+
+.matches li {
+  display: flex;
+  gap: 1.1rem;
+  align-items: baseline;
+  padding: 1rem 0;
+  border-bottom: 1px solid var(--line);
+}
+
+.score {
+  flex: 0 0 3.2rem;
+  font-size: 1.9rem;
+  font-weight: 650;
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+.detail { min-width: 0; }
+.teams { font-weight: 550; }
+.v { color: var(--muted); font-weight: 400; padding: 0 .15rem; }
+
+.meta, .why {
+  color: var(--muted);
+  font-size: .8rem;
+  margin-top: .2rem;
+}
+
+.why { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: .74rem; }
+.unknown { color: var(--warn); }
+
+code {
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: .85em;
+}
