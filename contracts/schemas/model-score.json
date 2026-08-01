@@ -1,0 +1,43 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://xfun.dev/schemas/model-score.json",
+  "title": "ModelScore",
+  "description": "What one model produces for one match. This is the system's only score truth: it is stored append-only and never modified. Calibrated and composed scores are derived from these at read time and are never stored as authoritative data.",
+  "type": "object",
+  "required": ["match_id", "model_id", "model_version", "raw_score", "components", "snapshot_hash"],
+  "additionalProperties": false,
+  "properties": {
+    "match_id": {
+      "type": "string",
+      "pattern": "^[a-z0-9-]+$"
+    },
+    "model_id": {
+      "type": "string",
+      "description": "Stable for the lifetime of the model. Never changes, even when the model is rewritten.",
+      "pattern": "^[a-z0-9-]+$"
+    },
+    "model_version": {
+      "type": "string",
+      "description": "Incremented whenever the model produces different output for unchanged input. A refactor that preserves output may leave it unchanged.",
+      "pattern": "^\\d+\\.\\d+\\.\\d+$"
+    },
+    "raw_score": {
+      "type": "number",
+      "description": "On the model's own native scale — a probability, a z-score, an arbitrary index. Deliberately unconstrained. Models MUST NOT normalise; the platform percentile-ranks raw scores within a caller-chosen cohort to produce comparable values. Two models' raw scores are not comparable to each other."
+    },
+    "components": {
+      "type": "object",
+      "description": "Named factors that drove the score, for explanation. A bare number is a thing to distrust; this is what makes a score arguable.",
+      "additionalProperties": { "type": "number" }
+    },
+    "snapshot_hash": {
+      "type": "string",
+      "description": "Hash of the exact MatchSnapshot this score was computed from. Together with model_id and model_version, this makes any stored score reproducible.",
+      "pattern": "^sha256:[0-9a-f]{64}$"
+    },
+    "computed_at": {
+      "type": "string",
+      "format": "date-time"
+    }
+  }
+}

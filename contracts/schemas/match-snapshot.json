@@ -1,0 +1,111 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://xfun.dev/schemas/match-snapshot.json",
+  "title": "MatchSnapshot",
+  "description": "Everything a scoring model is allowed to see about a single match. Assembled by ingestion from canonical entities; consumed by models as their only input. A model that needs something not in here cannot have it.",
+  "type": "object",
+  "required": ["match_id", "league", "kickoff_utc", "home_team", "away_team"],
+  "additionalProperties": false,
+  "properties": {
+    "match_id": {
+      "type": "string",
+      "description": "Stable identifier. Convention: <league>-<date>-<home>-<away>.",
+      "pattern": "^[a-z0-9-]+$"
+    },
+    "league": { "$ref": "#/$defs/league" },
+    "kickoff_utc": {
+      "type": "string",
+      "format": "date-time",
+      "description": "Kickoff in UTC. Clients localise; models must not assume a timezone."
+    },
+    "home_team": { "$ref": "#/$defs/team" },
+    "away_team": { "$ref": "#/$defs/team" },
+
+    "odds": {
+      "description": "Market prices. OPTIONAL — absent for matches with no market coverage, which is routine rather than exceptional. Models requiring odds features skip such matches.",
+      "$ref": "#/$defs/odds"
+    },
+    "form": {
+      "description": "Recent-form aggregates for both sides. OPTIONAL.",
+      "$ref": "#/$defs/form"
+    },
+    "table": {
+      "description": "League table context. OPTIONAL.",
+      "$ref": "#/$defs/table"
+    }
+  },
+  "$defs": {
+    "league": {
+      "type": "object",
+      "required": ["id", "name"],
+      "additionalProperties": false,
+      "properties": {
+        "id": { "type": "string", "pattern": "^[a-z0-9-]+$" },
+        "name": { "type": "string" },
+        "country": { "type": "string" }
+      }
+    },
+    "team": {
+      "type": "object",
+      "required": ["id", "name"],
+      "additionalProperties": false,
+      "properties": {
+        "id": { "type": "string", "pattern": "^[a-z0-9-]+$" },
+        "name": { "type": "string" }
+      }
+    },
+    "odds": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "total_line": {
+          "type": "number",
+          "description": "The over/under goals line, e.g. 2.5. This is the market's expected goal total and is the single most informative entertainment signal available.",
+          "minimum": 0
+        },
+        "over_price": { "type": "number", "exclusiveMinimum": 1 },
+        "under_price": { "type": "number", "exclusiveMinimum": 1 },
+        "home_price": {
+          "type": "number",
+          "description": "Decimal odds for a home win. With draw and away prices, the spread of implied probabilities measures how evenly matched the sides are.",
+          "exclusiveMinimum": 1
+        },
+        "draw_price": { "type": "number", "exclusiveMinimum": 1 },
+        "away_price": { "type": "number", "exclusiveMinimum": 1 },
+        "captured_at": { "type": "string", "format": "date-time" }
+      }
+    },
+    "form": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "home": { "$ref": "#/$defs/team_form" },
+        "away": { "$ref": "#/$defs/team_form" }
+      }
+    },
+    "team_form": {
+      "type": "object",
+      "required": ["matches"],
+      "additionalProperties": false,
+      "properties": {
+        "matches": {
+          "type": "integer",
+          "description": "How many recent matches the aggregates cover.",
+          "minimum": 0
+        },
+        "goals_for_avg": { "type": "number", "minimum": 0 },
+        "goals_against_avg": { "type": "number", "minimum": 0 }
+      }
+    },
+    "table": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "home_position": { "type": "integer", "minimum": 1 },
+        "away_position": { "type": "integer", "minimum": 1 },
+        "total_teams": { "type": "integer", "minimum": 2 },
+        "matchweek": { "type": "integer", "minimum": 1 }
+      }
+    }
+  }
+}

@@ -1,0 +1,35 @@
+{
+  "match_id": "seriea-2026-08-16-int-tor",
+  "league": {
+    "id": "seriea",
+    "name": "Serie A",
+    "country": "Italy"
+  },
+  "kickoff_utc": "2026-08-16T18:45:00Z",
+  "home_team": {
+    "id": "int",
+    "name": "Internazionale"
+  },
+  "away_team": {
+    "id": "tor",
+    "name": "Torino"
+  },
+  "form": {
+    "home": {
+      "matches": 10,
+      "goals_for_avg": 1.9,
+      "goals_against_avg": 1.0
+    },
+    "away": {
+      "matches": 10,
+      "goals_for_avg": 1.0,
+      "goals_against_avg": 1.3
+    }
+  },
+  "table": {
+    "home_position": 4,
+    "away_position": 12,
+    "total_teams": 20,
+    "matchweek": 2
+  }
+}

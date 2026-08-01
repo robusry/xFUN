@@ -1,0 +1,41 @@
+{
+  "match_id": "laliga-2026-08-16-rma-get",
+  "league": {
+    "id": "laliga",
+    "name": "La Liga",
+    "country": "Spain"
+  },
+  "kickoff_utc": "2026-08-16T18:00:00Z",
+  "home_team": {
+    "id": "rma",
+    "name": "Real Madrid"
+  },
+  "away_team": {
+    "id": "get",
+    "name": "Getafe"
+  },
+  "odds": {
+    "total_line": 3.0,
+    "over_price": 1.87,
+    "under_price": 1.97,
+    "captured_at": "2026-08-15T10:00:00Z"
+  },
+  "form": {
+    "home": {
+      "matches": 10,
+      "goals_for_avg": 2.4,
+      "goals_against_avg": 0.9
+    },
+    "away": {
+      "matches": 10,
+      "goals_for_avg": 0.9,
+      "goals_against_avg": 1.5
+    }
+  },
+  "table": {
+    "home_position": 2,
+    "away_position": 15,
+    "total_teams": 20,
+    "matchweek": 2
+  }
+}

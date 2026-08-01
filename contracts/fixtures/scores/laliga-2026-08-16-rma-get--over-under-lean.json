@@ -1,0 +1,11 @@
+{
+  "match_id": "laliga-2026-08-16-rma-get",
+  "model_id": "over-under-lean",
+  "model_version": "0.1.0",
+  "raw_score": 3.0,
+  "components": {
+    "total_line": 3.0
+  },
+  "computed_at": "2026-08-14T04:00:00Z",
+  "snapshot_hash": "sha256:7a0a4c5793d3ec4f000c1d2139eeec190fb2af8c7783a39346e68268b1dd250e"
+}

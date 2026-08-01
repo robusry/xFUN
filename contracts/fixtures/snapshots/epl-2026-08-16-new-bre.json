@@ -1,0 +1,44 @@
+{
+  "match_id": "epl-2026-08-16-new-bre",
+  "league": {
+    "id": "epl",
+    "name": "Premier League",
+    "country": "England"
+  },
+  "kickoff_utc": "2026-08-16T16:30:00Z",
+  "home_team": {
+    "id": "new",
+    "name": "Newcastle United"
+  },
+  "away_team": {
+    "id": "bre",
+    "name": "Brentford"
+  },
+  "odds": {
+    "total_line": 3.0,
+    "over_price": 1.88,
+    "under_price": 1.96,
+    "home_price": 1.8,
+    "draw_price": 3.9,
+    "away_price": 4.2,
+    "captured_at": "2026-08-14T09:00:00Z"
+  },
+  "form": {
+    "home": {
+      "matches": 10,
+      "goals_for_avg": 2.0,
+      "goals_against_avg": 1.2
+    },
+    "away": {
+      "matches": 10,
+      "goals_for_avg": 1.4,
+      "goals_against_avg": 1.6
+    }
+  },
+  "table": {
+    "home_position": 6,
+    "away_position": 11,
+    "total_teams": 20,
+    "matchweek": 2
+  }
+}
