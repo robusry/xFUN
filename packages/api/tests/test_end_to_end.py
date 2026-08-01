@@ -7,6 +7,8 @@ quietly breaking, which no unit test can see.
 
 from __future__ import annotations
 
+import os
+
 import pytest
 from xfun_composition import AliasResolver, load_recipes
 from xfun_ingestion import FixtureFileAdapter, ingest
@@ -15,7 +17,17 @@ from xfun_model_over_under_lean import MODEL as OVER_UNDER_LEAN
 from xfun_runtime import Registry, run_models
 from xfun_store import connect, migrate, register_models, write_scores
 
-fastapi = pytest.importorskip("fastapi", reason="API tests need `uv sync`")
+# Locally, skip if FastAPI is absent so someone can run the rest of the suite on a
+# fresh clone without `uv sync`. In CI, import hard and fail.
+#
+# The distinction is not fussiness. An earlier version skipped unconditionally,
+# and when CI installed only the workspace root, these eight tests vanished while
+# the Tests step still reported green -- a materially weaker suite passing
+# silently. A skip that is invisible is worse than a failure.
+if os.environ.get("CI"):
+    import fastapi  # noqa: F401
+else:
+    pytest.importorskip("fastapi", reason="API tests need `uv sync`")
 
 
 @pytest.fixture
