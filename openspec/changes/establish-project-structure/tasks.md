@@ -6,10 +6,10 @@
 ## 1. Repository skeleton
 
 - [ ] 1.1 Create top-level `contracts/`, `packages/`, `infra/`, `docs/` with placeholder READMEs stating each tree's purpose
-- [ ] 1.2 Set up Python workspace tooling with per-package dependency declaration
-- [ ] 1.3 Set up TypeScript workspace tooling covering `web` and `clients/ts`, with a reserved `mobile` slot
-- [ ] 1.4 Add `.gitkeep` to `openspec/specs/` and `openspec/changes/archive/` so both survive a clone
-- [ ] 1.5 Write the root `.gitignore` excluding per-tool local settings overrides while tracking generated tool instruction files
+- [ ] 1.2 Set up `uv` workspaces for Python, with each package declaring its own dependencies so a model's dependencies are not imposed on other packages
+- [ ] 1.3 Set up `pnpm` workspaces for TypeScript covering `web` and `clients/ts`, with a reserved `mobile` slot
+- [x] 1.4 Add `.gitkeep` to `openspec/specs/` and `openspec/changes/archive/` so both survive a clone
+- [x] 1.5 Write the root `.gitignore` excluding per-tool local settings overrides while tracking generated tool instruction files
 - [ ] 1.6 Record the pinned OpenSpec CLI version and document how contributors install it
 - [ ] 1.7 Request branch protection on `main` from the repository owner (needs owner access; do not lock down merge strategy)
 
@@ -69,8 +69,8 @@
 
 ## 9. Public API
 
-- [ ] 9.1 Decide and record the API implementation language (see design open questions)
-- [ ] 9.2 Implement match listing with the score alias and calibration cohort request parameters, reporting both in the response
+- [ ] 9.1 Scaffold `packages/api/` as a FastAPI application, validated against `contracts/openapi.yaml` rather than generating it — the contract is the source of truth
+- [ ] 9.2 Implement match listing with the score alias and calibration cohort request parameters, defaulting the cohort to `window` and reporting both in the response
 - [ ] 9.3 Implement per-match scores exposing each model's calibrated score alongside the composed score, with explanation payloads
 - [ ] 9.4 Implement the registry endpoint listing models, compositions, and aliases
 - [ ] 9.5 Generate `clients/ts` from `openapi.yaml`
@@ -98,6 +98,7 @@
 - [ ] 12.5 Add Conventional Commits linting for commit messages and pull request titles, with `spec` in the permitted type list
 - [ ] 12.6 Add a required-reviewer rule on `contracts/`
 - [ ] 12.7 Add a CI check verifying the OpenSpec CLI version matches the pinned version
+- [ ] 12.8 Establish the recurring reconciliation pass: cadence, named owner, and the procedure for clearing `spec-debt` items using `openspec doctor` and `openspec list --specs`
 
 ## 13. Documentation
 

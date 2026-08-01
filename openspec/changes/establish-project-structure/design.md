@@ -161,6 +161,18 @@ The goal of this first change is comprehension, not capability: collaborators ne
 
 *Cost accepted.* Each stub becomes a follow-up change, so the change count goes up. That is the intent: eight follow-ups are enumerated in `tasks.md` section 14, each small enough to review properly.
 
+### D15. Toolchain
+
+**Python: `uv` workspaces.** The layout depends on per-package dependency isolation — a model requiring a heavy ML framework must not impose it on the API or on other models (D9). `uv` supports that natively, where Poetry needs manual wiring to achieve it. Speed is a secondary benefit.
+
+**TypeScript: `pnpm` workspaces.** Strict dependency resolution refuses imports of packages not explicitly declared, which enforces the tier boundaries mechanically rather than by convention. npm's looser hoisting would let accidental cross-package imports pass unnoticed.
+
+**API: Python with FastAPI.** Keeps one runtime with ingestion, scoring, calibration, and composition, letting the API import contract types directly instead of re-deriving them in a second language. The generated TypeScript client (task 9.5) makes the language boundary to the web tier cheap.
+
+*One constraint this creates.* FastAPI's idiom is to generate OpenAPI from code, but `repo-structure` makes `contracts/openapi.yaml` the source of truth. The API is therefore validated *against* the committed contract rather than generating it, and CI enforces conformance (task 9.6 and the contract-conformance check). Getting this backwards would quietly invert the contract-first design.
+
+*Alternative considered.* TypeScript for the API, which would share a language with web and future mobile. Rejected because the data-side gravity is stronger — the API is a thin read layer over calibration and composition, both of which live in Python.
+
 ## Risks / Trade-offs
 
 - **Read-time calibration becomes slow at scale** → Workloads are bounded by matches per cohort; cache materialized results keyed by (cohort, recipe, raw-score generation) and invalidate on new raw rows. Revisit only with measurements.
@@ -192,9 +204,8 @@ Greenfield — this is a build order rather than a migration, and per D14 it pro
 
 ## Open Questions
 
-- **API implementation language.** Python keeps one runtime with ingestion and scoring and lets the API import contract types directly; TypeScript shares a language with web and mobile. Leaning Python — the API is a thin read layer and the data-side gravity is stronger, with generated clients making the boundary cheap. Not yet decided.
-- **Default calibration cohort.** Which cohort applies when a request omits the parameter, and whether the website's default differs from the API's.
-- **Minimum cohort size** below which percentile calibration is not meaningful, and whether the fallback widens the cohort or marks the score low-confidence.
+- **Default calibration cohort** once more than one cohort exists. The skeleton defaults to `window` because it is the only resolver implemented; whether that remains the default, and whether the website's default differs from the API's, is deferred to `complete-calibration-cohorts`.
+- **Minimum cohort size** below which percentile calibration is not meaningful, and whether the fallback widens the cohort or marks the score low-confidence. Deferred to `complete-calibration-cohorts`.
 - **Is `default` given a stability promise for third parties**, or is pinning the only way to get determinism?
 - **Who owns `contracts/`** as required reviewer, and **who arbitrates entry into `default`** before an evaluation leaderboard exists?
 - **Reconciliation cadence** — weekly, or per sprint — and its named owner.
