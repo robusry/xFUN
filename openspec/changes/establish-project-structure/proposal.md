@@ -9,6 +9,8 @@ Two decisions need to be settled before any of that code exists, because both ar
 
 This change establishes the project's structure, the contracts between tiers, the multi-model scoring architecture, and the workflow that keeps specs in step with a codebase edited by both spec-driven and hand-editing contributors.
 
+**The specs below describe the target architecture in full. The implementation delivered by this change is a walking skeleton** — every tier present and connected end to end on fixture data, with deliberately minimal components. The goal is a structure collaborators can read, run, and understand; the components are fleshed out by the follow-up changes enumerated in `tasks.md` section 14.
+
 ## What Changes
 
 - **Monorepo layout** with a language-neutral `contracts/` directory as the single seam between tiers, plus shared golden fixtures so every tier can be developed against the others before they exist.
@@ -43,4 +45,4 @@ None. This is the project's first change; `openspec/specs/` is empty.
 - **Repository**: introduces `contracts/`, `packages/`, `infra/`, and `docs/` trees. No existing code is affected — the repository currently contains only a README and OpenSpec scaffolding.
 - **Tooling**: path-filtered CI for a polyglot (Python + TypeScript) monorepo; contract validation; client generation from OpenAPI.
 - **Process**: PR template, a `spec-debt` label, and a recurring reconciliation pass become part of how the team works.
-- **Deferred to later changes**: individual model implementations, specific data source adapters, broadcast-availability data, the evaluation harness and ground-truth labels, and league scope. This change defines the slots those fit into, not their contents.
+- **Deferred to later changes**: real models, live data source adapters and provider selection, the remaining calibration cohorts and composition policies, score provenance, broadcast-availability data, the evaluation harness and ground-truth labels, and league scope. This change defines the slots those fit into and stubs them visibly; `docs/STUBS.md` names the follow-up change replacing each one.

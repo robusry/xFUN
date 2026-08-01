@@ -13,6 +13,7 @@ The design principle that follows from (1) is the one to judge every decision ag
 
 **Goals:**
 
+- Give collaborators a structure they can read, run, and understand before any component is worth building.
 - Let each tier be built and tested independently, before the tiers around it exist.
 - Make adding, replacing, or retiring a scoring model a local operation touching one directory.
 - Make changes to how scores are combined and presented cost minutes, not a re-run of the modelling pipeline.
@@ -21,8 +22,9 @@ The design principle that follows from (1) is the one to judge every decision ag
 
 **Non-Goals:**
 
-- Defining the fun formula itself. This change defines the slot a model fits into, not any model's contents.
-- Choosing data providers, leagues in scope, or broadcast data sources.
+- Working functionality. This change delivers a connected skeleton on fixture data; every component is minimal by intent.
+- Defining the fun formula itself, or building any real model. The placeholder models demonstrate the contract and predict nothing.
+- Choosing data providers, leagues in scope, or broadcast data sources. Ingestion reads from disk.
 - The evaluation harness and ground-truth labels. Necessary, but a separate change.
 - Building the mobile app. Its package slot exists; its implementation does not.
 - Solving multi-tenant auth, billing, or rate-limit tiers for the public API.
@@ -145,6 +147,20 @@ Two questions were initially conflated here: what the team should do, and whethe
 
 *Cost accepted.* Nothing prevents a contributor from merging a different way, so `main`'s history may end up mixed. That is recoverable and low-stakes; if it becomes a real annoyance, enforcement is two toggles away.
 
+### D14. Deliver a walking skeleton first
+
+This change builds every tier end to end on fixture data, with deliberately minimal implementations, rather than building any tier to completion. Two placeholder models, one calibration cohort, one composition policy, a fixture-file ingestion adapter with no network access, a two-page API, and one web page — connected, running, and demonstrably passing data from one end to the other.
+
+The goal of this first change is comprehension, not capability: collaborators need to see and understand the structure before the components are worth building. A skeleton makes the seams visible and lets several people start work in parallel against interfaces that already exist and demonstrably work.
+
+*Consequence for stubs.* A collaborator must never be unsure whether something is real. Every placeholder is marked in its own source, its package README, and a central `docs/STUBS.md` that names the follow-up change replacing it. An unmarked stub is worse than a missing feature, because someone will build on it.
+
+*What stays real.* The contracts and fixtures are not stubbed — they are the deliverable. So are the process and CI rules, since they govern how every subsequent change lands.
+
+*Alternatives considered.* Building one tier properly first — say, ingestion and scoring — was rejected because it leaves the seams unproven and gives collaborators nothing to read. Building everything properly in one change was rejected as weeks of work behind a single review.
+
+*Cost accepted.* Each stub becomes a follow-up change, so the change count goes up. That is the intent: eight follow-ups are enumerated in `tasks.md` section 14, each small enough to review properly.
+
 ## Risks / Trade-offs
 
 - **Read-time calibration becomes slow at scale** → Workloads are bounded by matches per cohort; cache materialized results keyed by (cohort, recipe, raw-score generation) and invalidate on new raw rows. Revisit only with measurements.
@@ -159,17 +175,18 @@ Two questions were initially conflated here: what the team should do, and whethe
 
 ## Migration Plan
 
-Greenfield — this is a build order rather than a migration.
+Greenfield — this is a build order rather than a migration, and per D14 it produces a walking skeleton rather than any finished tier.
 
-1. Branch protection on `main`, repository skeleton, path-filtered CI, contract and spec validation jobs. Branch protection comes first, since every subsequent step depends on the branch-and-PR workflow being enforced rather than merely documented.
-2. `contracts/`: `match-snapshot.json`, `fun-score.json`, initial `openapi.yaml`, and hand-authored golden fixtures. Fixtures come first so downstream work can start immediately.
-3. `scoring-contract` and `scoring-runtime`: interface, registry, feature assembly, calibration.
-4. One reference model against fixtures, proving the contract end to end.
-5. Score store and migrations; ingestion for one league and one data source.
-6. Composition and alias resolution.
-7. API over the store; generated clients.
-8. Web against generated clients and fixtures — can begin in parallel from step 2.
-9. Process: PR template, `spec-debt` label, drift-flagging automation, reconciliation cadence and owner.
+1. Repository skeleton, workspace tooling, path-filtered CI, contract and spec validation jobs. Branch protection is requested from the repository owner in parallel, since it needs access the team does not have.
+2. `contracts/`: `match-snapshot.json`, `model-score.json`, initial `openapi.yaml`, and hand-authored golden fixtures. These come first and are not stubbed — everything downstream develops against them.
+3. `scoring-contract` and `scoring-runtime`: interface, registry, snapshot hashing, feature assembly, model runner.
+4. Two placeholder models, proving multi-model fan-out and the missing-feature skip path.
+5. Score store and migrations; fixture-file ingestion adapter with no network access.
+6. Calibration with the `window` cohort; composition with the `renormalize` policy and alias resolution.
+7. API over the store; generated TypeScript client.
+8. Web against the generated client — can begin in parallel from step 2.
+9. End-to-end demo: one command from fixtures to a ranked list in the browser.
+10. Process and documentation: PR template, `spec-debt` label, commit linting, and the docs that make the structure legible, including `docs/STUBS.md`.
 
 *Rollback.* Nothing to roll back into; the reversible unit is each package, and any tier can be replaced behind its contract.
 
