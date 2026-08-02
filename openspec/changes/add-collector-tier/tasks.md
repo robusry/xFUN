@@ -77,6 +77,11 @@
 
 ## 10. Follow-ups this change deliberately defers
 
-- [ ] 10.1 Open `add-collector-corpora` (**B**) — unkeyed corpus escape hatch, content-addressed storage, retention enforcement per design D8, and model abstention. Coordinates with `add-score-provenance`
-- [ ] 10.2 Open `add-signal-derivers` (**C**) — the pure second phase publishing into `signals.*`, giving shared attribution without making it mandatory
-- [ ] 10.3 Confirm `add-live-ingestion` is re-scoped to write collectors rather than source adapters, and sequenced after B and C
+These are **recorded, not created**. Scaffolding B and C on this branch would put
+their artifacts in this change's pull request, and one change is one branch is one
+PR. Each gets its own branch once this one merges — which is also when B's design
+stops being speculative, since it depends on what A's implementation surfaced.
+
+- [x] 10.1 Record `add-collector-corpora` (**B**) — unkeyed corpus escape hatch, content-addressed storage, retention enforcement per design D8, and model abstention. Coordinates with `add-score-provenance`. Named in `proposal.md`, `design.md` D8/D9, `docs/STUBS.md`, and the extensibility note in the `scoring-contract` spec delta
+- [x] 10.2 Record `add-signal-derivers` (**C**) — the pure second phase publishing into `signals.*`, giving shared attribution without making it mandatory. Named in `proposal.md` and `design.md` D4
+- [x] 10.3 Re-scope `add-live-ingestion` to write collectors rather than source adapters — `docs/STUBS.md` now states this under both **Ingestion** and **Collectors**, and `SourceAdapter` no longer exists to write against
