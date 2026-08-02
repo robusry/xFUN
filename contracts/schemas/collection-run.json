@@ -1,0 +1,71 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://xfun.dev/schemas/collection-run.json",
+  "title": "CollectionRun",
+  "description": "What one collection run did: which slate it operated on, which collectors were invoked, and how each fared. This record exists to answer one question that is otherwise unanswerable — why does this match carry no score from this model? Without it, a source that was down for a week is indistinguishable from a source that had nothing to say.",
+  "type": "object",
+  "required": ["run_id", "slate_id", "started_at", "collectors"],
+  "additionalProperties": false,
+  "properties": {
+    "run_id": {
+      "type": "string",
+      "description": "Identifies this execution. Distinct from slate_id: the same slate collected twice produces two runs.",
+      "pattern": "^[A-Za-z0-9_-]+$"
+    },
+    "slate_id": {
+      "type": "string",
+      "description": "The slate this run operated on. Collected data is only interpretable alongside it.",
+      "pattern": "^sha256:[0-9a-f]{64}$"
+    },
+    "started_at": { "type": "string", "format": "date-time" },
+    "completed_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "Absent while the run is in flight."
+    },
+    "collectors": {
+      "type": "array",
+      "description": "One entry per registered collector considered for this run, including those not invoked.",
+      "items": { "$ref": "#/$defs/collector_outcome" }
+    }
+  },
+  "$defs": {
+    "collector_outcome": {
+      "type": "object",
+      "required": ["collector_id", "entity_kind", "outcome"],
+      "additionalProperties": false,
+      "properties": {
+        "collector_id": { "type": "string", "pattern": "^[a-z0-9-]+$" },
+        "entity_kind": {
+          "type": "string",
+          "description": "What this collector keys its output by, which determines how the platform joins it onto matches.",
+          "enum": ["match", "team", "league"]
+        },
+        "outcome": {
+          "type": "string",
+          "description": "`succeeded` means the source was reached and its answer is trusted, including an answer of 'nothing for this entity'. `failed` means the collector could not determine whether data exists — transient, worth retrying, and NOT the same as absence. `not_invoked` means no active model declared anything this collector provides, so it was correctly never called.",
+          "enum": ["succeeded", "failed", "not_invoked"]
+        },
+        "reason": {
+          "type": "string",
+          "description": "Why the collector failed. Required in practice when outcome is `failed`; an unexplained failure is barely better than a silent one."
+        },
+        "entities_with_data": {
+          "type": "integer",
+          "description": "Entities the collector returned values for. Meaningful only when outcome is `succeeded`.",
+          "minimum": 0
+        },
+        "entities_without_data": {
+          "type": "integer",
+          "description": "Entities the collector was asked about and legitimately had nothing for. This is coverage, not failure — the number a model's skip reasons should be read against.",
+          "minimum": 0
+        },
+        "provides": {
+          "type": "array",
+          "description": "Leaf paths this collector claimed at registration, recorded so a run stays interpretable after a path changes producer.",
+          "items": { "type": "string" }
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,151 @@
+{
+  "slate_id": "sha256:57c62b6f7ebc9b0edbd05859cf2794a0b9c0025cb2a8bbf0a35e9e30b5bfac24",
+  "selection": {
+    "rule": "league-allowlist",
+    "leagues": [
+      "epl",
+      "laliga",
+      "seriea"
+    ],
+    "window_start_utc": "2026-08-15T00:00:00Z",
+    "window_end_utc": "2026-08-19T00:00:00Z"
+  },
+  "matches": [
+    {
+      "match_id": "epl-2026-08-15-ars-liv",
+      "league": {
+        "id": "epl",
+        "name": "Premier League",
+        "country": "England"
+      },
+      "kickoff_utc": "2026-08-15T19:00:00Z",
+      "home_team": {
+        "id": "ars",
+        "name": "Arsenal"
+      },
+      "away_team": {
+        "id": "liv",
+        "name": "Liverpool"
+      }
+    },
+    {
+      "match_id": "epl-2026-08-15-bha-eve",
+      "league": {
+        "id": "epl",
+        "name": "Premier League",
+        "country": "England"
+      },
+      "kickoff_utc": "2026-08-15T14:00:00Z",
+      "home_team": {
+        "id": "bha",
+        "name": "Brighton & Hove Albion"
+      },
+      "away_team": {
+        "id": "eve",
+        "name": "Everton"
+      }
+    },
+    {
+      "match_id": "epl-2026-08-16-bur-shu",
+      "league": {
+        "id": "epl",
+        "name": "Premier League",
+        "country": "England"
+      },
+      "kickoff_utc": "2026-08-16T14:00:00Z",
+      "home_team": {
+        "id": "bur",
+        "name": "Burnley"
+      },
+      "away_team": {
+        "id": "shu",
+        "name": "Sheffield United"
+      }
+    },
+    {
+      "match_id": "epl-2026-08-16-new-bre",
+      "league": {
+        "id": "epl",
+        "name": "Premier League",
+        "country": "England"
+      },
+      "kickoff_utc": "2026-08-16T16:30:00Z",
+      "home_team": {
+        "id": "new",
+        "name": "Newcastle United"
+      },
+      "away_team": {
+        "id": "bre",
+        "name": "Brentford"
+      }
+    },
+    {
+      "match_id": "epl-2026-08-17-mci-tot",
+      "league": {
+        "id": "epl",
+        "name": "Premier League",
+        "country": "England"
+      },
+      "kickoff_utc": "2026-08-17T15:30:00Z",
+      "home_team": {
+        "id": "mci",
+        "name": "Manchester City"
+      },
+      "away_team": {
+        "id": "tot",
+        "name": "Tottenham Hotspur"
+      }
+    },
+    {
+      "match_id": "epl-2026-08-18-che-mun",
+      "league": {
+        "id": "epl",
+        "name": "Premier League",
+        "country": "England"
+      },
+      "kickoff_utc": "2026-08-18T19:00:00Z",
+      "home_team": {
+        "id": "che",
+        "name": "Chelsea"
+      },
+      "away_team": {
+        "id": "mun",
+        "name": "Manchester United"
+      }
+    },
+    {
+      "match_id": "laliga-2026-08-16-rma-get",
+      "league": {
+        "id": "laliga",
+        "name": "La Liga",
+        "country": "Spain"
+      },
+      "kickoff_utc": "2026-08-16T18:00:00Z",
+      "home_team": {
+        "id": "rma",
+        "name": "Real Madrid"
+      },
+      "away_team": {
+        "id": "get",
+        "name": "Getafe"
+      }
+    },
+    {
+      "match_id": "seriea-2026-08-16-int-tor",
+      "league": {
+        "id": "seriea",
+        "name": "Serie A",
+        "country": "Italy"
+      },
+      "kickoff_utc": "2026-08-16T18:45:00Z",
+      "home_team": {
+        "id": "int",
+        "name": "Internazionale"
+      },
+      "away_team": {
+        "id": "tor",
+        "name": "Torino"
+      }
+    }
+  ]
+}

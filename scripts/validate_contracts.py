@@ -18,6 +18,8 @@ CONTRACTS = ROOT / "contracts"
 PAIRS = [
     (CONTRACTS / "fixtures" / "snapshots", CONTRACTS / "schemas" / "match-snapshot.json"),
     (CONTRACTS / "fixtures" / "scores", CONTRACTS / "schemas" / "model-score.json"),
+    (CONTRACTS / "fixtures" / "slates", CONTRACTS / "schemas" / "slate.json"),
+    (CONTRACTS / "fixtures" / "collection-runs", CONTRACTS / "schemas" / "collection-run.json"),
 ]
 
 

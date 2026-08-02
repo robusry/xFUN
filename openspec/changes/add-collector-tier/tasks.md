@@ -6,11 +6,11 @@
 
 ## 1. Contracts
 
-- [ ] 1.1 Add the `signals` object to `contracts/schemas/match-snapshot.json`, open under `signals.<namespace>` so a collector can add a namespace without amending the core schema, while the rest of the schema stays closed
-- [ ] 1.2 Define `contracts/schemas/slate.json` — the match set for a run, plus the identity by which the run records which slate it used
-- [ ] 1.3 Define `contracts/schemas/collection-run.json` — collectors invoked, outcome of each, and the failure-versus-absence distinction
-- [ ] 1.4 Add golden fixtures covering a team-keyed signal present on one side only, a league-keyed signal, and a collector failure
-- [ ] 1.5 Extend `scripts/validate_contracts.py` to cover the new schemas and fixtures
+- [x] 1.1 Add the `signals` object to `contracts/schemas/match-snapshot.json`, open under `signals.<namespace>` so a collector can add a namespace without amending the core schema, while the rest of the schema stays closed
+- [x] 1.2 Define `contracts/schemas/slate.json` — the match set for a run, plus the identity by which the run records which slate it used
+- [x] 1.3 Define `contracts/schemas/collection-run.json` — collectors invoked, outcome of each, and the failure-versus-absence distinction
+- [x] 1.4 Add golden fixtures covering a team-keyed signal present on one side only, a league-keyed signal, and a collector failure
+- [x] 1.5 Extend `scripts/validate_contracts.py` to cover the new schemas and fixtures — schema coverage; the `slate_id` content-hash consistency check lands with `Slate` in 2.1
 
 ## 2. Scoring contract
 

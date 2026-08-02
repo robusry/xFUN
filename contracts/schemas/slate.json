@@ -1,0 +1,89 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://xfun.dev/schemas/slate.json",
+  "title": "Slate",
+  "description": "The complete set of matches a collection run operates on, known before collection begins. Collectors receive the slate whole and choose their own fan-out — an odds collector iterates matches, a social collector reads the teams and polls per team, a table collector works per league. The rule that selected these matches is recorded alongside them, because a slate collected under one rule is not interchangeable with a slate collected under another.",
+  "type": "object",
+  "required": ["slate_id", "selection", "matches"],
+  "additionalProperties": false,
+  "properties": {
+    "slate_id": {
+      "type": "string",
+      "description": "Content hash over the canonical match set, in the same `sha256:<hex>` form as snapshot_hash. Content-addressed so that two runs over the same matches are recognisably the same slate. A run record may additionally carry its own run identifier; the two answer different questions.",
+      "pattern": "^sha256:[0-9a-f]{64}$"
+    },
+    "selection": {
+      "description": "How these matches were chosen. Recorded so a slate stays interpretable after the rule changes.",
+      "$ref": "#/$defs/selection"
+    },
+    "matches": {
+      "type": "array",
+      "description": "Match references. Deliberately thin: identity, timing, and the entities a collector fans out over. A collector that needs more than this is asking the wrong tier.",
+      "minItems": 1,
+      "items": { "$ref": "#/$defs/match_ref" }
+    }
+  },
+  "$defs": {
+    "selection": {
+      "type": "object",
+      "required": ["rule"],
+      "additionalProperties": false,
+      "properties": {
+        "rule": {
+          "type": "string",
+          "description": "The selection rule in force. `league-allowlist` is the placeholder in use until broadcast availability can answer which matches are actually watchable in the US, at which point `us-watchable` replaces it without the collector interface changing.",
+          "enum": ["league-allowlist", "us-watchable"]
+        },
+        "leagues": {
+          "type": "array",
+          "description": "League ids the allowlist admitted. Present for `league-allowlist`.",
+          "items": { "type": "string", "pattern": "^[a-z0-9-]+$" }
+        },
+        "window_start_utc": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Earliest kickoff admitted, inclusive."
+        },
+        "window_end_utc": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Latest kickoff admitted, exclusive."
+        }
+      }
+    },
+    "match_ref": {
+      "type": "object",
+      "required": ["match_id", "league", "kickoff_utc", "home_team", "away_team"],
+      "additionalProperties": false,
+      "properties": {
+        "match_id": {
+          "type": "string",
+          "pattern": "^[a-z0-9-]+$"
+        },
+        "league": { "$ref": "#/$defs/league" },
+        "kickoff_utc": { "type": "string", "format": "date-time" },
+        "home_team": { "$ref": "#/$defs/team" },
+        "away_team": { "$ref": "#/$defs/team" }
+      }
+    },
+    "league": {
+      "type": "object",
+      "required": ["id", "name"],
+      "additionalProperties": false,
+      "properties": {
+        "id": { "type": "string", "pattern": "^[a-z0-9-]+$" },
+        "name": { "type": "string" },
+        "country": { "type": "string" }
+      }
+    },
+    "team": {
+      "type": "object",
+      "required": ["id", "name"],
+      "additionalProperties": false,
+      "properties": {
+        "id": { "type": "string", "pattern": "^[a-z0-9-]+$" },
+        "name": { "type": "string" }
+      }
+    }
+  }
+}

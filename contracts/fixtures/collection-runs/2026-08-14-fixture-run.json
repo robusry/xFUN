@@ -1,0 +1,49 @@
+{
+  "run_id": "2026-08-14T04-00-00Z-fixture",
+  "slate_id": "sha256:57c62b6f7ebc9b0edbd05859cf2794a0b9c0025cb2a8bbf0a35e9e30b5bfac24",
+  "started_at": "2026-08-14T04:00:00Z",
+  "completed_at": "2026-08-14T04:00:11Z",
+  "collectors": [
+    {
+      "collector_id": "fixture-match",
+      "entity_kind": "match",
+      "outcome": "succeeded",
+      "entities_with_data": 7,
+      "entities_without_data": 1,
+      "provides": [
+        "odds.total_line",
+        "odds.home_price",
+        "odds.draw_price",
+        "odds.away_price"
+      ]
+    },
+    {
+      "collector_id": "fixture-team",
+      "entity_kind": "team",
+      "outcome": "succeeded",
+      "entities_with_data": 1,
+      "entities_without_data": 15,
+      "provides": [
+        "signals.reddit.excitement",
+        "signals.reddit.posts"
+      ]
+    },
+    {
+      "collector_id": "fixture-league",
+      "entity_kind": "league",
+      "outcome": "failed",
+      "reason": "connection reset by peer after 3 attempts",
+      "provides": [
+        "signals.league-pulse.table_volatility"
+      ]
+    },
+    {
+      "collector_id": "fixture-unused",
+      "entity_kind": "match",
+      "outcome": "not_invoked",
+      "provides": [
+        "signals.unused.value"
+      ]
+    }
+  ]
+}
