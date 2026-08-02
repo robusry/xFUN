@@ -37,6 +37,7 @@
 - [x] 4.3 **PLACEHOLDER** — add a team-keyed fixture collector so the home/away join is exercised end to end rather than only in tests. *Replaced by `add-live-ingestion`.*
 - [x] 4.4 Mark both in each package README and in `docs/STUBS.md` — plus new STUBS entries for the collectors and the slate rule
 - [x] 4.5 **PLACEHOLDER** — add a league-keyed fixture collector too, so the third join is not left unit-tested only. *Replaced by `add-live-ingestion`.*
+- [x] 4.6 **PLACEHOLDER** — add a `social-buzz` model declaring `signals.*`, so the collector tier is reachable from the demo rather than dormant and the golden `signals` blocks are reproduced by a run rather than merely asserted. Kept out of `recipes/default.yaml`. *Replaced by the first validated social model.*
 
 ## 5. Ingestion and slate assembly
 

@@ -30,10 +30,11 @@ These are the bootstrap's actual deliverable and are expected to survive.
 
 | | |
 |---|---|
-| **What** | `over-under-lean` returns the over/under goals line. `odds-spread` returns the normalised entropy of vig-stripped outcome probabilities. |
-| **Why it is a placeholder** | Neither has been validated against any measure of whether matches were entertaining. `over-under-lean` ignores competitiveness and will rank a 4–0 procession above a tense 1–1; `odds-spread` ignores goals and will do the reverse. |
-| **Why two** | To exercise multi-model fan-out and the partial-coverage path. They require different features on purpose. |
-| **Replaced by** | `add-market-baseline-model` |
+| **What** | `over-under-lean` returns the over/under goals line. `odds-spread` returns the normalised entropy of vig-stripped outcome probabilities. `social-buzz` multiplies invented mention counts by an invented interest level. |
+| **Why it is a placeholder** | None has been validated against any measure of whether matches were entertaining. `over-under-lean` ignores competitiveness and will rank a 4–0 procession above a tense 1–1; `odds-spread` ignores goals and will do the reverse; `social-buzz` measures attention, which is not the same thing as quality, from data that was made up. |
+| **Why three** | To exercise multi-model fan-out and the partial-coverage path — they require different features on purpose. `social-buzz` additionally reads `signals.*` rather than canonical data, which is what makes the collector tier reachable from `scripts/demo.sh` instead of dormant. |
+| **Not in the default recipe** | `social-buzz` is deliberately absent from `packages/composition/recipes/default.yaml`; it contributes nothing to the composed score. |
+| **Replaced by** | `add-market-baseline-model` for the two market models; whichever change first builds a validated social model for `social-buzz` |
 
 ### Ingestion
 

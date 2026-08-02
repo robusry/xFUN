@@ -132,6 +132,24 @@ Three models reading `signals.reddit.home.sentiment` is coupling through shared 
 
 *Cost accepted:* A breaking change, with a blast radius of one placeholder class.
 
+### D12. A placeholder model consumes signals, so the tier is not dormant
+
+Neither existing model declares a signal path, so resolution correctly invoked no
+collector at all: the demo exercised the collector tier by not using it. That is
+right behaviour and wrong demonstration — the walking skeleton's promise is that
+every tier is connected end to end, and the golden `signals` blocks in the snapshot
+fixtures were asserted by nothing. `social-buzz` declares two signal paths, which
+makes the demo run collect → join → score and makes those fixtures reproducible.
+
+*Rejected:* leaving the tier dormant and covering joins with unit tests only. Cheaper,
+but it ships fixtures that describe output no run produces, which is the kind of
+quiet drift `contracts/` exists to prevent.
+
+*Cost accepted:* One more placeholder model to replace later, and a third model
+whose scores are deliberately excluded from the default recipe. The league-keyed
+collector stays `not_invoked` in the demo, which is a useful side effect: the
+no-consumer path is demonstrated live rather than only in tests.
+
 ## Risks / Trade-offs
 
 **Sharing concentrates failure** → Reddit goes down and three models skip instead of one. Mitigated by D7 making the cause legible rather than by avoiding the concentration, which is inherent to fetching once.

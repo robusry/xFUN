@@ -31,6 +31,7 @@ from xfun_composition import AliasResolver, compose_all, load_recipes
 from xfun_ingestion import assemble_slate, fixture_payloads, ingest
 from xfun_model_odds_spread import MODEL as ODDS_SPREAD
 from xfun_model_over_under_lean import MODEL as OVER_UNDER_LEAN
+from xfun_model_social_buzz import MODEL as SOCIAL_BUZZ
 from xfun_runtime import (
     CollectorRegistry,
     Registry,
@@ -71,6 +72,7 @@ def build_registry(provided_paths: frozenset[str] = frozenset()) -> Registry:
     registry = Registry(provided_paths=provided_paths)
     registry.register(OVER_UNDER_LEAN)
     registry.register(ODDS_SPREAD)
+    registry.register(SOCIAL_BUZZ)
     return registry
 
 

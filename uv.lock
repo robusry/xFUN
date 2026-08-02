@@ -11,6 +11,7 @@ members = [
     "xfun-ingestion",
     "xfun-model-odds-spread",
     "xfun-model-over-under-lean",
+    "xfun-model-social-buzz",
     "xfun-scoring-contract",
     "xfun-scoring-runtime",
     "xfun-store",
@@ -919,6 +920,17 @@ requires-dist = [{ name = "xfun-scoring-contract", editable = "packages/scoring-
 name = "xfun-model-over-under-lean"
 version = "0.1.0"
 source = { editable = "packages/models/over-under-lean" }
+dependencies = [
+    { name = "xfun-scoring-contract" },
+]
+
+[package.metadata]
+requires-dist = [{ name = "xfun-scoring-contract", editable = "packages/scoring-contract" }]
+
+[[package]]
+name = "xfun-model-social-buzz"
+version = "0.1.0"
+source = { editable = "packages/models/social-buzz" }
 dependencies = [
     { name = "xfun-scoring-contract" },
 ]
