@@ -43,7 +43,11 @@ composition happen at **read** time, because the caller chooses the calibration
 cohort per request, so a calibrated score is not a property of a stored row.
 Models are pure functions that declare which snapshot features they need; matches
 missing those features are skipped with a recorded reason, which is routine rather
-than exceptional. How scores are blended is versioned configuration behind a
+than exceptional. Fetching is not eliminated but moved earlier, into **collectors**
+— the one tier allowed to touch the network. A collector receives the whole slate,
+chooses its own fan-out, and keys its output by match, team, or league for the
+platform to join on mechanically, so a source is fetched once no matter how many
+models read it and attribution stays a model's judgement rather than a collector's. How scores are blended is versioned configuration behind a
 repointable alias, so the blending decision stays cheap to change — which is the
 point, because it is expected to change repeatedly.
 
@@ -61,6 +65,16 @@ look like bugs:
 - **Unimplemented cohorts/policies raise rather than falling back**, and surface
   as 501.
 - **Matches with no score are still returned**, with a reason.
+- **Collectors are exempt from the purity check.** Touching the network is the
+  purpose of that tier. The rule points the other way: no model and no API package
+  may import a collector.
+- **A signal path never names its producer.** `signals.<namespace>.<leaf>`, where
+  the namespace is a subject area. Encoding the producer would make swapping one a
+  breaking change for every model declaring the path.
+- **A collector nothing declares is not run**, and that is recorded rather than
+  omitted — "no consumer" is a different answer from "ran and found nothing".
+- **Collector failure is not absence.** Both leave the same hole in the snapshot;
+  only the run record can tell them apart, so it does.
 
 ## Layout
 
@@ -68,11 +82,13 @@ look like bugs:
 contracts/          the seam: JSON Schemas, openapi.yaml, golden fixtures
 packages/
   scoring-contract/   model interface + types. no deps, no I/O.
-  scoring-runtime/    registry, feature assembly, runner, calibration
+  scoring-runtime/    registry, collection, entity joins, runner, calibration
   store/              canonical entities + append-only score store
   models/<id>/        one package per model, deps isolated
+  collectors/<id>/    one package per data source. the ONLY tier that may
+                      touch the network. purity-exempt by design.
   composition/        src/ = mechanism (Zone A), recipes/ = values (Zone C)
-  ingestion/          source adapters
+  ingestion/          slate assembly + canonical entity writing
   api/                FastAPI, read-only
   web/                Vite + React, one page
   clients/ts/         generated from openapi.yaml

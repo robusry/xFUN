@@ -70,10 +70,10 @@
 
 ## 9. Documentation
 
-- [ ] 9.1 Update `docs/architecture.md` with the collect → join → score phases
-- [ ] 9.2 Update `docs/zones.md`: the collection mechanism is Zone A, an individual collector is Zone B
-- [ ] 9.3 Update `docs/STUBS.md` — the ingestion placeholder now targets the collector interface, and the fixture collectors are named
-- [ ] 9.4 Update `CLAUDE.md` layout and design summary for the new tier
+- [x] 9.1 Update `docs/architecture.md` with the collect → join → score phases
+- [x] 9.2 Update `docs/zones.md`: the collection mechanism is Zone A, an individual collector is Zone B
+- [x] 9.3 Update `docs/STUBS.md` — the ingestion placeholder now targets the collector interface, and the fixture collectors are named
+- [x] 9.4 Update `CLAUDE.md` layout and design summary for the new tier, including the four new "do not fix these" entries
 
 ## 10. Follow-ups this change deliberately defers
 
