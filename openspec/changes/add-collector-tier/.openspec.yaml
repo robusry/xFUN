@@ -1,0 +1,6 @@
+schema: spec-driven
+created: 2026-08-02
+goal: "Introduce a shared collector tier: the slate as a first-class input,
+  entity-keyed collector output with mechanical joins onto matches, and dedup
+  resolution so a data source is fetched once per run regardless of how many
+  models consume it."
