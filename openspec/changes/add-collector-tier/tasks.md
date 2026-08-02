@@ -59,13 +59,14 @@
 
 ## 8. Tests
 
-- [ ] 8.1 Resolution: three models sharing one collector invoke it once
-- [ ] 8.2 Resolution: a collector with no consumers is not invoked
-- [ ] 8.3 Registration: duplicate provider for a leaf path fails; a declared path nothing provides fails
-- [ ] 8.4 Join: team-keyed value present for one side only leaves the other absent and produces a skip with a reason
-- [ ] 8.5 Failure path: one collector fails, the run completes, dependent models skip, and the skip is attributable to failure rather than absence
-- [ ] 8.6 Ordering: collectors run in any order and produce an identical assembled snapshot
-- [ ] 8.7 Update `scripts/pipeline.py` so the end-to-end fixture run exercises collection, join, and scoring
+- [x] 8.1 Resolution: three models sharing one collector invoke it once
+- [x] 8.2 Resolution: a collector with no consumers is not invoked
+- [x] 8.3 Registration: duplicate provider for a leaf path fails; a declared path nothing provides fails
+- [x] 8.4 Join: team-keyed value present for one side only leaves the other absent and produces a skip with a reason
+- [x] 8.5 Failure path: one collector fails, the run completes, dependent models skip, and the skip is attributable to failure rather than absence
+- [x] 8.6 Ordering: collectors run in any order and produce an identical assembled snapshot
+- [x] 8.7 Update `scripts/pipeline.py` so the end-to-end fixture run exercises collection, join, and scoring
+- [x] 8.8 Also covered: the league broadcast join, a raising collector recorded as failure rather than empty coverage, and the run record conforming to its schema — 16 tests in `test_collection.py`
 
 ## 9. Documentation
 
