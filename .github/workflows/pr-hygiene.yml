@@ -1,0 +1,106 @@
+name: pr-hygiene
+
+on:
+  pull_request:
+    types: [opened, edited, synchronize, reopened, labeled, unlabeled]
+
+jobs:
+  conventional-commits:
+    name: title follows Conventional Commits
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check the pull request title
+        env:
+          TITLE: ${{ github.event.pull_request.title }}
+        run: |
+          PATTERN='^(spec|feat|fix|refactor|perf|test|docs|build|ci|chore)(\([a-z0-9./-]+\))?!?: .+'
+          if ! printf '%s' "$TITLE" | grep -Eq "$PATTERN"; then
+            echo "::error::Pull request title must follow Conventional Commits."
+            echo "Got:      $TITLE"
+            echo "Expected: <type>(<scope>): <subject>"
+            echo "Types:    spec feat fix refactor perf test docs build ci chore"
+            echo ""
+            echo "'spec' is for OpenSpec planning artifacts and archive commits."
+            echo "The title matters because squash-merge makes it the commit subject."
+            exit 1
+          fi
+          echo "ok: $TITLE"
+
+  spec-drift:
+    name: spec obligations for the touched zones
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Flag unspecced changes in Zone A or Zone B
+        env:
+          LABELS: ${{ toJSON(github.event.pull_request.labels.*.name) }}
+          BASE: ${{ github.event.pull_request.base.sha }}
+          HEAD: ${{ github.event.pull_request.head.sha }}
+        run: |
+          CHANGED="$(git diff --name-only "$BASE" "$HEAD")"
+
+          # Zone A: always needs specs. Zone B: needs them on behaviour change.
+          # Zone C (web, mobile, infra, CI, composition recipe VALUES) is absent
+          # from this pattern on purpose -- see docs/zones.md.
+          ZONES='^(contracts/|packages/scoring-contract/|packages/scoring-runtime/|packages/composition/src/|packages/api/|packages/ingestion/|packages/models/|packages/evaluation/)'
+
+          TOUCHED_ZONES="$(printf '%s\n' "$CHANGED" | grep -E "$ZONES" || true)"
+          TOUCHED_SPECS="$(printf '%s\n' "$CHANGED" | grep -E '^openspec/' || true)"
+
+          if [ -z "$TOUCHED_ZONES" ]; then
+            echo "No Zone A/B paths touched. Nothing to check."
+            exit 0
+          fi
+
+          if [ -n "$TOUCHED_SPECS" ]; then
+            echo "Zone A/B paths touched, and openspec/ changed alongside them."
+            exit 0
+          fi
+
+          if printf '%s' "$LABELS" | grep -q '"spec-debt"'; then
+            echo "::warning::Unspecced Zone A/B change, acknowledged via the spec-debt label."
+            echo "Capture it in a change during the next reconciliation pass."
+            exit 0
+          fi
+
+          echo "::error::This pull request changes Zone A/B paths with no openspec/ changes."
+          printf '%s\n' "$TOUCHED_ZONES" | sed 's/^/  /'
+          echo ""
+          echo "Either add the spec deltas, or apply the 'spec-debt' label to"
+          echo "acknowledge the debt and proceed. Drift you can count is debt;"
+          echo "drift you cannot see is rot. See docs/zones.md."
+          exit 1
+
+  archived:
+    name: an OpenSpec change in this PR must be archived
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Refuse to merge an unarchived change
+        env:
+          BASE: ${{ github.event.pull_request.base.sha }}
+          HEAD: ${{ github.event.pull_request.head.sha }}
+        run: |
+          CHANGED="$(git diff --name-only "$BASE" "$HEAD" | grep -E '^openspec/changes/' || true)"
+          ACTIVE="$(printf '%s\n' "$CHANGED" | grep -Ev '^openspec/changes/archive/' | grep -E '\S' || true)"
+          ARCHIVED="$(printf '%s\n' "$CHANGED" | grep -E '^openspec/changes/archive/' || true)"
+
+          if [ -z "$ACTIVE" ]; then
+            echo "No active change directory touched."
+            exit 0
+          fi
+          if [ -n "$ARCHIVED" ]; then
+            echo "Change archived in this pull request."
+            exit 0
+          fi
+
+          echo "::error::This pull request contains an active OpenSpec change that has"
+          echo "not been archived. Run 'openspec archive' as the final commit so that"
+          echo "main's specs never lag main's code. See docs/workflow.md."
+          exit 1

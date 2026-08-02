@@ -1,0 +1,44 @@
+{
+  "match_id": "epl-2026-08-17-mci-tot",
+  "league": {
+    "id": "epl",
+    "name": "Premier League",
+    "country": "England"
+  },
+  "kickoff_utc": "2026-08-17T15:30:00Z",
+  "home_team": {
+    "id": "mci",
+    "name": "Manchester City"
+  },
+  "away_team": {
+    "id": "tot",
+    "name": "Tottenham Hotspur"
+  },
+  "odds": {
+    "total_line": 3.25,
+    "over_price": 1.9,
+    "under_price": 1.92,
+    "home_price": 1.65,
+    "draw_price": 4.3,
+    "away_price": 4.6,
+    "captured_at": "2026-08-14T09:00:00Z"
+  },
+  "form": {
+    "home": {
+      "matches": 10,
+      "goals_for_avg": 2.6,
+      "goals_against_avg": 1.0
+    },
+    "away": {
+      "matches": 10,
+      "goals_for_avg": 1.9,
+      "goals_against_avg": 1.7
+    }
+  },
+  "table": {
+    "home_position": 1,
+    "away_position": 7,
+    "total_teams": 20,
+    "matchweek": 2
+  }
+}

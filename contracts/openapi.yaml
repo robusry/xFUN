@@ -1,0 +1,287 @@
+openapi: 3.1.0
+
+info:
+  title: xFUN API
+  version: "0.1.0"
+  description: |
+    Read-only access to entertainment scores for upcoming soccer matches.
+
+    **This document is the source of truth.** The API is validated against it;
+    it is not generated from the API. Clients are generated from it too.
+
+    Two things about scores that are easy to get wrong:
+
+    1. A score is meaningless without its **calibration cohort**. Raw model scores
+       live on incomparable native scales and are percentile-ranked within a cohort
+       to produce a 0-100 value. The same match legitimately scores differently
+       under different cohorts. Every response states which cohort produced it.
+    2. Scores are addressed by **alias**, not by composition version. `default` is
+       a stable name whose meaning can be repointed without any client change. A
+       client needing determinism should address a pinned composition instead.
+
+servers:
+  - url: http://localhost:8000
+    description: Local development
+
+paths:
+  /v1/matches:
+    get:
+      summary: Matches in a date range, ranked by score
+      operationId: listMatches
+      tags: [matches]
+      parameters:
+        - name: from
+          in: query
+          required: true
+          schema: { type: string, format: date }
+        - name: to
+          in: query
+          required: true
+          schema: { type: string, format: date }
+        - name: score
+          in: query
+          description: Score alias. Defaults to `default`.
+          schema: { type: string, default: default }
+        - name: cohort
+          in: query
+          description: >
+            Calibration cohort. Only `window` is implemented in the skeleton;
+            the others return 501. See docs/STUBS.md.
+          schema:
+            type: string
+            enum: [window, league, season, global]
+            default: window
+      responses:
+        "200":
+          description: Ranked matches
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/MatchListResponse" }
+        "501":
+          description: Requested cohort or policy is not implemented in this build
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Problem" }
+
+  /v1/matches/{match_id}/scores:
+    get:
+      summary: All model scores for one match, with explanation
+      operationId: getMatchScores
+      tags: [matches]
+      parameters:
+        - name: match_id
+          in: path
+          required: true
+          schema: { type: string }
+        - name: score
+          in: query
+          schema: { type: string, default: default }
+        - name: cohort
+          in: query
+          schema:
+            type: string
+            enum: [window, league, season, global]
+            default: window
+      responses:
+        "200":
+          description: Scores and explanation
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/MatchScoresResponse" }
+        "404":
+          description: Unknown match
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Problem" }
+
+  /v1/registry:
+    get:
+      summary: Available models, compositions, and aliases
+      operationId: getRegistry
+      description: >
+        Lets a consumer discover what exists and build its own blend from
+        per-model scores rather than relying on a composed alias.
+      tags: [registry]
+      responses:
+        "200":
+          description: Registry contents
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/RegistryResponse" }
+
+components:
+  schemas:
+    MatchListResponse:
+      type: object
+      required: [cohort, score_alias, matches]
+      properties:
+        cohort: { $ref: "#/components/schemas/CohortInfo" }
+        score_alias: { $ref: "#/components/schemas/AliasInfo" }
+        matches:
+          type: array
+          items: { $ref: "#/components/schemas/RankedMatch" }
+
+    MatchScoresResponse:
+      type: object
+      required: [match, cohort, score_alias, model_scores]
+      properties:
+        match: { $ref: "#/components/schemas/Match" }
+        cohort: { $ref: "#/components/schemas/CohortInfo" }
+        score_alias: { $ref: "#/components/schemas/AliasInfo" }
+        composed: { $ref: "#/components/schemas/ComposedScore" }
+        model_scores:
+          type: array
+          items: { $ref: "#/components/schemas/CalibratedModelScore" }
+
+    RankedMatch:
+      type: object
+      required: [match, composed]
+      properties:
+        match: { $ref: "#/components/schemas/Match" }
+        composed: { $ref: "#/components/schemas/ComposedScore" }
+
+    Match:
+      type: object
+      required: [match_id, league, kickoff_utc, home_team, away_team]
+      properties:
+        match_id: { type: string }
+        league: { type: string }
+        kickoff_utc: { type: string, format: date-time }
+        home_team: { type: string }
+        away_team: { type: string }
+        availability: { $ref: "#/components/schemas/Availability" }
+
+    Availability:
+      type: object
+      description: >
+        Where a US viewer can watch. Modelled separately from scoring with its own
+        update cadence. `unknown` is a first-class answer — a confidently wrong
+        provider is worse than an honest gap.
+      required: [status]
+      properties:
+        status:
+          type: string
+          enum: [known, unknown]
+        providers:
+          type: array
+          items: { type: string }
+
+    ComposedScore:
+      type: object
+      description: >
+        Null when no composed score could be produced — for example when too few
+        models scored the match. `reason` says why.
+      required: [value]
+      properties:
+        value:
+          type: [number, "null"]
+          minimum: 0
+          maximum: 100
+        reason:
+          type: [string, "null"]
+          description: Present when value is null.
+        contributors:
+          type: array
+          items: { $ref: "#/components/schemas/Contributor" }
+
+    Contributor:
+      type: object
+      required: [model_id, weight, calibrated_score]
+      properties:
+        model_id: { type: string }
+        weight:
+          type: number
+          description: Effective weight after any renormalisation for missing models.
+        calibrated_score: { type: number }
+
+    CalibratedModelScore:
+      type: object
+      required: [model_id, model_version, calibrated_score, components]
+      properties:
+        model_id: { type: string }
+        model_version: { type: string }
+        raw_score: { type: number }
+        calibrated_score:
+          type: number
+          minimum: 0
+          maximum: 100
+        components:
+          type: object
+          additionalProperties: { type: number }
+
+    CohortInfo:
+      type: object
+      description: A calibrated score without its cohort is uninterpretable.
+      required: [definition, match_count]
+      properties:
+        definition:
+          type: string
+          enum: [window, league, season, global]
+        match_count:
+          type: integer
+          description: How many matches the percentile ranking was computed over.
+        low_confidence:
+          type: boolean
+          description: True when the cohort was smaller than the configured minimum.
+
+    AliasInfo:
+      type: object
+      required: [alias, resolves_to]
+      properties:
+        alias: { type: string }
+        resolves_to:
+          type: string
+          description: A composition id and version, or a single model_id.
+        kind:
+          type: string
+          enum: [composition, model]
+
+    RegistryResponse:
+      type: object
+      required: [models, compositions, aliases]
+      properties:
+        models:
+          type: array
+          items: { $ref: "#/components/schemas/RegisteredModel" }
+        compositions:
+          type: array
+          items: { $ref: "#/components/schemas/RegisteredComposition" }
+        aliases:
+          type: array
+          items: { $ref: "#/components/schemas/AliasInfo" }
+
+    RegisteredModel:
+      type: object
+      required: [model_id, model_version, retired, required_features]
+      properties:
+        model_id: { type: string }
+        model_version: { type: string }
+        retired:
+          type: boolean
+          description: Retired models produce no new scores; their history stays queryable.
+        required_features:
+          type: array
+          items: { type: string }
+        description: { type: string }
+
+    RegisteredComposition:
+      type: object
+      required: [id, version, models, on_missing, min_models]
+      properties:
+        id: { type: string }
+        version: { type: integer }
+        models:
+          type: object
+          additionalProperties: { type: number }
+        on_missing:
+          type: string
+          enum: [require-all, renormalize, fallback]
+        min_models: { type: integer }
+
+    Problem:
+      type: object
+      required: [title, status]
+      properties:
+        title: { type: string }
+        status: { type: integer }
+        detail: { type: string }

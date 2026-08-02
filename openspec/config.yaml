@@ -1,0 +1,183 @@
+schema: spec-driven
+
+context: |
+  # xFUN
+
+  Predicting which soccer matches will be entertaining to watch, for viewers in
+  the US, across leagues people actually follow.
+
+  A team collaborating on GitHub, with some contributors working spec-first and
+  others editing code by hand. Python for data and API, TypeScript for clients.
+
+  ## What the product is
+
+  Half the problem is coming up with a formula for "fun" — some mix of betting
+  odds on goal totals, team xG, goals averaged over recent matches. The other
+  half is pulling that data and delivering it somewhere people want it.
+
+  Scope is deliberately limited to matches watchable in the US, in leagues with
+  real US audiences.
+
+  ## The organising principle
+
+  **Make changing your mind cheap.** Several models will be developed
+  independently, and how their scores are combined and exposed is explicitly
+  undecided and expected to change repeatedly. Judge every decision by how
+  expensive a reversal is, not by how good it looks today.
+
+  ## Architecture (decided)
+
+  Monorepo. `contracts/` is the language-neutral seam between tiers — JSON
+  Schemas, the OpenAPI document, and golden fixtures. It contains no executable
+  code, and every tier develops against it before the tiers around it exist.
+
+      ingestion -> store -> models -> score store -> API -> clients
+
+  ### Counterintuitive decisions — do not "simplify" these
+
+  Each of these looks like an inefficiency and is load-bearing. A change
+  proposal that removes one has misunderstood the design.
+
+  - **Raw model scores are the ONLY truth.** Calibrated and composed scores are
+    derived at READ time and never stored as authoritative data. This is because
+    the calibration cohort is chosen by the CALLER per request — the same raw
+    score yields different calibrated values under different cohorts, so a
+    calibrated value is not a property of a row. Any materialisation is a cache
+    that can be thrown away.
+
+  - **Models are pure functions.** No network, no database, no filesystem, no
+    clock. All input arrives in a `MatchSnapshot`. Purity is what makes a model
+    testable on fixtures, reproducible years later, and runnable in a notebook.
+    CI fails a model package that declares a DB driver or an HTTP client.
+
+  - **Models never reference each other.** No cross-imports, no reading another
+    model's output. One such link turns scoring into an ordered graph, makes
+    backfills sequenced, and makes composition expensive to reverse.
+
+  - **The API never executes a model.** Scores are precomputed in batch; the API
+    reads rows. A broken model degrades score freshness, not availability. No
+    model package may appear in the API's dependency tree, and CI checks it.
+
+  - **The score store is append-only.** Never updated, never deleted — enforced
+    by database trigger, not by application code. Re-scoring inserts a new row;
+    the superseded one stays queryable. Retiring a model means removing it from
+    scoring runs and recipes, never deleting its history.
+
+  - **Models must NOT normalise their own scores.** `raw_score` is on whatever
+    native scale suits the model — a probability, a z-score, an arbitrary index.
+    The platform percentile-ranks per (model_id, model_version) within a cohort.
+    Two models' raw scores are not comparable to each other, and averaging them
+    directly produces plausible nonsense with no visible symptom.
+
+  - **Composition is configuration, not code.** A recipe names models, weights, a
+    missing-model policy, and a minimum count, and lives in
+    `packages/composition/recipes/*.yaml`. Changing the blend must stay a config
+    diff — if it required editing Python, nobody would propose changes.
+
+  - **The missing-model policy is a required field, never defaulted.** Coverage
+    gaps are routine, not exceptional. An implicit policy gets resolved
+    differently by every recipe author.
+
+  - **Public score names are repointable aliases.** Consumers address `default`,
+    never `default-v1`. The same mechanism serves a single model's score through
+    the identical code path, which is what lets the blending decision stay open.
+
+  - **Unimplemented cohorts and policies return 501, never a fallback.** A silent
+    fallback returns a plausible number computed against the wrong population.
+
+  - **Unscored matches are returned with a reason, not dropped.** "No score, and
+    here is why" beats a silently shorter list.
+
+  - **Broadcast availability may answer "unknown".** A confidently wrong provider
+    is worse than an admitted gap — telling someone a match is on a service that
+    does not carry it is the failure users notice immediately.
+
+  - **Every score response states its cohort and alias.** A calibrated score
+    without its cohort is uninterpretable, and an alias can be repointed.
+
+  ## Zones — when a change needs specs
+
+  Requiring specs for every change is how spec-driven development dies on a
+  mixed team. The obligation depends on what was touched:
+
+    Zone A  always specs   contracts/, scoring-contract, scoring-runtime,
+                           composition/src
+    Zone B  on behaviour   api/, ingestion/, models/, evaluation/
+    Zone C  none           web/, mobile/, infra/, CI, deps, refactors,
+                           composition/recipes/*.yaml
+
+  The carve-out that matters most: the composition MECHANISM is Zone A, the
+  recipe VALUES are Zone C. Spec the machinery permanently; leave the numbers
+  free to move weekly.
+
+  Hand edits are legitimate. Code-first work is captured afterwards by a capture
+  change — a normal contribution, not a confession.
+
+  ## Workflow
+
+  Branch before touching any file, including before `openspec new change`. One
+  change = one branch = one PR. The PR opens only when the change is COMPLETE —
+  artifacts, implementation, and the archive commit — so plan and code are
+  reviewed together. Rebase, then archive, then open the PR.
+
+  Conventional Commits, with a `spec` type for planning and archive commits.
+  Squash-merge by convention, not enforcement.
+
+  Decisions are made by the team as a group, with PR approval as the deciding
+  gate. No individual owns any part of this project.
+
+  ## Current state — a walking skeleton
+
+  Every tier exists and is connected end to end on FIXTURE data, with
+  deliberately minimal components. The deliverable so far is a structure
+  collaborators can read and run, not working functionality.
+
+  **`docs/STUBS.md` is the authoritative list of what is placeholder.** Read it
+  before assuming anything works. Currently placeholder: both models (they
+  predict nothing), ingestion (reads files, no provider), three of four
+  calibration cohorts, two of three composition policies, broadcast
+  availability, and the database engine (SQLite, expected to become Postgres).
+
+  ## Not yet decided — do not assume
+
+  - **What "fun" means, measured.** There is no ground-truth label. Without one
+    there is no way to tell whether a formula is any good, and "which models at
+    what weights" has no answerable form. Candidate labels: a composite
+    box-score, r/soccer match-thread engagement, highlight view counts, or user
+    ratings collected after the fact. This is the most consequential open
+    question in the project.
+  - Whether the headline score is GLOBAL (one number per match, shareable and
+    arguable) or PERSONALISED (ranked per viewer, filtered by what they can
+    actually watch). Both is possible; which one is the headline is a real
+    product decision.
+  - League scope: audience size versus entertainment density. Surfacing an
+    unknown but wild match is more differentiated than ranking matches people
+    already know about, but the data is thinner.
+  - The default calibration cohort, once more than one exists.
+  - Whether `default` carries a stability promise for third parties.
+
+  ## Scope discipline
+
+  The formula is the interesting problem; broadcast availability is the risky
+  one. US rights are fragmented and move between seasons, there is no clean API
+  for them, and getting it wrong is the error users notice immediately.
+
+  Prefer proposals that keep changes small. A PR opens only when a change is
+  complete, so a large change means a long-lived branch and a late design
+  objection discards more work.
+
+rules:
+  proposal:
+    - State which zones the change touches (A, B, or C) and why.
+    - If the change replaces a placeholder, name the entry in docs/STUBS.md it
+      resolves.
+  specs:
+    - Requirements describe observable behaviour, not implementation.
+    - Include scenarios for coverage gaps and failure paths, not only the happy
+      path — missing data is routine in this system.
+  design:
+    - Record the alternatives rejected and why, not only the choice made.
+    - State the cost accepted by each decision explicitly.
+  tasks:
+    - Mark any task that produces a placeholder, and name the follow-up change
+      that will replace it.

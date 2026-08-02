@@ -1,0 +1,19 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(openspec --version)",
+      "Bash(openspec --help)",
+      "Bash(openspec list *)",
+      "Bash(openspec status *)",
+      "Bash(openspec show *)",
+      "Bash(openspec validate *)",
+      "Bash(openspec instructions *)",
+      "Bash(openspec spec *)",
+      "Bash(openspec doctor *)",
+      "Bash(openspec context *)",
+      "Bash(openspec schemas *)",
+      "Bash(openspec templates *)",
+      "Bash(openspec store list *)"
+    ]
+  }
+}

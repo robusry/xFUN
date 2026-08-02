@@ -1,0 +1,14 @@
+{
+  "name": "xfun",
+  "private": true,
+  "type": "module",
+  "packageManager": "pnpm@9.12.0",
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "web:dev": "pnpm --filter @xfun/web dev",
+    "web:build": "pnpm --filter @xfun/web build",
+    "client:generate": "pnpm --filter @xfun/client generate"
+  }
+}

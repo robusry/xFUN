@@ -1,0 +1,11 @@
+{
+  "match_id": "epl-2026-08-15-ars-liv",
+  "model_id": "odds-spread",
+  "model_version": "0.1.0",
+  "raw_score": 0.881,
+  "components": {
+    "implied_entropy": 0.881
+  },
+  "computed_at": "2026-08-14T04:00:00Z",
+  "snapshot_hash": "sha256:3632355102df162208bfb9efbdefb0d1ae58fc9e3a3d1ace9e706f15f35a9428"
+}

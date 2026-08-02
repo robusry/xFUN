@@ -1,0 +1,16 @@
+[project]
+name = "xfun-store"
+version = "0.1.0"
+description = "Persistence for canonical entities and the append-only score store."
+requires-python = ">=3.12"
+dependencies = [
+    "xfun-scoring-contract",
+    "xfun-scoring-runtime",
+]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/xfun_store"]

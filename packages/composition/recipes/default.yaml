@@ -1,0 +1,30 @@
+# The default blend.
+#
+# THIS FILE IS CONFIGURATION, NOT CODE. Changing the weights is a config diff any
+# team member can read, review, and revert -- deliberately, because how models are
+# combined is expected to change repeatedly and the cost of one change must be
+# near zero. Recompose runs over stored raw scores in seconds; no model re-runs.
+#
+# Zone C: changing these values does NOT require an OpenSpec change. The
+# composition *mechanism* is Zone A; these *values* are not. See docs/zones.md.
+#
+# Both models here are placeholders that predict nothing, so these weights are
+# arbitrary. They become a real decision when a real model lands, and the team
+# decides by pull request review.
+
+id: default
+version: 1
+
+models:
+  over-under-lean: 0.5
+  odds-spread: 0.5
+
+# Required field, deliberately not defaulted: coverage gaps are routine, and
+# leaving this implicit means each recipe author resolves it differently.
+#   require-all  - no composed score unless every model scored     (not implemented)
+#   renormalize  - compose from what is present, redistribute weight
+#   fallback     - substitute a named alternative model            (not implemented)
+on_missing: renormalize
+
+# Below this many contributing models, produce no composed score and say why.
+min_models: 1
