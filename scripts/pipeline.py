@@ -19,14 +19,25 @@ from pathlib import Path
 # Make workspace packages importable without `uv sync`, so this runs on a fresh
 # clone. With uv sync installed editable, these are already on the path.
 ROOT = Path(__file__).resolve().parent.parent
-for src in sorted(ROOT.glob("packages/*/src")) + sorted(ROOT.glob("packages/models/*/src")):
+for src in (
+    sorted(ROOT.glob("packages/*/src"))
+    + sorted(ROOT.glob("packages/models/*/src"))
+    + sorted(ROOT.glob("packages/collectors/*/src"))
+):
     sys.path.insert(0, str(src))
 
+from xfun_collector_fixture_signals import fixture_collectors
 from xfun_composition import AliasResolver, compose_all, load_recipes
-from xfun_ingestion import FixtureFileAdapter, ingest
+from xfun_ingestion import assemble_slate, fixture_payloads, ingest
 from xfun_model_odds_spread import MODEL as ODDS_SPREAD
 from xfun_model_over_under_lean import MODEL as OVER_UNDER_LEAN
-from xfun_runtime import Registry, calibrate, run_models
+from xfun_runtime import (
+    CollectorRegistry,
+    Registry,
+    calibrate,
+    run_collectors,
+    run_models,
+)
 from xfun_store import (
     connect,
     latest_scores,
@@ -40,13 +51,24 @@ from xfun_store import (
 STAMP = "2026-08-14T04:00:00+00:00"
 
 
-def build_registry() -> Registry:
+def build_collector_registry() -> CollectorRegistry:
+    """The only place that knows which collectors exist."""
+    registry = CollectorRegistry()
+    for collector in fixture_collectors():
+        registry.register(collector)
+    return registry
+
+
+def build_registry(provided_paths: frozenset[str] = frozenset()) -> Registry:
     """The only place that knows which models exist.
 
     Adding a model is one import and one register() call -- nothing else in the
     system changes.
+
+    `provided_paths` comes from the collector registry. A model declaring a signal
+    nothing provides fails here rather than skipping every match in silence.
     """
-    registry = Registry()
+    registry = Registry(provided_paths=provided_paths)
     registry.register(OVER_UNDER_LEAN)
     registry.register(ODDS_SPREAD)
     return registry
@@ -66,16 +88,43 @@ def main() -> int:
     applied = list(migrate(conn))
     say(f"  migrations   {len(applied)} applied" if applied else "  migrations   up to date")
 
-    result = ingest(conn, FixtureFileAdapter())
+    result = ingest(conn, fixture_payloads())
     say(f"  ingestion    {result.summary()}")
 
-    snapshots = load_snapshots(conn)
+    # The slate is decided before any collector runs, because collectors fan out
+    # from it -- a team-keyed collector needs to know which teams are in play.
+    slate = assemble_slate(conn)
+    say(f"  slate        {len(slate.matches)} matches, "
+        f"{len(slate.teams())} teams, {len(slate.leagues())} leagues "
+        f"({slate.selection.rule})")
+
+    collectors = build_collector_registry()
+    registry = build_registry(collectors.provided_paths())
+
+    # Only what some active model actually declares gets collected. A source
+    # nothing consumes is not fetched -- rate limits are real.
+    required = {p for m in registry.active() for p in m.model.required_features}
+    collection = run_collectors(collectors, slate, required, run_id="demo", started_at=STAMP)
+    say(f"  collection   {collection.summary()}")
+    for outcome in collection.outcomes:
+        detail = outcome.reason or (
+            f"{outcome.entities_with_data} with data, "
+            f"{outcome.entities_without_data} without"
+            if outcome.entities_with_data is not None
+            else "no model declared anything it provides"
+        )
+        say(f"               {outcome.collector_id}: {outcome.outcome} — {detail}")
+
+    # Signals are folded in before hashing, so a changed signal yields a new
+    # snapshot_hash and therefore a new score row.
+    snapshots = load_snapshots(conn, signals=collection.signals)
     say(f"  snapshots    {len(snapshots)} assembled from canonical entities")
 
-    registry = build_registry()
     register_models(conn, registry)
 
-    run = run_models(registry, snapshots, computed_at=STAMP)
+    run = run_models(
+        registry, snapshots, computed_at=STAMP, unavailable=collection.unavailable_paths()
+    )
     write_scores(conn, run.scores)
     say(f"  scoring      {run.summary()}")
     for skip in run.skips:

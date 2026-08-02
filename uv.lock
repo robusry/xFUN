@@ -6,6 +6,7 @@ requires-python = ">=3.12"
 members = [
     "xfun",
     "xfun-api",
+    "xfun-collector-fixture-signals",
     "xfun-composition",
     "xfun-ingestion",
     "xfun-model-odds-spread",
@@ -852,6 +853,21 @@ requires-dist = [
     { name = "xfun-scoring-contract", editable = "packages/scoring-contract" },
     { name = "xfun-scoring-runtime", editable = "packages/scoring-runtime" },
     { name = "xfun-store", editable = "packages/store" },
+]
+
+[[package]]
+name = "xfun-collector-fixture-signals"
+version = "0.1.0"
+source = { editable = "packages/collectors/fixture-signals" }
+dependencies = [
+    { name = "xfun-scoring-contract" },
+    { name = "xfun-scoring-runtime" },
+]
+
+[package.metadata]
+requires-dist = [
+    { name = "xfun-scoring-contract", editable = "packages/scoring-contract" },
+    { name = "xfun-scoring-runtime", editable = "packages/scoring-runtime" },
 ]
 
 [[package]]

@@ -1,13 +1,16 @@
-"""Data source adapters.
+"""Slate assembly and canonical entity writing.
 
-Fixture-backed in the skeleton: nothing here touches the network. Adding a real
-provider means a new adapter and nothing else -- the scoring path, the API, and
-the web app are unaffected, because everything downstream consumes MatchSnapshots
-rather than provider payloads.
+Two jobs, both narrower than what this package used to do. It decides WHICH matches
+a run is about -- the slate -- and it writes the canonical part of each match into
+the store. It no longer defines a pluggable source interface: fetching everything
+else is the collector tier's job, because collectors fan out from a slate and key
+their output by entity, which is what lets several models share one fetch.
+
+Nothing here touches the network. See `packages/collectors/` for the tier that does.
 """
 
-from .adapter import SourceAdapter
-from .fixture_file import FixtureFileAdapter
-from .run import ingest
+from .fixtures import fixture_payloads
+from .run import IngestResult, ingest
+from .slate import assemble_slate
 
-__all__ = ["FixtureFileAdapter", "SourceAdapter", "ingest"]
+__all__ = ["IngestResult", "assemble_slate", "fixture_payloads", "ingest"]

@@ -32,17 +32,18 @@
 
 ## 4. Collector packages
 
-- [ ] 4.1 Create `packages/collectors/` with a README stating that this is the only tier permitted external access during a run
-- [ ] 4.2 **PLACEHOLDER** — port `FixtureFileAdapter` to a match-keyed fixture collector. Reads files, talks to nothing. *Replaced by `add-live-ingestion`.*
-- [ ] 4.3 **PLACEHOLDER** — add a team-keyed fixture collector so the home/away join is exercised end to end rather than only in tests. *Replaced by `add-live-ingestion`.*
-- [ ] 4.4 Mark both in each package README and in `docs/STUBS.md`
+- [x] 4.1 Create `packages/collectors/` with a README stating that this is the only tier permitted external access during a run
+- [x] 4.2 **PLACEHOLDER** — port `FixtureFileAdapter` to a match-keyed fixture collector. Reads files, talks to nothing. *Replaced by `add-live-ingestion`.*
+- [x] 4.3 **PLACEHOLDER** — add a team-keyed fixture collector so the home/away join is exercised end to end rather than only in tests. *Replaced by `add-live-ingestion`.*
+- [x] 4.4 Mark both in each package README and in `docs/STUBS.md` — plus new STUBS entries for the collectors and the slate rule
+- [x] 4.5 **PLACEHOLDER** — add a league-keyed fixture collector too, so the third join is not left unit-tested only. *Replaced by `add-live-ingestion`.*
 
 ## 5. Ingestion and slate assembly
 
-- [ ] 5.1 **PLACEHOLDER** — assemble the slate from a league allowlist within a time window. *Replaced by `add-broadcast-availability`, which makes "watchable in the US" answerable.*
-- [ ] 5.2 Record the slate with the run so collected data stays interpretable alongside the slate that produced it
-- [ ] 5.3 **BREAKING** — remove `SourceAdapter` and its tests; the collector protocol replaces it
-- [ ] 5.4 Update `packages/ingestion/README.md` for the narrowed responsibility: slate assembly and snapshot writing, not source adapters
+- [x] 5.1 **PLACEHOLDER** — assemble the slate from a league allowlist within a time window. *Replaced by `add-broadcast-availability`, which makes "watchable in the US" answerable.*
+- [x] 5.2 Record the slate with the run so collected data stays interpretable alongside the slate that produced it
+- [x] 5.3 **BREAKING** — remove `SourceAdapter` and its tests; the collector protocol replaces it
+- [x] 5.4 Update `packages/ingestion/README.md` for the narrowed responsibility: slate assembly and snapshot writing, not source adapters
 
 ## 6. Store
 

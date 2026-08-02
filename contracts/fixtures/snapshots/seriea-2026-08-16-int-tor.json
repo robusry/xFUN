@@ -31,5 +31,10 @@
     "away_position": 12,
     "total_teams": 20,
     "matchweek": 2
+  },
+  "signals": {
+    "league-pulse": {
+      "table_volatility": 0.41
+    }
   }
 }

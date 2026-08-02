@@ -39,9 +39,26 @@ These are the bootstrap's actual deliverable and are expected to survive.
 
 | | |
 |---|---|
-| **What** | `FixtureFileAdapter` reads `contracts/fixtures/snapshots/*.json` from disk. |
+| **What** | `fixture_payloads()` reads `contracts/fixtures/snapshots/*.json` from disk. |
 | **Why it is a placeholder** | No HTTP client, no provider, no credentials — deliberately, so a fresh clone runs with nothing configured. No provider has been selected. |
-| **Replaced by** | `add-live-ingestion` |
+| **Replaced by** | `add-live-ingestion`, which now writes **collectors** rather than source adapters — `SourceAdapter` was removed by `add-collector-tier`. |
+
+### Collectors
+
+| | |
+|---|---|
+| **What** | `fixture-match`, `fixture-team`, and `fixture-league` in `packages/collectors/fixture-signals/` read `contracts/fixtures/signals/*.json` from disk. The values are invented. |
+| **Why they exist** | To exercise all three entity joins end to end on a clone with nothing configured. `fixture-team` returns one team on purpose, so a match carries `signals.reddit.home.*` with no `away` counterpart and the partial-coverage path is real rather than theoretical. |
+| **Also missing** | Nothing persists collected signals between runs, so `refresh_after_seconds` is declared but not enforced, and a re-score requires a re-collect. No collector consumes an unkeyed corpus. |
+| **Replaced by** | `add-live-ingestion` for real sources; `add-collector-corpora` for persistence, retention, and the corpus escape hatch |
+
+### The slate rule
+
+| | |
+|---|---|
+| **What** | `assemble_slate()` selects matches by league allowlist within a time window, and records `rule: league-allowlist` on the slate. |
+| **Why it is a placeholder** | The product scope is matches watchable in the US, but broadcast availability always answers `unknown`, so `us-watchable` is not computable yet. The rule is recorded rather than assumed so runs stay interpretable once it changes. |
+| **Replaced by** | `add-broadcast-availability` |
 
 ### Calibration cohorts
 
