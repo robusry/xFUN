@@ -48,14 +48,14 @@
 
 ## 6. Store
 
-- [ ] 6.1 Add a migration for the collection run record, following the existing plain-`.sql` filename-order convention
-- [ ] 6.2 Add read paths for the run record sufficient to answer why a given match went unscored by a given model
+- [x] 6.1 Add a migration for the collection run record, following the existing plain-`.sql` filename-order convention
+- [x] 6.2 Add read paths for the run record sufficient to answer why a given match went unscored by a given model — `explain_missing_path` separates failure, not-invoked, and genuine absence
 
 ## 7. CI and tier boundaries
 
-- [ ] 7.1 Extend `scripts/check_dependencies.py`: no model package and no API package may import or depend on a collector package
-- [ ] 7.2 Exempt collector packages from the model purity rules, with a comment stating why the inversion is deliberate
-- [ ] 7.3 Confirm the existing rule that a model depends only on `xfun-scoring-contract` still holds unchanged
+- [x] 7.1 Extend `scripts/check_dependencies.py`: no model package and no API package may import or depend on a collector package — both rules verified by injecting violations and confirming they fail
+- [x] 7.2 Exempt collector packages from the model purity rules, with a comment stating why the inversion is deliberate
+- [x] 7.3 Confirm the existing rule that a model depends only on `xfun-scoring-contract` still holds unchanged — `social-buzz` declares only the contract despite consuming collected signals
 
 ## 8. Tests
 

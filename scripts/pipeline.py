@@ -45,6 +45,7 @@ from xfun_store import (
     load_snapshots,
     migrate,
     register_models,
+    write_collection_run,
     write_scores,
     write_snapshot_payload,  # noqa: F401  (re-exported for clarity)
 )
@@ -106,7 +107,10 @@ def main() -> int:
     # Only what some active model actually declares gets collected. A source
     # nothing consumes is not fetched -- rate limits are real.
     required = {p for m in registry.active() for p in m.model.required_features}
-    collection = run_collectors(collectors, slate, required, run_id="demo", started_at=STAMP)
+    collection = run_collectors(
+        collectors, slate, required, run_id="demo", started_at=STAMP, completed_at=STAMP
+    )
+    write_collection_run(conn, collection, slate.selection.to_dict())
     say(f"  collection   {collection.summary()}")
     for outcome in collection.outcomes:
         detail = outcome.reason or (
