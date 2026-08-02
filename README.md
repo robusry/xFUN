@@ -33,9 +33,14 @@ Check the setup took:
 
 ```bash
 uv run pytest -q                                 # 28 passed
+uv run python scripts/pipeline.py                # seeds .data/xfun.db
 uv run python scripts/check_api_conformance.py   # 8 checks, 0 failed
 pnpm -r typecheck
 ```
+
+The pipeline line is not optional either. The conformance check reads the database,
+so on a fresh clone it fails with `no such table: model_registry` — and leaves an
+empty `.data/xfun.db` behind, which then looks like a database that exists.
 
 ## Run it
 
@@ -127,6 +132,63 @@ your first change. In short:
 
 You do not have to use OpenSpec to contribute. Hand-edited work is expected, and
 `docs/zones.md` explains how it gets captured into specs afterwards.
+
+## Contributing with Claude
+
+Install OpenSpec at the pinned version and clone. There is no third step — no
+`openspec init`, no agent configuration of your own.
+
+```bash
+npm install -g @fission-ai/openspec@1.6.0    # the pin, not @latest — see below
+```
+
+**`.claude/` is shared project infrastructure, not anyone's local config.** The
+`skills/openspec-*` and `commands/opsx/` files are committed on purpose, so that
+everyone's agent works from the same instructions. Only `.claude/settings.local.json`
+is gitignored. Treat a change to the tracked files as a change to the repository,
+because it is one.
+
+What a clone gives you, with nothing to set up:
+
+| | |
+|---|---|
+| `CLAUDE.md` | picked up automatically; points at the design context and what is placeholder |
+| `.claude/skills/openspec-*` | the propose / apply / archive workflow |
+| `.claude/commands/opsx/` | the matching `/opsx:*` slash commands |
+| `.claude/settings.json` | pre-approves read-only `openspec` commands, so no permission prompts for them |
+| `openspec/` | `config.yaml` plus the capability specs, already validating |
+
+Verify with `openspec validate --all --strict`, which passes on a fresh clone.
+
+### The version has to match exactly
+
+`1.6.0`, not `@latest`. Artifact templates, workflow schemas, and validation rules
+ship with the CLI rather than this repository, so two contributors on different
+versions generate divergent artifacts from identical input. CI reads
+`.openspec-version` and fails the build on any mismatch.
+
+Wrong version installed? Nothing is corrupted — reinstall at the pin:
+
+```bash
+openspec --version                            # what you actually have
+npm install -g @fission-ai/openspec@1.6.0     # what the repo expects
+```
+
+### The pin is a decision, not a life sentence
+
+Upgrading is a normal change, on its own branch and PR:
+
+```bash
+npm install -g @fission-ai/openspec@<new>
+echo "<new>" > .openspec-version
+openspec update                               # regenerates the .claude/ instruction files
+```
+
+Then commit the regenerated files along with the pin. `openspec update` rewrites the
+tracked instruction files, so wherever the new version's templates differ, the change
+shows up in the diff — which is the point. The upgrade is reviewable, it happens to
+everyone at once on merge, and nobody silently drifts onto a different CLI. (Re-running
+it on the same version is a no-op, so it is safe to run when in doubt.)
 
 ## Documentation
 
