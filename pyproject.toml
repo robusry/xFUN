@@ -17,6 +17,7 @@ members = [
     "packages/ingestion",
     "packages/api",
     "packages/models/*",
+    "packages/collectors/*",
 ]
 
 # Each package depends on its siblings through the workspace, never through PyPI.

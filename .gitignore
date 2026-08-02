@@ -4,6 +4,11 @@
 # standards every contributor works from. Same applies to equivalent
 # generated instruction files for other AI tools.
 .claude/settings.local.json
+# Also the atomic-write temp files the editor leaves behind
+# (.claude/settings.local.json.tmp.<pid>.<hash>). The trailing glob covers the
+# base file too; both are per-user and one of them has already been committed by
+# accident once.
+.claude/settings.local.json*
 
 # Python
 __pycache__/

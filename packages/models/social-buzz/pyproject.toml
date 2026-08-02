@@ -1,0 +1,20 @@
+[project]
+name = "xfun-model-social-buzz"
+version = "0.1.0"
+description = "Scores a match from collected social signals. PLACEHOLDER."
+requires-python = ">=3.12"
+
+# A model depends on the contract and nothing else -- including when its inputs
+# come from a collector. It reads `signals.*` as paths on the snapshot and has no
+# idea a collector exists. If this list ever grows a collector package, the
+# dependency check in CI will fail it.
+dependencies = [
+    "xfun-scoring-contract",
+]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/xfun_model_social_buzz"]

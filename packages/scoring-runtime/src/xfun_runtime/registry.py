@@ -15,7 +15,7 @@ from collections.abc import Iterable, Mapping
 from dataclasses import dataclass
 from typing import Any
 
-from xfun_contract import Model
+from xfun_contract import Model, declared_feature_paths, declared_requirements
 
 from .paths import schemas_dir
 
@@ -75,10 +75,20 @@ def snapshot_feature_paths() -> frozenset[str]:
 class Registry:
     """Holds the models a scoring run will fan out over."""
 
-    def __init__(self, *, validate_features: bool = True) -> None:
+    def __init__(
+        self,
+        *,
+        validate_features: bool = True,
+        provided_paths: Iterable[str] = (),
+    ) -> None:
         self._models: dict[str, RegisteredModel] = {}
         self._validate_features = validate_features
         self._known_paths = snapshot_feature_paths() if validate_features else frozenset()
+        # Signal paths cannot come from the schema: the `signals` region is open, so
+        # the schema knows a namespace may exist but never which leaves are in it.
+        # Those paths are legitimate only if some registered collector claims them,
+        # which is why registration now needs the provider set as well.
+        self._provided_paths = frozenset(provided_paths)
 
     def register(self, model: Model, *, retired: bool = False) -> None:
         if not _ID_PATTERN.match(model.model_id):
@@ -91,17 +101,31 @@ class Registry:
             )
         if model.model_id in self._models:
             raise RegistrationError(f"model_id {model.model_id!r} is already registered")
-        if not model.required_features:
+        if not declared_requirements(model):
             raise RegistrationError(
                 f"{model.model_id}: must declare at least one required feature"
             )
 
         if self._validate_features:
-            unknown = sorted(set(model.required_features) - self._known_paths)
+            # Two different mistakes, and conflating them sends the author to the
+            # wrong place. A typo in a canonical path is a schema problem; a signal
+            # path nothing provides is a missing collector.
+            unknown: list[str] = []
+            unprovided: list[str] = []
+            for path in declared_feature_paths(model):
+                if path in self._known_paths or path in self._provided_paths:
+                    continue
+                (unprovided if path.startswith("signals.") else unknown).append(path)
+
             if unknown:
                 raise RegistrationError(
                     f"{model.model_id}: declares features absent from "
-                    f"match-snapshot.json: {', '.join(unknown)}"
+                    f"match-snapshot.json: {', '.join(sorted(set(unknown)))}"
+                )
+            if unprovided:
+                raise RegistrationError(
+                    f"{model.model_id}: declares signals no registered collector "
+                    f"provides: {', '.join(sorted(set(unprovided)))}"
                 )
 
         self._models[model.model_id] = RegisteredModel(model=model, retired=retired)

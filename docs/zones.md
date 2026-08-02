@@ -8,7 +8,7 @@ team. So the obligation depends on what you touched.
 | Zone | Paths | Obligation |
 |---|---|---|
 | **A** | `contracts/`<br>`packages/scoring-contract/`<br>`packages/scoring-runtime/`<br>`packages/composition/src/` | **Always.** A change with spec deltas, every time. |
-| **B** | `packages/api/`<br>`packages/ingestion/`<br>`packages/models/<id>/` behavior<br>`packages/evaluation/` | **On observable behavior change.** New endpoint, changed response, new data source, changed model output → yes. Refactor, perf, bugfix-to-match-spec → no. |
+| **B** | `packages/api/`<br>`packages/ingestion/`<br>`packages/models/<id>/` behavior<br>`packages/collectors/<id>/` behavior<br>`packages/evaluation/` | **On observable behavior change.** New endpoint, changed response, new data source, changed model output → yes. Refactor, perf, bugfix-to-match-spec → no. |
 | **C** | `packages/web/`, `packages/mobile/`<br>`infra/`, CI, dependency bumps<br>`packages/composition/recipes/*.yaml` | **None.** Hand-edit freely. If a change exists anyway, archive with `--skip-specs`. |
 
 Zone A is deliberately small — roughly the code everyone depends on and everyone
@@ -20,6 +20,19 @@ will argue about.
   packages/composition/src/       ZONE A  ← the mechanism
   packages/composition/recipes/   ZONE C  ← the values
 ```
+
+The collector tier splits the same way, for the same reason:
+
+```
+  scoring-runtime/collectors.py   ZONE A  ← resolution, the joins, the registry
+  scoring-runtime/join.py         ZONE A  ← adding a fourth entity kind is a
+                                            new join, and a spec change
+  packages/collectors/<id>/       ZONE B  ← one source; specs on behaviour change
+```
+
+Adding a collector for a new source is Zone B — it changes what data exists, not
+what the platform does with it. Changing how entity-keyed output is joined onto
+matches is Zone A, because every model's declared paths depend on it.
 
 Adding a new missing-model policy changes what a composed score *means*: Zone A,
 specs required. Changing `over-under-lean: 0.5` to `0.6` does not: Zone C, a

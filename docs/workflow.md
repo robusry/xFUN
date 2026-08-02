@@ -108,10 +108,10 @@ the CLI, so a version mismatch produces divergent artifacts.
 
 ## Branch protection
 
-`main` should reject direct pushes and require a pull request. This needs
-repository-owner access. **The request deliberately does not include locking down
-merge strategy or requiring linear history**, since squash-merge is a convention
-here rather than a constraint.
+`main` rejects direct pushes and requires a pull request. **Protection deliberately
+does not lock down merge strategy or require linear history**, since squash-merge is
+a convention here rather than a constraint.
 
-Once CI is established, `contracts`, `ci`, and `pr-hygiene` should be added as
-required status checks.
+Still outstanding: adding `contracts`, `ci`, and `pr-hygiene` as required status
+checks. Reading protection settings needs repository-owner access, so contributors
+without it cannot confirm the current configuration from the API.

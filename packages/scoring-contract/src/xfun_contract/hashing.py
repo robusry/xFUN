@@ -13,15 +13,33 @@ from __future__ import annotations
 
 import hashlib
 import json
-from collections.abc import Mapping
+from collections.abc import Mapping, Sequence
 from typing import Any
 
-__all__ = ["canonical_json", "snapshot_hash"]
+__all__ = ["canonical_json", "slate_hash", "snapshot_hash"]
 
 
-def canonical_json(data: Mapping[str, Any]) -> str:
-    """Stable JSON: sorted keys, no incidental whitespace, unicode preserved."""
+def canonical_json(data: Any) -> str:
+    """Stable JSON: sorted keys, no incidental whitespace, unicode preserved.
+
+    Accepts any JSON-serialisable value, not only a mapping -- a slate hashes a
+    list of match refs.
+    """
     return json.dumps(data, sort_keys=True, separators=(",", ":"), ensure_ascii=False)
+
+
+def slate_hash(matches: Sequence[Mapping[str, Any]]) -> str:
+    """Return `sha256:<hex>` for a slate's match set.
+
+    Sorted by match_id before hashing, so a slate assembled in a different order is
+    recognisably the same slate. The selection rule is deliberately NOT hashed: two
+    runs that chose the same matches by different rules are looking at the same
+    slate, and that must stay true when the rule changes from a league allowlist to
+    broadcast availability.
+    """
+    ordered = sorted(matches, key=lambda m: m["match_id"])
+    digest = hashlib.sha256(canonical_json(ordered).encode("utf-8")).hexdigest()
+    return f"sha256:{digest}"
 
 
 def snapshot_hash(data: Mapping[str, Any]) -> str:

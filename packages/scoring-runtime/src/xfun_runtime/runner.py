@@ -13,7 +13,7 @@ indistinguishable from a model that ran and returned nothing.
 
 from __future__ import annotations
 
-from collections.abc import Iterable
+from collections.abc import Iterable, Mapping
 from dataclasses import dataclass, field
 from datetime import UTC, datetime
 
@@ -26,15 +26,33 @@ __all__ = ["RunResult", "Skip", "run_models"]
 
 @dataclass(frozen=True)
 class Skip:
-    """A model did not score a match, and why."""
+    """A model did not score a match, and why.
+
+    The two ways a feature can be missing are NOT interchangeable. Absent data is a
+    permanent, correct answer about this match. A collector that failed established
+    nothing at all, and the same match may well be scoreable on the next run. They
+    produce an identical hole in the snapshot, so if the skip does not separate
+    them, nothing downstream can.
+    """
 
     match_id: str
     model_id: str
     missing_features: tuple[str, ...]
+    failures: Mapping[str, str] = field(default_factory=dict)
+    """Missing path -> why its source could not answer. Empty when the data is
+    simply absent."""
+
+    @property
+    def caused_by_failure(self) -> bool:
+        return bool(self.failures)
 
     @property
     def reason(self) -> str:
-        return f"missing required features: {', '.join(self.missing_features)}"
+        missing = ", ".join(self.missing_features)
+        if not self.failures:
+            return f"missing required features: {missing}"
+        causes = "; ".join(f"{path} ({why})" for path, why in sorted(self.failures.items()))
+        return f"missing required features: {missing} — source unavailable: {causes}"
 
 
 @dataclass
@@ -51,13 +69,20 @@ def run_models(
     snapshots: Iterable[MatchSnapshot],
     *,
     computed_at: str | None = None,
+    unavailable: Mapping[str, str] | None = None,
 ) -> RunResult:
     """Score every snapshot with every active model that can score it.
 
     `computed_at` is injected rather than read from the clock inside a model,
     because models must be deterministic. The runner is where time enters.
+
+    `unavailable` maps a feature path to why its source could not answer this run,
+    as reported by the collection run. It changes no scoring decision -- a missing
+    feature is a skip either way -- but it is what lets the recorded skip say which
+    kind of missing it was.
     """
     stamp = computed_at or datetime.now(UTC).isoformat(timespec="seconds")
+    unreachable = dict(unavailable or {})
     result = RunResult()
 
     for snapshot in snapshots:
@@ -73,6 +98,9 @@ def run_models(
                         match_id=snapshot.match_id,
                         model_id=model.model_id,
                         missing_features=missing,
+                        failures={
+                            path: unreachable[path] for path in missing if path in unreachable
+                        },
                     )
                 )
                 continue

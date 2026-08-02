@@ -4,7 +4,7 @@
 
 ```
 ┌──────────────────────────────────────────────────────────────────┐
-│ INGESTION          scheduled · idempotent · one adapter per source│
+│ INGESTION          scheduled · idempotent · slate + canonical rows│
 │                    fixture-file only, for now                     │
 └────────────────────────────┬─────────────────────────────────────┘
                              │ canonical entities
@@ -12,11 +12,25 @@
 ┌──────────────────────────────────────────────────────────────────┐
 │ STORE              league · team · match · odds · form · table    │
 └────────────────────────────┬─────────────────────────────────────┘
+                             │ Slate                ◀── contract 1a
+                             ▼
+┌──────────────────────────────────────────────────────────────────┐
+│ COLLECTORS         the ONLY tier allowed to touch the network.    │
+│                    each fans out its own way, once per slate      │
+│                    keyed by  match · team · league                │
+└────────────────────────────┬─────────────────────────────────────┘
+                             │ entity-keyed values
+                    ┌────────▼─────────┐
+                    │  mechanical join │  match → identity
+                    │                  │  team  → {home, away}
+                    │                  │  league→ broadcast
+                    └────────┬─────────┘
                              │ MatchSnapshot        ◀── contract 1
+                             │ (canonical + signals.*)
                              ▼
 ┌──────────────────────────────────────────────────────────────────┐
 │ MODELS             pure functions. no I/O. mutually independent.  │
-│                    over-under-lean   odds-spread                  │
+│                    over-under-lean  odds-spread  social-buzz      │
 └────────────────────────────┬─────────────────────────────────────┘
                              │ ModelScore           ◀── contract 2
                              ▼
@@ -37,6 +51,39 @@
        ▼                     ▼                      ▼
      web                mobile (later)         third parties
 ```
+
+## Where fetching happens, and why it is not in the model
+
+A model may not touch the network — that purity is what makes a score
+reproducible. But a model developer still needs to bring new data, and asking
+another tier to add a schema field for every experiment makes changing your mind
+expensive, which is the one thing this project optimises against.
+
+Collectors resolve that. Fetching moves **earlier** rather than being eliminated:
+
+- **The slate arrives whole**, so each collector picks its own fan-out. An odds
+  source is queried per match; a social source is read per team; a league table is
+  one request covering twenty matches.
+- **Output is keyed by entity, not always by match.** Requiring per-match output
+  would force every collector to solve attribution — and attribution is a judgement
+  call. One model wants strict match-thread matching, another wants loose
+  team-mention sentiment; a collector that picks one forecloses the other.
+- **A collector runs once per slate**, no matter how many models read it, and not
+  at all if nothing does.
+- **A path has exactly one producer**, but a namespace is a subject area rather
+  than a producer id. So a signal can change producer without its path moving, and
+  models that declare the path never notice. Provenance lives in the run record.
+
+The tier boundary is enforced in the inverse direction from everywhere else: CI
+does not check what a collector imports — reaching outside is its purpose — it
+checks that **no model and no API package imports a collector**.
+
+### Absence and failure are different answers
+
+"This match has no thread" is permanent and correct. "The API returned 503"
+establishes nothing. Both leave an identical hole in the snapshot, so the run
+record separates them and the skip reason carries which one it was. Without that,
+a source down for a week looks exactly like a source with nothing to say.
 
 ## Four decisions that explain most of the code
 

@@ -32,6 +32,12 @@
     "table": {
       "description": "League table context. OPTIONAL.",
       "$ref": "#/$defs/table"
+    },
+    "signals": {
+      "description": "Values produced by collectors and joined onto this match. OPTIONAL. This is the one region of the snapshot that is open: a collector adds a namespace without amending this schema, which is what lets a model developer bring a new signal without a Zone A change. Everything outside `signals` stays closed.",
+      "type": "object",
+      "propertyNames": { "pattern": "^[a-z0-9-]+$" },
+      "additionalProperties": { "$ref": "#/$defs/signal_namespace" }
     }
   },
   "$defs": {
@@ -106,6 +112,12 @@
         "total_teams": { "type": "integer", "minimum": 2 },
         "matchweek": { "type": "integer", "minimum": 1 }
       }
+    },
+    "signal_namespace": {
+      "description": "One subject area's signals, e.g. `reddit`. Deliberately open: the schema cannot know what a collector will provide, so the guarantee that exactly one producer claims any given leaf path is enforced by the collector registry rather than here. A namespace fed by a team-keyed collector nests its values under `home` and `away`, which is the same shape `form` already uses.",
+      "type": "object",
+      "propertyNames": { "pattern": "^[a-z0-9_-]+$" },
+      "additionalProperties": true
     }
   }
 }

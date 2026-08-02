@@ -1,0 +1,40 @@
+{
+  "match_id": "epl-2026-08-18-che-mun",
+  "league": {
+    "id": "epl",
+    "name": "Premier League",
+    "country": "England"
+  },
+  "kickoff_utc": "2026-08-18T19:00:00Z",
+  "home_team": {
+    "id": "che",
+    "name": "Chelsea"
+  },
+  "away_team": {
+    "id": "mun",
+    "name": "Manchester United"
+  },
+  "form": {
+    "home": {
+      "matches": 10,
+      "goals_for_avg": 1.7,
+      "goals_against_avg": 1.2
+    },
+    "away": {
+      "matches": 10,
+      "goals_for_avg": 1.5,
+      "goals_against_avg": 1.4
+    }
+  },
+  "signals": {
+    "reddit": {
+      "home": {
+        "excitement": 0.81,
+        "posts": 46
+      }
+    },
+    "match-buzz": {
+      "mentions": 1284
+    }
+  }
+}

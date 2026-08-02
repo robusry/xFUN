@@ -11,7 +11,7 @@ import os
 
 import pytest
 from xfun_composition import AliasResolver, load_recipes
-from xfun_ingestion import FixtureFileAdapter, ingest
+from xfun_ingestion import fixture_payloads, ingest
 from xfun_model_odds_spread import MODEL as ODDS_SPREAD
 from xfun_model_over_under_lean import MODEL as OVER_UNDER_LEAN
 from xfun_runtime import Registry, run_models
@@ -43,7 +43,7 @@ def api_client(tmp_path, monkeypatch):
 
     conn = connect(db)
     list(migrate(conn))
-    ingest(conn, FixtureFileAdapter())
+    ingest(conn, fixture_payloads())
 
     from xfun_store import load_snapshots
 

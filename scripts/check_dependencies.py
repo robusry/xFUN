@@ -16,6 +16,17 @@ than trusting discipline:
 3. **The API never executes a model.** No model package appears anywhere in the
    API's dependency tree. This is what lets the API keep serving when a model is
    broken, and what keeps modelling work from becoming an availability risk.
+
+4. **Models and the API never import a collector.** A model reads signals as dotted
+   paths on its snapshot and must not know which collector produced them -- that
+   indirection is what lets a signal change producer without every model that
+   declares it breaking. A model importing a collector would also smuggle the
+   network back into scoring through the side door.
+
+Note the inversion in rule 4: collector packages are deliberately NOT subject to the
+purity rules. Reaching outside the process is the entire purpose of that tier, so
+the check that keeps the boundary honest points the other way -- at who is allowed
+to import them, not at what they may import.
 """
 
 from __future__ import annotations
@@ -37,6 +48,8 @@ FORBIDDEN_IN_MODELS = {
 
 MODEL_DIST_PREFIX = "xfun-model-"
 MODEL_MODULE_PREFIX = "xfun_model_"
+COLLECTOR_DIST_PREFIX = "xfun-collector-"
+COLLECTOR_MODULE_PREFIX = "xfun_collector_"
 
 
 def _dependencies(pyproject: Path) -> list[str]:
@@ -84,8 +97,14 @@ def main() -> int:
                     f"models/{name}: imports another model ({module!r}). Models are "
                     f"mutually independent."
                 )
+            if module.startswith(COLLECTOR_MODULE_PREFIX):
+                failures.append(
+                    f"models/{name}: imports a collector ({module!r}). A model names "
+                    f"signal paths and must not know which collector produced them, "
+                    f"so that a signal can change producer without breaking it."
+                )
 
-    # --- 3: the API must not be able to run a model ------------------------
+    # --- 3 and 4: the API must not run a model or fetch anything ------------
     api_dir = PACKAGES / "api"
     for dependency in _dependencies(api_dir / "pyproject.toml"):
         if dependency.startswith(MODEL_DIST_PREFIX):
@@ -93,13 +112,35 @@ def main() -> int:
                 f"api: declares dependency {dependency!r}. The API reads precomputed "
                 f"scores and must never execute a model."
             )
+        if dependency.startswith(COLLECTOR_DIST_PREFIX):
+            failures.append(
+                f"api: declares dependency {dependency!r}. The API serves stored data "
+                f"and must never collect it -- a slow source would become an "
+                f"availability problem."
+            )
     for module in sorted(_imported_modules(api_dir / "src")):
         if module.startswith(MODEL_MODULE_PREFIX):
             failures.append(
                 f"api: imports {module!r}. The API must never execute a model."
             )
+        if module.startswith(COLLECTOR_MODULE_PREFIX):
+            failures.append(
+                f"api: imports {module!r}. The API must never run a collector."
+            )
 
-    checked = f"{len(model_dirs)} model packages, api"
+    # --- collectors are deliberately NOT purity-checked ---------------------
+    #
+    # This is the one tier that exists to touch the network, so the rules above
+    # would be exactly backwards here. A collector may declare an HTTP client, a
+    # credentials library, or any source SDK. What keeps the boundary honest is
+    # rule 4, which constrains who may import a collector rather than what a
+    # collector may import.
+    collector_dirs = sorted(d for d in (PACKAGES / "collectors").glob("*/") if d.is_dir())
+
+    checked = (
+        f"{len(model_dirs)} model packages, "
+        f"{len(collector_dirs)} collector packages (purity-exempt), api"
+    )
     if failures:
         print(f"Tier boundary violations ({checked}):\n")
         for failure in failures:

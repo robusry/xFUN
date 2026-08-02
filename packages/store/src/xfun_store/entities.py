@@ -105,11 +105,21 @@ def load_snapshots(
     *,
     date_from: str | None = None,
     date_to: str | None = None,
+    signals: Mapping[str, Mapping[str, Any]] | None = None,
 ) -> tuple[MatchSnapshot, ...]:
     """Rebuild MatchSnapshots from canonical entities.
 
     The result must validate against contracts/schemas/match-snapshot.json; CI
     checks that on the fixture set.
+
+    `signals` is `match_id -> {namespace -> payload}` from a collection run, folded
+    in here rather than stored. Collected signals are NOT canonical entities: they
+    are assembled per run, exactly as the snapshot itself is, so a re-score needs a
+    re-collect. That is the same gap `add-score-provenance` already owns for
+    snapshots, inherited rather than newly introduced.
+
+    Folding happens before the caller hashes, so a changed signal yields a
+    different `snapshot_hash` and therefore a new score row.
     """
     sql = (
         "SELECT m.match_id, m.kickoff_utc, "
@@ -198,6 +208,10 @@ def load_snapshots(
             )
             if table:
                 payload["table"] = table
+
+        collected = (signals or {}).get(row["match_id"])
+        if collected:
+            payload["signals"] = {ns: dict(values) for ns, values in collected.items()}
 
         snapshots.append(MatchSnapshot(payload))
 
