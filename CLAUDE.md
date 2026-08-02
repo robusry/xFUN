@@ -156,5 +156,5 @@ Not a queue — nothing here is claimed as next.
 no evaluation harness, no broadcast availability data, no mobile app, and no
 automated JavaScript test — CI covers the TS side with typecheck and build only.
 
-Branch protection on `main` is requested but not yet enabled; it needs repository
-owner access.
+Branch protection on `main` is enabled. Adding `contracts`, `ci`, and `pr-hygiene`
+as required status checks is still outstanding.
