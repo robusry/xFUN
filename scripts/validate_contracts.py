@@ -62,6 +62,26 @@ def main() -> int:
             else:
                 print(f"ok    {fixture.relative_to(ROOT)}")
 
+    # A slate_id that does not match its own match set is invisible to JSON Schema
+    # -- the shape is fine, the identity is a lie. Recomputing it here is the only
+    # way a wrong one fails before something downstream trusts it.
+    try:
+        from xfun_contract import slate_hash
+    except ImportError:
+        print("xfun_contract not importable. Run: uv sync --all-packages", file=sys.stderr)
+        return 2
+
+    for fixture in sorted((CONTRACTS / "fixtures" / "slates").glob("*.json")):
+        checked += 1
+        instance = json.loads(fixture.read_text())
+        expected = slate_hash(instance["matches"])
+        if instance["slate_id"] != expected:
+            failures += 1
+            print(f"FAIL  {fixture.relative_to(ROOT)}")
+            print(f"        slate_id is {instance['slate_id']}, matches hash to {expected}")
+        else:
+            print(f"ok    {fixture.relative_to(ROOT)} slate_id matches its match set")
+
     openapi = CONTRACTS / "openapi.yaml"
     try:
         spec = yaml.safe_load(openapi.read_text())

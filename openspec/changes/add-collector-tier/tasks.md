@@ -14,11 +14,11 @@
 
 ## 2. Scoring contract
 
-- [ ] 2.1 Add `Slate` and `MatchRef` types — enough match identity for a collector to fan out, and nothing more
-- [ ] 2.2 Add the `Collector` protocol: identity, declared entity kind, declared provided paths, declared refresh cadence, and `collect(slate)`
-- [ ] 2.3 Add the `EntityKind` enumeration (`match`, `team`, `league`) as a closed set
-- [ ] 2.4 Express feature declaration so further declaration kinds can be added without replacing the existing one (see design D9; the corpus kind arrives in `add-collector-corpora`)
-- [ ] 2.5 Add a collection outcome type that distinguishes "no data for this entity" from "could not determine whether data exists"
+- [x] 2.1 Add `Slate` and `MatchRef` types — enough match identity for a collector to fan out, and nothing more
+- [x] 2.2 Add the `Collector` protocol: identity, declared entity kind, declared provided paths, declared refresh cadence, and `collect(slate)`
+- [x] 2.3 Add the `EntityKind` enumeration (`match`, `team`, `league`) as a closed set
+- [x] 2.4 Express feature declaration so further declaration kinds can be added without replacing the existing one (see design D9; the corpus kind arrives in `add-collector-corpora`)
+- [x] 2.5 Add a collection outcome type that distinguishes "no data for this entity" from "could not determine whether data exists"
 
 ## 3. Scoring runtime
 
