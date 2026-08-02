@@ -40,9 +40,18 @@ echo "${BOLD}pipeline${RESET}"
 "${RUN[@]}" scripts/pipeline.py
 
 echo
+# This script serves the API and nothing else. Saying so plainly matters: the
+# obvious assumption is that "the demo" includes the web page, and the failure
+# that assumption produces -- a 404 at http://localhost:8000/ -- reads as a
+# broken demo rather than as the wrong URL.
+echo "${BOLD}This serves the API only. The web page needs a second terminal.${RESET}"
+echo
 echo "${BOLD}api${RESET}  http://localhost:8000/v1/matches?from=2026-08-01&to=2026-08-31"
 echo "${DIM}      docs at http://localhost:8000/docs${RESET}"
-echo "${DIM}      web:  pnpm install && pnpm client:generate && pnpm web:dev${RESET}"
+echo "${DIM}      http://localhost:8000/ itself is a 404 -- there is no page there${RESET}"
+echo
+echo "${BOLD}web${RESET}  second terminal: pnpm install && pnpm client:generate && pnpm web:dev"
+echo "${DIM}      then http://localhost:5173${RESET}"
 echo
 
 if ! "${RUN[@]}" -c "import fastapi, uvicorn" 2>/dev/null; then

@@ -33,9 +33,14 @@ Check the setup took:
 
 ```bash
 uv run pytest -q                                 # 28 passed
+uv run python scripts/pipeline.py                # seeds .data/xfun.db
 uv run python scripts/check_api_conformance.py   # 8 checks, 0 failed
 pnpm -r typecheck
 ```
+
+The pipeline line is not optional either. The conformance check reads the database,
+so on a fresh clone it fails with `no such table: model_registry` — and leaves an
+empty `.data/xfun.db` behind, which then looks like a database that exists.
 
 ## Run it
 
