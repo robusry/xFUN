@@ -23,7 +23,8 @@
       "Bash(python3 *)",
       "Bash(uv run *)",
       "Bash(git commit -q -m 'feat\\(contracts\\): add signals namespace, slate, and collection-run schemas *)",
-      "Bash(git commit -q -m 'feat\\(scoring-contract\\): add slate, collector, and extensible requirement types *)"
+      "Bash(git commit -q -m 'feat\\(scoring-contract\\): add slate, collector, and extensible requirement types *)",
+      "Bash(git commit -q -m 'feat\\(scoring-runtime\\): add collector registry, resolution, joins, and run record *)"
     ]
   }
 }

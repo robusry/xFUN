@@ -22,13 +22,13 @@
 
 ## 3. Scoring runtime
 
-- [ ] 3.1 Add the collector registry: reject a duplicate collector id, and reject two producers claiming the same leaf path
-- [ ] 3.2 Validate model feature declarations against the union of provided paths as well as the snapshot schema; a well-formed path nothing provides fails registration
-- [ ] 3.3 Implement resolution — union the active models' declared features, map to the collectors that provide them, invoke each at most once, and skip collectors with no consumers
-- [ ] 3.4 Implement the three joins: match by identity, team onto home and away sides, league broadcast across the league
-- [ ] 3.5 Assemble joined signals into the snapshot before hashing, so a signal change is visible in `snapshot_hash`
-- [ ] 3.6 Record the collection run: slate, collectors invoked, per-collector outcome
-- [ ] 3.7 Carry the failure-versus-absence distinction into the skip reason recorded by the runner
+- [x] 3.1 Add the collector registry: reject a duplicate collector id, and reject two producers claiming the same leaf path
+- [x] 3.2 Validate model feature declarations against the union of provided paths as well as the snapshot schema; a well-formed path nothing provides fails registration
+- [x] 3.3 Implement resolution — union the active models' declared features, map to the collectors that provide them, invoke each at most once, and skip collectors with no consumers
+- [x] 3.4 Implement the three joins: match by identity, team onto home and away sides, league broadcast across the league
+- [x] 3.5 Assemble joined signals into the snapshot before hashing, so a signal change is visible in `snapshot_hash`
+- [x] 3.6 Record the collection run: slate, collectors invoked, per-collector outcome
+- [x] 3.7 Carry the failure-versus-absence distinction into the skip reason recorded by the runner
 
 ## 4. Collector packages
 
