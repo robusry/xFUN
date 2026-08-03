@@ -40,15 +40,15 @@
 
 ## 7. Failure as a first-class outcome
 
-- [ ] 7.1 Record schedule-source failure with a reason, distinctly from a window containing no watchable match
-- [ ] 7.2 Ensure a failed acquisition does not present stale canonical matches as freshly acquired
-- [ ] 7.3 Test unreachable, unauthorised, and unparseable sources against the malformed fixture from 1.2
+- [x] 7.1 Record schedule-source failure with a reason, distinctly from a window containing no watchable match
+- [x] 7.2 Ensure a failed acquisition does not present stale canonical matches as freshly acquired
+- [x] 7.3 Test unreachable, unauthorised, and unparseable sources against the malformed fixture from 1.2
 
 ## 8. Wiring and the opt-in flag
 
-- [ ] 8.1 Add live acquisition behind an explicit flag in `scripts/pipeline.py`, defaulting to fixtures
+- [x] 8.1 Add live acquisition behind an explicit flag in `scripts/pipeline.py`, defaulting to fixtures
 - [ ] 8.2 Surface the flag in `scripts/demo.sh` without making it the default path
-- [ ] 8.3 Add the HTTP client dependency to `packages/ingestion/pyproject.toml`, run `uv lock`, and commit the lockfile
+- [x] 8.3 Add the HTTP client dependency to `packages/ingestion/pyproject.toml`, run `uv lock`, and commit the lockfile
 - [ ] 8.4 Confirm `scripts/check_dependencies.py` still passes, and extend it so models and the API may not import the schedule source — the rule the `data-collection` delta adds
 
 ## 9. Correcting the architecture rule in every place it is stated

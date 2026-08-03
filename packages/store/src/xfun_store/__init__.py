@@ -19,17 +19,20 @@ from .collection import (
 )
 from .db import DB_PATH, applied_migrations, connect, migrate
 from .entities import load_snapshots, match_leagues, write_snapshot_payload
+from .schedule_run import ScheduleRun, latest_schedule_run, write_schedule_run
 from .scores import all_scores, latest_scores, register_models, write_scores
 
 __all__ = [
     "DB_PATH",
     "MatchAvailability",
     "PathProvenance",
+    "ScheduleRun",
     "all_scores",
     "applied_migrations",
     "connect",
     "explain_missing_path",
     "latest_run",
+    "latest_schedule_run",
     "latest_scores",
     "load_snapshots",
     "match_leagues",
@@ -40,6 +43,7 @@ __all__ = [
     "register_models",
     "write_availability",
     "write_collection_run",
+    "write_schedule_run",
     "write_scores",
     "write_snapshot_payload",
 ]

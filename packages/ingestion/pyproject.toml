@@ -8,6 +8,10 @@ dependencies = [
     "xfun-scoring-runtime",
     "xfun-store",
     "pyyaml>=6.0",
+    # The schedule source is the one part of ingestion that reaches the network.
+    # See the data-collection spec: external access is confined to two tiers,
+    # this one and collectors, ordered by when they run relative to the slate.
+    "httpx>=0.27",
 ]
 
 [build-system]

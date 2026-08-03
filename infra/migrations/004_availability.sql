@@ -50,3 +50,42 @@ CREATE TABLE IF NOT EXISTS match_provider (
 );
 
 CREATE INDEX IF NOT EXISTS idx_match_provider_match ON match_provider(match_id);
+
+-- What happened when the schedule was acquired.
+--
+-- Same reasoning as collection_run, one tier earlier. Two very different
+-- situations leave an identical empty slate:
+--
+--   the source answered and nothing in the window is watchable   (coverage)
+--   the source could not be reached, or changed shape            (failure)
+--
+-- The first is correct and common -- the leagues in scope go between seasons,
+-- and a quiet week is a real answer. The second establishes nothing. Without
+-- this table a source that broke looks exactly like a fortnight with no
+-- football, and the pipeline downstream of it reports, correctly and uselessly,
+-- that there was nothing to score.
+--
+-- `matches_seen` is counted BEFORE the watchable filter and `matches_watchable`
+-- after, so a run where the source answered fully but named no providers is
+-- distinguishable from one where it returned nothing at all. Those two also
+-- produce the same empty slate.
+CREATE TABLE IF NOT EXISTS schedule_run (
+    run_id            TEXT NOT NULL PRIMARY KEY,
+    source_id         TEXT NOT NULL,
+    status            TEXT NOT NULL CHECK (status IN ('ok', 'failed')),
+    reason            TEXT,
+    window_start_utc  TEXT NOT NULL,
+    window_end_utc    TEXT NOT NULL,
+    matches_seen      INTEGER NOT NULL DEFAULT 0,
+    matches_watchable INTEGER NOT NULL DEFAULT 0,
+    ran_at            TEXT NOT NULL,
+
+    -- A failure must say why. "It broke" without a reason is the thing this
+    -- table exists to prevent, and an ok run has nothing to explain.
+    CHECK (
+        (status = 'failed' AND reason IS NOT NULL)
+        OR (status = 'ok' AND reason IS NULL)
+    )
+);
+
+CREATE INDEX IF NOT EXISTS idx_schedule_run_ran_at ON schedule_run(ran_at);

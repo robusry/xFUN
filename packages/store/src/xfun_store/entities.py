@@ -11,7 +11,7 @@ produces a snapshot with no `odds` key, and models requiring odds skip it.
 from __future__ import annotations
 
 import sqlite3
-from collections.abc import Iterable, Mapping
+from collections.abc import Iterable, Mapping, Sequence
 from typing import Any
 
 from xfun_contract import MatchSnapshot
@@ -106,6 +106,7 @@ def load_snapshots(
     date_from: str | None = None,
     date_to: str | None = None,
     signals: Mapping[str, Mapping[str, Any]] | None = None,
+    match_ids: Sequence[str] | None = None,
 ) -> tuple[MatchSnapshot, ...]:
     """Rebuild MatchSnapshots from canonical entities.
 
@@ -133,6 +134,15 @@ def load_snapshots(
     )
     clauses: list[str] = []
     params: list[str] = []
+
+    if match_ids is not None:
+        # Used to score exactly the slate. Without it a run would score every
+        # match in the store rather than the ones it decided to be about, which
+        # makes the selection rule decorative.
+        if not match_ids:
+            return ()
+        clauses.append(f"m.match_id IN ({','.join('?' * len(match_ids))})")
+        params.extend(match_ids)
     if date_from:
         clauses.append("m.kickoff_utc >= ?")
         params.append(date_from)

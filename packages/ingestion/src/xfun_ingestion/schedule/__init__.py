@@ -14,6 +14,7 @@ translation is deliberately separate, because the source's ids are stable only
 within the source.
 """
 
+from .acquire import acquire_window, store_matches
 from .canonical import (
     CanonicalIdError,
     canonical_payload,
@@ -37,23 +38,37 @@ from .rights import (
     load_rights,
     resolve_providers,
 )
+from .source import (
+    SOURCE_ID,
+    ScheduleSourceError,
+    fetch_window,
+    schedule_url,
+    window_dates,
+)
 
 __all__ = [
+    "SOURCE_ID",
     "Availability",
     "CanonicalIdError",
     "LeagueRights",
     "RightsTableError",
     "ScheduleParseError",
+    "ScheduleSourceError",
     "SourceMatch",
+    "acquire_window",
     "canonical_payload",
     "competition_groups",
     "default_rights_path",
+    "fetch_window",
     "league_id",
     "load_rights",
     "match_id",
     "parse_schedule",
     "resolve_providers",
+    "schedule_url",
     "slugify",
     "sports_events",
+    "store_matches",
     "team_id",
+    "window_dates",
 ]
