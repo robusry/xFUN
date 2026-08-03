@@ -1,0 +1,71 @@
+# Which US providers carry a whole league.
+#
+# Configuration, not code -- Zone C, hand-edited freely, in the same sense as
+# packages/composition/recipes/*.yaml. No spec change is needed to correct an entry,
+# and correcting one promptly matters more than correcting it formally.
+#
+# ONLY league-wide, constant rights belong here. This file answers "who carries every
+# match in this competition", and an entry that is true for most matches but not all
+# is worse than no entry at all -- it produces a confidently wrong provider, which is
+# the failure a viewer notices immediately and the one thing openapi.yaml's
+# Availability schema explicitly refuses to do. A league whose rights split by club,
+# by match, or by language does not go here. It falls to `unknown`, and under the
+# `us-watchable` rule its matches simply do not reach the slate.
+#
+# Entries are consulted ONLY when the schedule source names no provider for a match.
+# Per-match data always wins, because it can express a split that no line here can.
+#
+# Every entry needs `verified_on` and `source`. Loading fails without them, on
+# purpose: a provider of unknown vintage is the thing most likely to be quietly
+# wrong, and US rights move between seasons.
+#
+# `source` must be the league's or the rights holder's own announcement. An
+# aggregator is not evidence -- most of them were wrong about at least one of the
+# leagues below when this file was written.
+
+leagues:
+  usa-major-league-soccer:
+    name: Major League Soccer
+    providers:
+      - Apple TV
+    verified_on: 2026-08-03
+    source: https://www.apple.com/newsroom/2025/11/major-league-soccer-is-coming-to-apple-tv-starting-in-2026/
+    note: >-
+      Every regular-season match from 2026, with no blackouts, included with an Apple
+      TV subscription. The standalone MLS Season Pass ended after the 2025 season, so
+      any entry naming it is out of date.
+
+  usa-mls-next-pro:
+    name: MLS NEXT Pro
+    providers:
+      - OneFootball
+      - MLSNEXTPro.com
+    verified_on: 2026-08-03
+    source: https://www.mlsnextpro.com/news/onefootball-becomes-the-new-home-of-mls-next-pro-matches-in-2026-with-new-global-partnership
+    note: >-
+      Free-to-air worldwide on OneFootball from the 2026 season, and free on the
+      league's own site. NOT Apple TV: Apple holds streaming rights through 2032, but
+      the 2026 broadcast arrangement is OneFootball. Aggregators list no provider at
+      all for this competition, which is why the entry exists.
+
+# --- Deliberately absent -----------------------------------------------------
+#
+# mexico-liga-mx
+#   Rights are split by CLUB, not held league-wide, so no single line is true.
+#   TelevisaUnivision (Univision, UniMás, TUDN, ViX) carries most clubs; Chivas home
+#   matches are Telemundo/Peacock; Monterrey, Tijuana, and Santos are on FOX; and
+#   Paramount+ carries a subset with English commentary. Naming the majority carrier
+#   would be wrong for several clubs every matchweek.
+#
+#   The consequence is deliberate and worth understanding: because the schedule
+#   source also names no provider for Liga MX, its matches resolve to `unknown` and
+#   the `us-watchable` rule keeps them off the slate. Liga MX is therefore absent
+#   from the product until either the source starts answering for it, or this file
+#   grows club-level entries -- which is a change to the rule this file encodes, not
+#   a new row in it.
+#   Evidence: https://corporate.televisaunivision.com/press/2026/05/12/televisaunivision-announces-expansive-sports-portfolio-for-2026-27/
+#
+# england-premier-league
+#   The archetypal split-rights league: one matchweek divides between NBC, USA
+#   Network, and Peacock. The schedule source answers per match, which is exactly the
+#   case that must win over anything here.

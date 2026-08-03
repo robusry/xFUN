@@ -6,6 +6,11 @@
 # server, no container, and no credentials, because the point of this repository
 # is that someone can clone it and see the structure work.
 #
+# `--live` acquires real upcoming matches and their US broadcasters instead of
+# reading fixture files. It is opt-in rather than default because the default
+# must keep working on a clone with nothing configured and no network -- and
+# because the default should not depend on a third party being up.
+#
 set -euo pipefail
 
 cd "$(dirname "$0")/.."
@@ -37,7 +42,14 @@ else
 fi
 
 echo "${BOLD}pipeline${RESET}"
-"${RUN[@]}" scripts/pipeline.py
+"${RUN[@]}" scripts/pipeline.py "$@"
+
+if [ $# -eq 0 ]; then
+  echo
+  echo "${DIM}These are the fixture matches. For real upcoming matches and where"
+  echo "to watch them in the US:  ./scripts/demo.sh --live${RESET}"
+  echo "${DIM}That reaches the network. Nothing else here does.${RESET}"
+fi
 
 echo
 echo "${BOLD}api${RESET}  http://localhost:8000/v1/matches?from=2026-08-01&to=2026-08-31"

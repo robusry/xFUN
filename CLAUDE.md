@@ -21,16 +21,25 @@ API with no database server, no container, and no credentials. But the component
 inside the tiers are placeholders by design: the deliverable so far is a structure
 the team can read and run, not working functionality.
 
-Both models predict nothing. Ingestion reads files. Three of four calibration
-cohorts and two of three composition policies return 501.
+Both models predict nothing. Three of four calibration cohorts and two of three
+composition policies return 501.
+
+**Ingestion is the exception, and only half of it.** `./scripts/demo.sh --live`
+acquires real upcoming matches and their US broadcasters. Nothing a *model* reads
+is real, so on a live run every match is returned with a recorded skip reason and
+no score. That is the partial-coverage path working on real data.
 
 `openspec/specs/` is the authoritative record of what the system currently
-**does** — seven capabilities, 46 requirements — while `openspec/config.yaml`
+**does** — nine capabilities, 59 requirements — while `openspec/config.yaml`
 holds the reasoning behind them. Archived changes are under
 `openspec/changes/archive/`:
 
 - `2026-08-01-establish-project-structure` — the architecture, the workflow, and
   the skeleton itself
+- `2026-08-02-add-collector-tier` — the collector tier, the slate, and the entity
+  joins
+- `2026-08-03-add-live-schedule` — real matches and US broadcasters, the
+  `us-watchable` slate rule, and the six-source survey behind picking goal.com
 
 **This file does not set priorities.** "Still open" below records what is
 undecided, not a queue. Ask what the session is for rather than inferring it.
@@ -65,9 +74,12 @@ look like bugs:
 - **Unimplemented cohorts/policies raise rather than falling back**, and surface
   as 501.
 - **Matches with no score are still returned**, with a reason.
-- **Collectors are exempt from the purity check.** Touching the network is the
-  purpose of that tier. The rule points the other way: no model and no API package
-  may import a collector.
+- **Collectors and the schedule source are exempt from the purity check.**
+  Touching the network is the purpose of those two tiers, and there are exactly
+  two, separated by when they run relative to the slate: the schedule source
+  produces it, collectors enrich it. A collector cannot produce the slate —
+  `collect(slate)` takes one as input. The rule points the other way: no model and
+  no API package may import either.
 - **A signal path never names its producer.** `signals.<namespace>.<leaf>`, where
   the namespace is a subject area. Encoding the producer would make swapping one a
   breaking change for every model declaring the path.
@@ -85,8 +97,10 @@ packages/
   scoring-runtime/    registry, collection, entity joins, runner, calibration
   store/              canonical entities + append-only score store
   models/<id>/        one package per model, deps isolated
-  collectors/<id>/    one package per data source. the ONLY tier that may
-                      touch the network. purity-exempt by design.
+  collectors/<id>/    one package per data source. ONE of the two tiers
+                      that may touch the network. purity-exempt by design.
+                      (the other is ingestion/schedule/, which runs BEFORE
+                      the slate because it produces what the slate is made of)
   composition/        src/ = mechanism (Zone A), recipes/ = values (Zone C)
   ingestion/          slate assembly + canonical entity writing
   api/                FastAPI, read-only
@@ -161,6 +175,20 @@ Not a queue — nothing here is claimed as next.
   can be evaluated and "which models at what weights" has no answerable form.
   The most consequential open question in the project, and the reason
   `add-evaluation-harness` is the follow-up worth arguing for first.
+- **Liga MX is missing from the product, and this is known.** Its US rights are
+  held per club — TelevisaUnivision carries most, Chivas home matches are
+  Telemundo/Peacock, Monterrey/Tijuana/Santos are FOX — so no league-wide entry
+  in `packages/ingestion/rights/` is true, and goal.com names no provider for it
+  either. Its matches therefore resolve to `unknown` and `us-watchable` keeps them
+  off the slate. **Do not "fix" this by adding a league-wide Liga MX entry**: it
+  would be wrong for several clubs every matchweek, and a confidently wrong
+  provider is the failure a viewer notices immediately. The two real options are
+  club-level entries, or the per-match manual-entry path below. Neither is
+  proposed yet. Full detail in `docs/STUBS.md` and the archived
+  `add-live-schedule` design, D3.
+- **A way for a person to enter missing TV data by hand**, per match rather than
+  per league. The rights table is the league-wide case of this; Liga MX is the
+  standing example of what it cannot express.
 - Global versus personalised as the headline score.
 - League scope: audience size versus entertainment density.
 - The default calibration cohort, once more than one exists.
@@ -168,9 +196,14 @@ Not a queue — nothing here is claimed as next.
 
 ## Absent on purpose, not forgotten
 
-`docs/STUBS.md` is authoritative. In short: no real model, no live data provider,
-no evaluation harness, no broadcast availability data, no mobile app, and no
-automated JavaScript test — CI covers the TS side with typecheck and build only.
+`docs/STUBS.md` is authoritative. In short: no real model, nothing real that a
+*model* reads, no evaluation harness, no mobile app, and no automated JavaScript
+test — CI covers the TS side with typecheck and build only.
+
+Matches and US broadcasters ARE real on the live path, via goal.com — an
+unofficial source with no API contract, chosen from a six-way survey recorded in
+the archived `add-live-schedule` design, D2. Read that before proposing a
+replacement; most of the obvious candidates refuse automated access.
 
 Branch protection on `main` is enabled. Adding `contracts`, `ci`, and `pr-hygiene`
 as required status checks is still outstanding.

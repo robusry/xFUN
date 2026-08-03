@@ -893,6 +893,8 @@ name = "xfun-ingestion"
 version = "0.1.0"
 source = { editable = "packages/ingestion" }
 dependencies = [
+    { name = "httpx" },
+    { name = "pyyaml" },
     { name = "xfun-scoring-contract" },
     { name = "xfun-scoring-runtime" },
     { name = "xfun-store" },
@@ -900,6 +902,8 @@ dependencies = [
 
 [package.metadata]
 requires-dist = [
+    { name = "httpx", specifier = ">=0.27" },
+    { name = "pyyaml", specifier = ">=6.0" },
     { name = "xfun-scoring-contract", editable = "packages/scoring-contract" },
     { name = "xfun-scoring-runtime", editable = "packages/scoring-runtime" },
     { name = "xfun-store", editable = "packages/store" },

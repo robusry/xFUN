@@ -1,12 +1,17 @@
 [project]
 name = "xfun-ingestion"
 version = "0.1.0"
-description = "Data source adapters. Fixture-backed in the skeleton; no network."
+description = "Slate assembly, canonical entity writing, and the schedule source."
 requires-python = ">=3.12"
 dependencies = [
     "xfun-scoring-contract",
     "xfun-scoring-runtime",
     "xfun-store",
+    "pyyaml>=6.0",
+    # The schedule source is the one part of ingestion that reaches the network.
+    # See the data-collection spec: external access is confined to two tiers,
+    # this one and collectors, ordered by when they run relative to the slate.
+    "httpx>=0.27",
 ]
 
 [build-system]

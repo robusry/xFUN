@@ -29,6 +29,7 @@ for src in (
 from xfun_collector_fixture_signals import fixture_collectors
 from xfun_composition import AliasResolver, compose_all, load_recipes
 from xfun_ingestion import assemble_slate, fixture_payloads, ingest
+from xfun_ingestion.schedule import acquire_window
 from xfun_model_odds_spread import MODEL as ODDS_SPREAD
 from xfun_model_over_under_lean import MODEL as OVER_UNDER_LEAN
 from xfun_model_social_buzz import MODEL as SOCIAL_BUZZ
@@ -80,6 +81,15 @@ def build_registry(provided_paths: frozenset[str] = frozenset()) -> Registry:
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--quiet", action="store_true")
+    parser.add_argument(
+        "--live",
+        action="store_true",
+        help=(
+            "acquire real upcoming matches and their US broadcasters from the "
+            "network instead of reading fixture files. Off by default: a fresh "
+            "clone must run with nothing configured and no external dependency."
+        ),
+    )
     args = parser.parse_args()
 
     def say(*parts: object) -> None:
@@ -91,12 +101,31 @@ def main() -> int:
     applied = list(migrate(conn))
     say(f"  migrations   {len(applied)} applied" if applied else "  migrations   up to date")
 
-    result = ingest(conn, fixture_payloads())
-    say(f"  ingestion    {result.summary()}")
+    if args.live:
+        # The one step in this pipeline that touches the network, and it runs
+        # before the slate exists because it produces what the slate is made of.
+        run = acquire_window(conn)
+        say(f"  acquisition  {run.summary()}")
+        if run.failed:
+            # Stop rather than continue into an empty slate. Carrying on would
+            # produce a run that looks exactly like a quiet week, which is the
+            # confusion the schedule_run record exists to prevent -- and printing
+            # the reason here is what makes it visible without querying for it.
+            say("\n  The schedule source could not be read, so there is no slate.")
+            say("  This is a source failure, NOT a window with nothing worth watching.")
+            conn.close()
+            return 1
+        rule = "us-watchable"
+    else:
+        result = ingest(conn, fixture_payloads())
+        say(f"  ingestion    {result.summary()}")
+        # Fixture snapshots carry no availability, so `us-watchable` would
+        # correctly admit none of them and the demo would show an empty slate.
+        rule = "league-allowlist"
 
     # The slate is decided before any collector runs, because collectors fan out
     # from it -- a team-keyed collector needs to know which teams are in play.
-    slate = assemble_slate(conn)
+    slate = assemble_slate(conn, rule=rule)
     say(f"  slate        {len(slate.matches)} matches, "
         f"{len(slate.teams())} teams, {len(slate.leagues())} leagues "
         f"({slate.selection.rule})")
@@ -121,9 +150,16 @@ def main() -> int:
         )
         say(f"               {outcome.collector_id}: {outcome.outcome} — {detail}")
 
+    # Scored matches are the SLATE, not everything in the store. Live acquisition
+    # writes every match the source returned worldwide so that "we asked and nobody
+    # carries it" is a recorded fact; scoring all of that would make the selection
+    # rule decorative.
+    #
     # Signals are folded in before hashing, so a changed signal yields a new
     # snapshot_hash and therefore a new score row.
-    snapshots = load_snapshots(conn, signals=collection.signals)
+    snapshots = load_snapshots(
+        conn, signals=collection.signals, match_ids=slate.match_ids()
+    )
     say(f"  snapshots    {len(snapshots)} assembled from canonical entities")
 
     register_models(conn, registry)

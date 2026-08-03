@@ -28,6 +28,15 @@ The collector tier splits the same way, for the same reason:
   scoring-runtime/join.py         ZONE A  ← adding a fourth entity kind is a
                                             new join, and a spec change
   packages/collectors/<id>/       ZONE B  ← one source; specs on behaviour change
+  ingestion/schedule/             ZONE B  ← the schedule source: which matches
+                                            exist and who carries them. Changing
+                                            the SELECTION RULE is a spec change;
+                                            adapting a parser to a redesigned
+                                            page is not
+  ingestion/rights/*.yaml         ZONE C  ← which providers carry a whole league.
+                                            Values, like composition recipes.
+                                            Correcting one promptly matters more
+                                            than correcting it formally
 ```
 
 Adding a collector for a new source is Zone B — it changes what data exists, not

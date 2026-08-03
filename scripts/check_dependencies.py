@@ -23,10 +23,16 @@ than trusting discipline:
    declares it breaking. A model importing a collector would also smuggle the
    network back into scoring through the side door.
 
-Note the inversion in rule 4: collector packages are deliberately NOT subject to the
-purity rules. Reaching outside the process is the entire purpose of that tier, so
-the check that keeps the boundary honest points the other way -- at who is allowed
-to import them, not at what they may import.
+5. **Models and the API never import the schedule source.** External access lives in
+   two tiers, ordered by when they run relative to the slate: the schedule source
+   produces it, collectors enrich it. Both are impure by design and neither may be
+   reached from scoring or from serving, for the same reason -- a model that fetches
+   is not reproducible, and an API that fetches makes somebody else's uptime its own.
+
+Note the inversion in rules 4 and 5: collector packages and the schedule source are
+deliberately NOT subject to the purity rules. Reaching outside the process is the
+entire purpose of those tiers, so the check that keeps the boundary honest points the
+other way -- at who is allowed to import them, not at what they may import.
 """
 
 from __future__ import annotations
@@ -51,6 +57,11 @@ MODEL_MODULE_PREFIX = "xfun_model_"
 COLLECTOR_DIST_PREFIX = "xfun-collector-"
 COLLECTOR_MODULE_PREFIX = "xfun_collector_"
 
+# The schedule source lives inside ingestion rather than in its own package,
+# because one component does not earn a tier. That makes it a submodule rather
+# than a distribution, so it is matched by import path.
+SCHEDULE_SOURCE_MODULE = "xfun_ingestion.schedule"
+
 
 def _dependencies(pyproject: Path) -> list[str]:
     data = tomllib.loads(pyproject.read_text())
@@ -68,6 +79,25 @@ def _imported_modules(package_dir: Path) -> set[str]:
             elif isinstance(node, ast.ImportFrom) and node.module and node.level == 0:
                 modules.add(node.module.split(".")[0])
     return modules
+
+
+def _imported_paths(package_dir: Path) -> set[str]:
+    """Full dotted import paths, not just the top-level package.
+
+    The schedule source is a submodule of ingestion rather than its own
+    distribution, so `xfun_ingestion.schedule` and `xfun_ingestion` must be
+    distinguishable -- reading canonical entities is fine, reaching the network is
+    not.
+    """
+    paths: set[str] = set()
+    for source in package_dir.rglob("*.py"):
+        tree = ast.parse(source.read_text(), filename=str(source))
+        for node in ast.walk(tree):
+            if isinstance(node, ast.Import):
+                paths.update(alias.name for alias in node.names)
+            elif isinstance(node, ast.ImportFrom) and node.module and node.level == 0:
+                paths.add(node.module)
+    return paths
 
 
 def main() -> int:
@@ -127,6 +157,22 @@ def main() -> int:
             failures.append(
                 f"api: imports {module!r}. The API must never run a collector."
             )
+
+    # --- 5: nobody who scores or serves may reach the schedule source ------
+    #
+    # Models are already barred from xfun_ingestion entirely by
+    # FORBIDDEN_IN_MODELS, so this catches the API, which legitimately reads
+    # canonical entities but must never acquire them.
+    for label, src in (("api", api_dir / "src"), *((f"models/{d.name}", d / "src") for d in model_dirs)):
+        for path in sorted(_imported_paths(src)):
+            if path == SCHEDULE_SOURCE_MODULE or path.startswith(
+                f"{SCHEDULE_SOURCE_MODULE}."
+            ):
+                failures.append(
+                    f"{label}: imports {path!r}. The schedule source reaches the "
+                    f"network; scoring and serving must not. It runs before the "
+                    f"slate exists, in the pipeline, and writes what both then read."
+                )
 
     # --- collectors are deliberately NOT purity-checked ---------------------
     #
