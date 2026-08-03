@@ -230,6 +230,53 @@ uselessly, that there was nothing to do.
 
 *Cost accepted:* another failure path to record and surface.
 
+### D9. Canonical ids are slugs derived from names, not the source's ids
+
+A league's canonical id is a slug of its country and name; a team's is a slug of its
+name; a match's is `<league>-<date>-<home>-<away>`, extending the convention the
+existing fixtures already use. All three are constrained to `^[a-z0-9-]+$` by
+`match-snapshot.json` and `slate.json`, so slugging is not optional dressing — it is
+what the schema requires.
+
+Deriving them deterministically is also what makes re-running acquisition converge.
+The same match yields the same id on every run, so entity writes upsert on a natural
+key rather than needing a stored correspondence between the source's identifiers and
+ours.
+
+*Rejected:* adopting the source's ids directly. They are stable and unique, and
+`dmz37633qbsvl7gncq5s51yjw` would work. But D2 is explicit that this source is the
+best option available rather than a vendor commitment, and taking its identifiers as
+canonical would make replacing it a migration of every stored row instead of a
+change to one module.
+
+*Rejected:* a hand-maintained mapping from source ids to canonical ids. Accurate,
+and unmaintainable at this breadth — the leagues in scope alone carry several
+hundred teams, and every promotion, relegation, and expansion franchise is a new
+entry nobody will remember to add.
+
+*Rejected:* storing the source's id alongside the canonical one for traceability. It
+would make a rename detectable, but nothing in this change could act on the
+detection, and a merge path for duplicated entities is well outside its scope. Left
+out until something needs it.
+
+*Cost accepted, and it is the real one:* a team's slug comes from its name alone,
+because the source attaches a country to competitions and not to teams. Two clubs in
+different countries sharing a name would collide onto one canonical team — River
+Plate exists in both Argentina and Uruguay. The leagues in scope make this unlikely
+rather than impossible, and the alternative — scoping a team by the country of the
+first competition it was seen in — is worse, because it would assign a wrong country
+to any team first seen in a continental competition.
+
+*Second cost accepted:* if the source renames a team, its slug changes and a second
+canonical entity appears, silently. Nothing detects this today.
+
+*Third cost accepted:* live ids will not match the existing fixture ids. `arsenal`
+and `england-premier-league` are not `ars` and `epl`, so the fixture snapshots and a
+live run describe the same real clubs under different identifiers. Acceptable
+because the fixture data is invented anyway and the two paths are never mixed in one
+store, but it means a fixture-seeded database and a live-seeded one are not
+interchangeable.
+
 ## Risks / Trade-offs
 
 **The source changes its page structure without notice** → D5 confines the fragile half to
@@ -274,10 +321,6 @@ working at every step.
 
 ## Open Questions
 
-- **Team and competition identity.** The source's ids are stable within it but are not the
-  canonical ids (`ars`, `epl`) the store uses. Whether the mapping is a table, derived from
-  slugs, or the source's ids simply become canonical for leagues that have no fixture
-  equivalent, is unresolved and is the first thing implementation will hit.
 - **Whether the rights table belongs in `packages/ingestion/` or beside the composition
   recipes.** Both are Zone C configuration; the recipes directory has the established
   precedent for values that move without specs.

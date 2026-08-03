@@ -14,6 +14,14 @@ translation is deliberately separate, because the source's ids are stable only
 within the source.
 """
 
+from .canonical import (
+    CanonicalIdError,
+    canonical_payload,
+    league_id,
+    match_id,
+    slugify,
+    team_id,
+)
 from .parse import (
     ScheduleParseError,
     SourceMatch,
@@ -23,9 +31,15 @@ from .parse import (
 )
 
 __all__ = [
+    "CanonicalIdError",
     "ScheduleParseError",
     "SourceMatch",
+    "canonical_payload",
     "competition_groups",
+    "league_id",
+    "match_id",
     "parse_schedule",
+    "slugify",
     "sports_events",
+    "team_id",
 ]

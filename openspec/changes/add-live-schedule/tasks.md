@@ -13,9 +13,9 @@
 
 ## 3. Canonical identity
 
-- [ ] 3.1 Resolve the open question in design: decide how source team and competition ids map to canonical ids, and record the decision in the design before writing the mapping
-- [ ] 3.2 Implement the mapping and write canonical league, team, and match entities from a parsed response
-- [ ] 3.3 Test that re-running acquisition over an overlapping window converges rather than duplicating
+- [x] 3.1 Resolve the open question in design: decide how source team and competition ids map to canonical ids, and record the decision in the design before writing the mapping
+- [x] 3.2 Implement the mapping and write canonical league, team, and match entities from a parsed response
+- [x] 3.3 Test that re-running acquisition over an overlapping window converges rather than duplicating
 
 ## 4. The rights table
 
