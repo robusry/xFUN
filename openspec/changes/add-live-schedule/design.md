@@ -336,6 +336,11 @@ working at every step.
 
 ## Open Questions
 
+- **Manual per-match entry.** The rights table is the league-wide case of a person
+  supplying what no source knows. The per-match case — someone filling in a provider for
+  one fixture — is expected to follow, and Liga MX is the standing example of what the
+  league-wide form cannot express. Deliberately not designed here; noted so that the
+  table's shape is understood as one point on that path rather than the whole of it.
 - **Whether the rights table belongs in `packages/ingestion/` or beside the composition
   recipes.** Both are Zone C configuration; the recipes directory has the established
   precedent for values that move without specs.

@@ -27,10 +27,13 @@ from xfun_composition import (
     PolicyNotImplemented,
 )
 from xfun_runtime.calibration import CohortNotImplemented, calibrate
+from xfun_store import MatchAvailability
 
 from .context import ApiContext, get_context
 
 CohortName = Literal["window", "league", "season", "global"]
+
+UNKNOWN_AVAILABILITY = MatchAvailability()
 
 app = FastAPI(
     title="xFUN API",
@@ -77,17 +80,22 @@ async def _policy_not_implemented(_request, exc: PolicyNotImplemented) -> JSONRe
 Ctx = Annotated[ApiContext, Depends(get_context)]
 
 
-def _match_payload(snapshot) -> dict[str, Any]:
+def _match_payload(snapshot, availability: MatchAvailability | None = None) -> dict[str, Any]:
     return {
         "match_id": snapshot.match_id,
         "league": snapshot.data["league"]["name"],
         "kickoff_utc": snapshot.kickoff_utc,
         "home_team": snapshot.data["home_team"]["name"],
         "away_team": snapshot.data["away_team"]["name"],
-        # Broadcast availability is a separate concern with its own cadence, and
-        # "unknown" is a first-class answer. A confidently wrong provider is worse
-        # than an honest gap. Replaced by the add-broadcast-availability change.
-        "availability": {"status": "unknown", "providers": []},
+        # Read from the store rather than assembled from the snapshot. Availability
+        # is deliberately absent from a snapshot so that no model can score a match
+        # differently according to who broadcasts it.
+        #
+        # A match with no stored answer reports "unknown", which is a first-class
+        # answer rather than a gap: a confidently wrong provider -- telling someone
+        # a match is on a service that does not carry it -- is the failure a viewer
+        # notices immediately.
+        "availability": (availability or UNKNOWN_AVAILABILITY).to_payload(),
     }
 
 
@@ -115,11 +123,18 @@ def list_matches(
     by_match = calibration.by_match()
     recipe = ctx.recipe_for(target)
 
+    availability = ctx.availability(match_ids)
+
     ranked = []
     for snapshot in snapshots:
         scores = by_match.get(snapshot.match_id, ())
         composed = ctx.compose(scores, target, recipe)
-        ranked.append({"match": _match_payload(snapshot), "composed": composed.to_dict()})
+        ranked.append(
+            {
+                "match": _match_payload(snapshot, availability.get(snapshot.match_id)),
+                "composed": composed.to_dict(),
+            }
+        )
 
     # Unscored matches sort last rather than being dropped: "no score, and here is
     # why" is more useful than a silently shorter list.
@@ -161,7 +176,7 @@ def get_match_scores(
     composed = ctx.compose(scores, target, ctx.recipe_for(target))
 
     return {
-        "match": _match_payload(snapshot),
+        "match": _match_payload(snapshot, ctx.availability([match_id]).get(match_id)),
         "cohort": calibration.cohort.to_dict(),
         "score_alias": target.to_dict(),
         "composed": composed.to_dict(),

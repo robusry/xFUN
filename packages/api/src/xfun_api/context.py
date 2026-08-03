@@ -27,7 +27,13 @@ from xfun_composition import (
 )
 from xfun_contract import MatchSnapshot, ModelScore
 from xfun_runtime.calibration import CalibratedScore
-from xfun_store import connect, latest_scores, load_snapshots
+from xfun_store import (
+    MatchAvailability,
+    connect,
+    latest_scores,
+    load_snapshots,
+    read_availability_map,
+)
 
 __all__ = ["ApiContext", "get_context"]
 
@@ -57,6 +63,19 @@ class ApiContext:
     def scores(self, match_ids: Sequence[str] | None = None) -> tuple[ModelScore, ...]:
         with self._conn() as conn:
             return latest_scores(conn, match_ids=match_ids)
+
+    def availability(
+        self, match_ids: Sequence[str] | None = None
+    ) -> dict[str, MatchAvailability]:
+        """Where each match can be watched.
+
+        Read for the whole response at once rather than per match, so that
+        rendering a page does not become a function of how many matches are on.
+        Matches absent from the result have no stored answer, which callers read
+        as `unknown` -- the same thing a stored `unknown` means.
+        """
+        with self._conn() as conn:
+            return dict(read_availability_map(conn, match_ids))
 
     def registered_models(self) -> list[dict[str, Any]]:
         with self._conn() as conn:

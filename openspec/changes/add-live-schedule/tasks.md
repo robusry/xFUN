@@ -26,10 +26,10 @@
 
 ## 5. Availability persistence
 
-- [ ] 5.1 Add `infra/migrations/004_availability.sql` for per-match availability status and providers
-- [ ] 5.2 Write availability during acquisition and read it in `xfun_store`
-- [ ] 5.3 Replace the hardcoded `{"status": "unknown", "providers": []}` at `packages/api/src/xfun_api/main.py:88` with a store read
-- [ ] 5.4 Confirm `scripts/check_api_conformance.py` still passes — `openapi.yaml` already defines `Availability`, so the shape must not change
+- [x] 5.1 Add `infra/migrations/004_availability.sql` for per-match availability status and providers
+- [x] 5.2 Write availability during acquisition and read it in `xfun_store`
+- [x] 5.3 Replace the hardcoded `{"status": "unknown", "providers": []}` at `packages/api/src/xfun_api/main.py:88` with a store read
+- [x] 5.4 Confirm `scripts/check_api_conformance.py` still passes — `openapi.yaml` already defines `Availability`, so the shape must not change
 
 ## 6. The slate rule
 
@@ -71,3 +71,4 @@
 - [ ] 11.1 Record that model input remains entirely on fixture data, so no model scores, and that supplying it is expected to fall to the collector tier rather than to acquisition
 - [ ] 11.2 Record that `add-broadcast-availability` is fully discharged by this change, and update any reference that still names it as pending
 - [ ] 11.3 Record the unresolved question of whether `unknown` availability stays reachable once `us-watchable` filters on a known provider
+- [ ] 11.4 Record the expected follow-up: a way for a person to enter missing TV data by hand, per match rather than per league. The rights table is the league-wide case of this, and Liga MX is the standing example of what it cannot express — rights held per club. Not proposed here
