@@ -11,6 +11,13 @@ Nothing here touches the network. See `packages/collectors/` for the tier that d
 
 from .fixtures import fixture_payloads
 from .run import IngestResult, ingest
-from .slate import assemble_slate
+from .slate import WATCHABLE_WINDOW_DAYS, UnknownSelectionRule, assemble_slate
 
-__all__ = ["IngestResult", "assemble_slate", "fixture_payloads", "ingest"]
+__all__ = [
+    "WATCHABLE_WINDOW_DAYS",
+    "IngestResult",
+    "UnknownSelectionRule",
+    "assemble_slate",
+    "fixture_payloads",
+    "ingest",
+]

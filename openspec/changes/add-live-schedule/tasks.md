@@ -33,10 +33,10 @@
 
 ## 6. The slate rule
 
-- [ ] 6.1 Add `us-watchable` to `assemble_slate()`: kickoff within 10 days of run time, and at least one known provider
-- [ ] 6.2 Keep `league-allowlist` reachable for the fixture path, which has no provider data
-- [ ] 6.3 Record the rule and window bounds on `Selection`, and validate the slate against `contracts/schemas/slate.json` (`us-watchable` is already in the enum)
-- [ ] 6.4 Test the boundary cases from the spec: known provider inside the window, no provider inside it, known provider beyond it, and a window with nothing watchable
+- [x] 6.1 Add `us-watchable` to `assemble_slate()`: kickoff within 10 days of run time, and at least one known provider
+- [x] 6.2 Keep `league-allowlist` reachable for the fixture path, which has no provider data
+- [x] 6.3 Record the rule and window bounds on `Selection`, and validate the slate against `contracts/schemas/slate.json` (`us-watchable` is already in the enum)
+- [x] 6.4 Test the boundary cases from the spec: known provider inside the window, no provider inside it, known provider beyond it, and a window with nothing watchable
 
 ## 7. Failure as a first-class outcome
 
