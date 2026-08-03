@@ -25,10 +25,27 @@ A web developer with no API deployed generates a client from `openapi.yaml`, ser
 ingestion pipeline loads a snapshot fixture and iterates on a model. Neither waits
 for anyone.
 
+## Two kinds of fixture
+
+Most fixtures here are **authored contract examples**: written by us, validated
+against a schema in CI, and used by both sides of a seam. They are the contract.
+
+`fixtures/schedule/` is different. Those are **captured third-party responses** —
+reduced copies of goal.com pages, produced by `scripts/capture_schedule_fixture.py`.
+They validate against no schema, because the shape is not ours to define, and they
+may be refreshed wholesale when the source changes. They are test input for the
+schedule parsers, not an agreement between tiers.
+
+The distinction matters when one breaks. A failing authored fixture means a producer
+violated the contract. A failing captured fixture means somebody else changed their
+website, and the fix is usually to recapture and adapt the parser. See `docs/STUBS.md`
+for why the project depends on an unofficial source at all.
+
 ## Rules
 
 - Fixtures are validated against their schemas in CI. A producer that emits
-  non-conforming output fails before it can reach a consumer.
+  non-conforming output fails before it can reach a consumer. Captured fixtures are
+  exempt, since there is no schema to validate them against.
 - The same fixture files are used by both the producing and the consuming side's
   tests — that is what makes them a contract rather than two sets of sample data.
 - `openapi.yaml` is the source of truth for the API. The API is validated *against*

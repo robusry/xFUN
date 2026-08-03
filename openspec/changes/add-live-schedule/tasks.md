@@ -1,15 +1,15 @@
 ## 1. Golden fixtures for the source
 
-- [ ] 1.1 Capture real goal.com responses for two dates into `contracts/fixtures/schedule/`, one dense and one sparse, keeping the JSON-LD blocks and the competition-grouped page state
-- [ ] 1.2 Add a malformed capture — page state present but the expected structure missing — so the parse-failure path of `schedule-acquisition` is testable without the network
-- [ ] 1.3 Record in `contracts/README.md` that these fixtures are captured third-party responses, not authored contract examples, and may be refreshed wholesale
+- [x] 1.1 Capture real goal.com responses for two dates into `contracts/fixtures/schedule/`, one dense and one sparse, keeping the JSON-LD blocks and the competition-grouped page state
+- [x] 1.2 Add a malformed capture — page state present but the expected structure missing — so the parse-failure path of `schedule-acquisition` is testable without the network
+- [x] 1.3 Record in `contracts/README.md` that these fixtures are captured third-party responses, not authored contract examples, and may be refreshed wholesale
 
 ## 2. Parsing the source
 
-- [ ] 2.1 Parse schema.org `SportsEvent` JSON-LD for match identity, UTC kickoff, and team names
-- [ ] 2.2 Parse the competition-grouped page state for `competition.id`, `competition.name`, `competition.area.name`, and `tvChannels`
-- [ ] 2.3 Join the two by match, keeping identity sourced from JSON-LD and competition/providers from page state per design D5
-- [ ] 2.4 Test both parsers against the golden fixtures, including a competition-name collision (the `Premier League` bucket spans six countries and only the id separates them)
+- [x] 2.1 Parse schema.org `SportsEvent` JSON-LD for match identity, UTC kickoff, and team names
+- [x] 2.2 Parse the competition-grouped page state for `competition.id`, `competition.name`, `competition.area.name`, and `tvChannels`
+- [x] 2.3 Join the two by match, keeping identity sourced from JSON-LD and competition/providers from page state per design D5
+- [x] 2.4 Test both parsers against the golden fixtures, including a competition-name collision (the `Premier League` bucket spans six countries and only the id separates them)
 
 ## 3. Canonical identity
 

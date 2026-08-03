@@ -1,0 +1,18 @@
+<!doctype html>
+<html><head>
+<!-- HAND-WRITTEN, not captured. A degraded version of the real fixtures, for the
+     parse-failure scenario in specs/schedule-acquisition/spec.md.
+
+     The specific breakage is the one design D5 predicts: the source keeps its
+     schema.org JSON-LD, which is a standard it does not own, and renames the key
+     holding its own page state, which is a private implementation detail. So the
+     stable half still parses and the fragile half does not.
+
+     This must be recorded as a FAILURE rather than as a date with no matches. Both
+     produce an empty slate, and only the run record distinguishes "the source
+     changed shape" from "nothing is on". Treating this as absence is the specific
+     bug this fixture exists to catch. -->
+</head><body>
+<script type="application/ld+json">{"@context": "https://schema.org", "@type": "SportsEvent", "name": "Hull City vs Manchester United", "startDate": "2026-08-22T11:30:00.000Z", "location": {"@type": "Place", "name": "MKM Stadium"}, "url": "https://www.goal.com/en-us/match/hull-city-vs-manchester-united/x", "eventStatus": "https://schema.org/EventScheduled", "homeTeam": {"@type": "SportsTeam", "name": "Hull City"}, "awayTeam": {"@type": "SportsTeam", "name": "Manchester United"}}</script>
+<script id="__NEXT_DATA__" type="application/json">{"props": {"pageProps": {"content": {"matchCentreGroups": []}}}}</script>
+</body></html>
