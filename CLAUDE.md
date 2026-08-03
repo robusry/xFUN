@@ -21,16 +21,25 @@ API with no database server, no container, and no credentials. But the component
 inside the tiers are placeholders by design: the deliverable so far is a structure
 the team can read and run, not working functionality.
 
-Both models predict nothing. Ingestion reads files. Three of four calibration
-cohorts and two of three composition policies return 501.
+Both models predict nothing. Three of four calibration cohorts and two of three
+composition policies return 501.
+
+**Ingestion is the exception, and only half of it.** `./scripts/demo.sh --live`
+acquires real upcoming matches and their US broadcasters. Nothing a *model* reads
+is real, so on a live run every match is returned with a recorded skip reason and
+no score. That is the partial-coverage path working on real data.
 
 `openspec/specs/` is the authoritative record of what the system currently
-**does** — seven capabilities, 46 requirements — while `openspec/config.yaml`
+**does** — nine capabilities, 59 requirements — while `openspec/config.yaml`
 holds the reasoning behind them. Archived changes are under
 `openspec/changes/archive/`:
 
 - `2026-08-01-establish-project-structure` — the architecture, the workflow, and
   the skeleton itself
+- `2026-08-02-add-collector-tier` — the collector tier, the slate, and the entity
+  joins
+- `2026-08-03-add-live-schedule` — real matches and US broadcasters, the
+  `us-watchable` slate rule, and the six-source survey behind picking goal.com
 
 **This file does not set priorities.** "Still open" below records what is
 undecided, not a queue. Ask what the session is for rather than inferring it.
