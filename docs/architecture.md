@@ -5,7 +5,10 @@
 ```
 ┌──────────────────────────────────────────────────────────────────┐
 │ INGESTION          scheduled · idempotent · slate + canonical rows│
-│                    fixture-file only, for now                     │
+│  ├ schedule source  which matches exist, and who carries them.    │
+│  │                  TOUCHES THE NETWORK — runs before the slate,  │
+│  │                  because it produces what the slate is made of │
+│  └ fixture files    the default path; no network, no credentials  │
 └────────────────────────────┬─────────────────────────────────────┘
                              │ canonical entities
                              ▼
@@ -15,7 +18,7 @@
                              │ Slate                ◀── contract 1a
                              ▼
 ┌──────────────────────────────────────────────────────────────────┐
-│ COLLECTORS         the ONLY tier allowed to touch the network.    │
+│ COLLECTORS         the other tier allowed to touch the network.   │
 │                    each fans out its own way, once per slate      │
 │                    keyed by  match · team · league                │
 └────────────────────────────┬─────────────────────────────────────┘
@@ -77,6 +80,26 @@ Collectors resolve that. Fetching moves **earlier** rather than being eliminated
 The tier boundary is enforced in the inverse direction from everywhere else: CI
 does not check what a collector imports — reaching outside is its purpose — it
 checks that **no model and no API package imports a collector**.
+
+### The two tiers that fetch, and why there are two
+
+External access lives in exactly two places, and which one a job belongs to is
+decided by **when it runs relative to the slate**:
+
+| | runs | produces |
+|---|---|---|
+| **schedule source** | before a slate exists | the matches a slate is made of, and who broadcasts them |
+| **collectors** | after the slate is assembled | signals about matches already known |
+
+The split is structural rather than stylistic. `Collector.collect(slate)` takes a
+slate as its input, so nothing expressible through that interface can produce one —
+a schedule source forced into it would have to be handed a slate it then ignored.
+`assemble_slate()` reads the `match` table, which has to be populated first.
+
+So "collectors are the only tier that may touch the network" is now false, and the
+rule that replaced it is narrower rather than looser: **two named tiers, in a stated
+order, and nothing else** — no model, no API, no composition, no store. CI checks
+that scoring and serving reach neither.
 
 ### Absence and failure are different answers
 

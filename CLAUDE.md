@@ -65,9 +65,12 @@ look like bugs:
 - **Unimplemented cohorts/policies raise rather than falling back**, and surface
   as 501.
 - **Matches with no score are still returned**, with a reason.
-- **Collectors are exempt from the purity check.** Touching the network is the
-  purpose of that tier. The rule points the other way: no model and no API package
-  may import a collector.
+- **Collectors and the schedule source are exempt from the purity check.**
+  Touching the network is the purpose of those two tiers, and there are exactly
+  two, separated by when they run relative to the slate: the schedule source
+  produces it, collectors enrich it. A collector cannot produce the slate —
+  `collect(slate)` takes one as input. The rule points the other way: no model and
+  no API package may import either.
 - **A signal path never names its producer.** `signals.<namespace>.<leaf>`, where
   the namespace is a subject area. Encoding the producer would make swapping one a
   breaking change for every model declaring the path.
@@ -85,8 +88,10 @@ packages/
   scoring-runtime/    registry, collection, entity joins, runner, calibration
   store/              canonical entities + append-only score store
   models/<id>/        one package per model, deps isolated
-  collectors/<id>/    one package per data source. the ONLY tier that may
-                      touch the network. purity-exempt by design.
+  collectors/<id>/    one package per data source. ONE of the two tiers
+                      that may touch the network. purity-exempt by design.
+                      (the other is ingestion/schedule/, which runs BEFORE
+                      the slate because it produces what the slate is made of)
   composition/        src/ = mechanism (Zone A), recipes/ = values (Zone C)
   ingestion/          slate assembly + canonical entity writing
   api/                FastAPI, read-only
