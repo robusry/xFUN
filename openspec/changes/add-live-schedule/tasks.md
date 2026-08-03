@@ -55,7 +55,7 @@
 
 - [ ] 9.1 `CLAUDE.md`: collectors are no longer "the ONLY tier that may touch the network" — restate as the two tiers of design D1
 - [ ] 9.2 `docs/architecture.md` and `docs/zones.md`: same correction, so the rule is not true in three places and false in a fourth
-- [ ] 9.3 `docs/STUBS.md`: mark **Ingestion**, **The slate rule**, and **Broadcast availability** as partly resolved — not deleted, since ingestion still has no odds, form, or table
+- [ ] 9.3 `docs/STUBS.md`: mark **Ingestion**, **The slate rule**, and **Broadcast availability** as partly resolved — not deleted, since acquisition establishes matches and availability but nothing a model reads
 - [ ] 9.4 `docs/STUBS.md`: add goal.com as an unofficial third-party source with no API contract, naming the six rejected alternatives from design D2 so the survey is not repeated
 - [ ] 9.5 PLACEHOLDER: the rights table is hand-maintained and will go stale when rights move between seasons. Record it in `docs/STUBS.md`; no follow-up change is proposed, because no surveyed source can replace it
 
@@ -64,10 +64,10 @@
 - [ ] 10.1 Run everything CI runs, in order, per `CLAUDE.md`
 - [ ] 10.2 Run the pipeline live against the real source and confirm the slate holds real matches with real providers
 - [ ] 10.3 Confirm the fixture path still runs on a clone with no network and no credentials
-- [ ] 10.4 Confirm every match is returned with a recorded skip reason and no composed score, since no model has odds — the expected outcome, not a regression
+- [ ] 10.4 Confirm every match is returned with a recorded skip reason and no composed score, since no model's declared features are satisfied — the expected outcome, not a regression
 
 ## 11. Follow-ups this change deliberately defers
 
-- [ ] 11.1 Record that `add-live-ingestion` remains open for odds, form, and table, without which no model scores
+- [ ] 11.1 Record that model input remains entirely on fixture data, so no model scores, and that supplying it is expected to fall to the collector tier rather than to acquisition
 - [ ] 11.2 Record that `add-broadcast-availability` is fully discharged by this change, and update any reference that still names it as pending
 - [ ] 11.3 Record the unresolved question of whether `unknown` availability stays reachable once `us-watchable` filters on a known provider

@@ -7,12 +7,14 @@ something is to fill it with matches that are really on, and to say where a US v
 actually watch them — which is also the product's stated scope, and the one part of it
 that has never been computable.
 
-This change is deliberately narrow: **schedule and US broadcast providers only.** No odds,
-no form, no league table. That has a consequence worth stating plainly rather than
-discovering later — `over-under-lean` and `odds-spread` both require odds, so after this
-change every match is returned with a recorded skip reason and no composed score. That is
-the partial-coverage path working correctly on real data, not a regression, and it is why
-this change is worth landing before a model-facing one.
+This change is deliberately narrow: **which matches exist, and where a US viewer can watch
+them.** Nothing a model consumes is in scope — acquisition sits upstream of scoring, and
+what models read is the collector tier's concern. That has a consequence worth stating
+plainly rather than discovering later: neither registered model's declared features are
+satisfied by anything this change produces, so every match is returned with a recorded skip
+reason and no composed score. That is the partial-coverage path working correctly on real
+data, not a regression, and it is why this change is worth landing before a model-facing
+one.
 
 ## What Changes
 
@@ -65,12 +67,13 @@ reads availability from the store instead of hardcoding it at `main.py:88`.
 **Placeholders resolved in `docs/STUBS.md`.** Three entries: **Ingestion** (`fixture_payloads()`
 reads from disk), **The slate rule** (`league-allowlist` placeholder), and **Broadcast
 availability** (always answers `unknown`). Each is resolved in part rather than wholly —
-ingestion still has no odds, form, or table source — and `docs/STUBS.md` must say so
-rather than delete the rows.
+acquisition establishes matches and availability, not anything a model reads — and
+`docs/STUBS.md` must say so rather than delete the rows.
 
-**Not resolved.** `add-live-ingestion` remains open for odds, form, and table, without
-which no model scores. This change takes the schedule half of it and the whole of
-`add-broadcast-availability`.
+**Not resolved.** Model input remains entirely on fixture data, so no model scores. Which
+tier supplies it is out of scope here and is expected to be the collector tier, since
+model-facing data is what that tier exists to fetch. This change takes the schedule half of
+`add-live-ingestion` and the whole of `add-broadcast-availability`.
 
 **External dependency.** goal.com is a third-party site with no API contract and no
 stability guarantee, read via its published JSON-LD and page state. Its `robots.txt` is

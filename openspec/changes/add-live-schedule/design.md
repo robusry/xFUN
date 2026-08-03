@@ -35,8 +35,10 @@ reader who does not know it will re-run the same search.
 
 **Non-Goals:**
 
-- Odds, form, and league table. `add-live-ingestion` keeps those, and without them no model
-  scores. This change makes the schedule real, not the rankings.
+- Anything a model consumes. Acquisition establishes which matches exist and where they can
+  be watched; what a model reads about them is a separate tier's concern, and this design
+  takes no position on which. Because no model input becomes real here, no model scores —
+  this change makes the schedule real, not the rankings.
 - Signal collectors against live sources. Unchanged, still on fixture files.
 - Persisting snapshots. `add-score-provenance`.
 - A provider selection that is durable. goal.com is the best option available today, not a
@@ -246,9 +248,10 @@ Accepted and recorded rather than corrected. "Fubo" is not false — it does car
 `selection` records the rule and window so a thin slate is interpretable rather than
 mysterious.
 
-**Nothing scores after this change** → Stated in the proposal and expected. Both models
-require odds. Matches are returned with recorded skip reasons, which exercises the
-partial-coverage path on real data.
+**Nothing scores after this change** → Stated in the proposal and expected. Neither
+registered model's declared features are satisfied by anything acquisition produces.
+Matches are returned with recorded skip reasons, which exercises the partial-coverage path
+on real data.
 
 **Depending on a third party with no contract** → Recorded in `docs/STUBS.md` as unofficial,
 alongside the six alternatives and why each was rejected, so the decision can be revisited
