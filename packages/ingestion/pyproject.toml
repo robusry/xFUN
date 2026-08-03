@@ -1,12 +1,13 @@
 [project]
 name = "xfun-ingestion"
 version = "0.1.0"
-description = "Data source adapters. Fixture-backed in the skeleton; no network."
+description = "Slate assembly, canonical entity writing, and the schedule source."
 requires-python = ">=3.12"
 dependencies = [
     "xfun-scoring-contract",
     "xfun-scoring-runtime",
     "xfun-store",
+    "pyyaml>=6.0",
 ]
 
 [build-system]

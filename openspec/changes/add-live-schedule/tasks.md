@@ -19,10 +19,10 @@
 
 ## 4. The rights table
 
-- [ ] 4.1 Add the `league -> US providers` table as Zone C configuration, with a `verified_on` date required per entry
-- [ ] 4.2 Seed the leagues the source leaves empty — MLS, MLS NEXT Pro, Liga MX — each verified against the league's own published rights announcement, not against an aggregator
-- [ ] 4.3 Fail table loading when an entry omits `verified_on`, per the `schedule-acquisition` spec
-- [ ] 4.4 Implement two-step provider resolution: per-match data first, table second, `unknown` third
+- [x] 4.1 Add the `league -> US providers` table as Zone C configuration, with a `verified_on` date required per entry
+- [x] 4.2 Seed the leagues the source leaves empty, each verified against the rights holder's own announcement rather than an aggregator. Verification corrected two assumptions: MLS NEXT Pro is OneFootball, not Apple TV, and Liga MX rights are held per club, so it gets no entry and its matches will not reach the slate
+- [x] 4.3 Fail table loading when an entry omits `verified_on`, per the `schedule-acquisition` spec
+- [x] 4.4 Implement two-step provider resolution: per-match data first, table second, `unknown` third
 
 ## 5. Availability persistence
 

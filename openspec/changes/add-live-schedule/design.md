@@ -125,13 +125,27 @@ break without notice. D5 and D8 are how that cost is contained rather than ignor
 Per-match provider data from the source wins. Where it is absent, a hand-maintained
 `league -> US providers` table answers. Where neither does, availability is `unknown`.
 
-The table is not a workaround. US broadcast rights are mostly league-wide: every MLS and
-MLS NEXT Pro match is Apple TV, Liga MX is TUDN/ViX/Univision. For those leagues a static
-line is *more* accurate than a per-match lookup, because the source's provider data carries
-affiliate tracking (`sponsored: true`, and Fubo is its single most-listed channel), so it
-reflects commercial partnerships rather than rights. It also covers the source's decay
-across the window — provider coverage thins from roughly a fifth of matches on day three to
-almost none by day ten.
+The table is not a workaround. Some US rights genuinely are league-wide: every MLS match
+from 2026 is on Apple TV with no blackouts, and every MLS NEXT Pro match is free on
+OneFootball. For those leagues a static line is *more* accurate than a per-match lookup,
+because the source's provider data carries affiliate tracking (`sponsored: true`, and Fubo
+is its single most-listed channel), so it reflects commercial partnerships rather than
+rights. It also covers the source's decay across the window — provider coverage thins from
+roughly a fifth of matches on day three to almost none by day ten.
+
+**Verifying the seed entries corrected two assumptions this design was written on, which
+is the strongest argument for the rule that entries cite the rights holder rather than an
+aggregator.** MLS NEXT Pro is not Apple TV: Apple holds streaming rights through 2032, but
+the 2026 broadcast arrangement is OneFootball plus the league's own site. And Liga MX is
+not league-wide at all — its rights are held per club, with TelevisaUnivision carrying most,
+Chivas home matches on Telemundo/Peacock, Monterrey, Tijuana and Santos on FOX, and a
+Paramount+ subset in English. Both beliefs came from aggregators and both were wrong.
+
+Liga MX therefore does **not** get an entry, and the consequence is real rather than
+cosmetic: the source names no provider for it either, so its matches resolve to `unknown`
+and D4's rule keeps them off the slate. Liga MX is absent from the product until either the
+source starts answering for it or the table grows club-level entries — which is a change to
+what this table means, not a row added to it.
 
 The precedence is deliberately the other way round from what accuracy alone would suggest.
 Per-match data wins because split-rights leagues exist — a Premier League matchweek divides
@@ -141,8 +155,9 @@ answers only where the source is silent, which is where rights are constant.
 *Rejected:* the table as the only source of providers. Cannot express split rights, which
 covers the leagues with the largest US audiences.
 
-*Rejected:* the source as the only source of providers. Drops Liga MX and MLS NEXT Pro
-entirely, both of which are in scope and both of which have completely stable carriers.
+*Rejected:* the source as the only source of providers. It names none for MLS NEXT Pro
+across every sampled date, and that competition has a single free carrier for every match,
+so the one thing the source cannot tell us is the thing that is easiest to state correctly.
 
 *Cost accepted:* the table is hand-maintained and will go stale when rights move between
 seasons, silently and in the direction users notice. It is Zone C configuration, carries a

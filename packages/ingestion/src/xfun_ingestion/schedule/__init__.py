@@ -29,16 +29,30 @@ from .parse import (
     parse_schedule,
     sports_events,
 )
+from .rights import (
+    Availability,
+    LeagueRights,
+    RightsTableError,
+    default_rights_path,
+    load_rights,
+    resolve_providers,
+)
 
 __all__ = [
+    "Availability",
     "CanonicalIdError",
+    "LeagueRights",
+    "RightsTableError",
     "ScheduleParseError",
     "SourceMatch",
     "canonical_payload",
     "competition_groups",
+    "default_rights_path",
     "league_id",
+    "load_rights",
     "match_id",
     "parse_schedule",
+    "resolve_providers",
     "slugify",
     "sports_events",
     "team_id",
