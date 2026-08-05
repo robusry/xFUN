@@ -51,12 +51,20 @@ Past-dated goal.com fixtures pages carry the final score and a status in the sam
 acquisition already parses for competition and TV providers. Verified across 140 dates: a
 finished match carries `status: "RESULT"` and `score: {teamA, teamB}`.
 
-The decisive argument is **identity, not coverage**. Canonical team ids are slugs derived from
-this source's team names (D9 of `add-live-schedule`), and the collector's output is joined to
-the slate on exactly those ids. A second provider means cross-source entity resolution — its
-"Man Utd" against our `manchester-united`, and the River Plate collision D9 already accepts as
-a known cost — where a mismatch does not fail, it silently attributes another club's goals.
-One source, one vocabulary, an exact join.
+The decisive argument is **identity, not coverage**. A collector has to recognise "the team
+on the slate" in "a name on a page", and this one does it by reducing both names with the same
+derivation acquisition uses for canonical ids (`team_id`), then emitting under the slate's own
+id. Within one source that is exact: the slate's names came from these pages, so the two sides
+of the comparison are drawn from one vocabulary. A second provider makes it cross-source entity
+resolution — its "Man Utd" against this project's "Manchester United", and the River Plate
+collision D9 already accepts as a known cost — where a mismatch does not fail, it silently
+attributes another club's goals.
+
+Note what this does *not* assume: that the slate's ids were minted from this source. Matching
+on `team_id(team.name)` rather than on `team.id` is what lets the same collector run against the
+golden fixture slate, whose teams are `ars` and `liv` named `Arsenal` and `Liverpool`. Two slate
+teams reducing to one name are dropped rather than resolved, because attributing one River
+Plate's goals to the other is exactly the failure this whole design is arranged to avoid.
 
 *Rejected:* football-data.org. Its free tier is twelve competitions — Premier League,
 Championship, La Liga, Serie A, Bundesliga, Ligue 1, Eredivisie, Primeira Liga, Brasileirão,
@@ -113,6 +121,13 @@ argument for 120 rather than the 90 that looks natural: stopping at 90 discards 
 slate for a saving of 48 MB, and the teams it discards are the ones a US viewer is most likely
 to be watching in August. Mid-season the early stop reaches every team in roughly 35–45 dates
 and the bound never binds.
+
+*Observed*, on the live run that closed this change out (2026-08-05, window to 2026-08-15):
+2,838 matches seen, 184 watchable, a 162-match slate over 261 teams. The scan covered **246 of
+261 teams (94%)** and `recent-goals-total` scored **149 of 162 matches (92%)**, raw scores from
+6 to 32, mean 15.4. The 13 unscored matches came back with a recorded reason, as designed. That
+the coverage matched the 95% predicted from the sampling above is the reason the table is in
+this document rather than in somebody's terminal history.
 
 *Rejected:* no bound at all, scanning until every team has five. Unbounded work against a
 third party for a signal that decays: the five most recent matches of a club that last played
@@ -201,12 +216,13 @@ headers and its 403 policy, and a fetch of one dated page — and the collector 
 keeps the tier boundary honest points at who may import a collector, not at what one may
 import.
 
-*Rejected:* a second HTTP client and a second copy of `slugify` inside the collector. The slug
-rule is not a detail: the join between this collector's output and the slate is by canonical
-team id, so if the two derivations ever disagree by one character, the value silently lands on
-no team and the match is skipped as though the team had not played. And the 403 handling
-carries a policy — "the source may have started blocking automated access; do not work around
-it" — which should have one home rather than two that can drift apart.
+*Rejected:* a second HTTP client and a second copy of `slugify` inside the collector. The 403
+handling carries a policy, not merely an error message — "the source may have started blocking
+automated access; do not work around it" — and a policy with two homes is a policy that drifts.
+The name derivation is a weaker case, since this collector reduces both sides of its comparison
+itself and would stay self-consistent with any implementation; it is shared anyway because the
+function that defines what a canonical id *is* should have one definition, and a private copy
+would go on agreeing right up until acquisition normalised something and it didn't.
 
 *Cost accepted:* a collector package now depends on `xfun-ingestion`. If that grates later, the
 thing to extract is "how to read a goal.com page and derive an id from a name", which both
@@ -258,10 +274,14 @@ one line restores the blend, and the team decides by review, not by this design.
   scores none sum to the same total as two sides scoring 2.5 each, and the second match is
   probably the better watch. Left alone deliberately: the team specified the sum, and a
   weighting invented here would be a second unvalidated hypothesis smuggled in under the first.
-- **A renamed club becomes a new team.** Already accepted in D9 of `add-live-schedule` for the
-  canonical entity; it bites harder here, because a club renamed mid-scan splits its five
-  matches across two slugs and both end up short. Rare, and it produces absence rather than a
-  wrong number.
+- **A club the source names differently is invisible.** Not hypothetical: the golden snapshot
+  calls Inter `Internazionale` and goal.com calls them `Inter`, so the offline demo scores
+  seven of its eight fixture matches and returns the Serie A one unscored with a reason. Left
+  alone rather than fixed by renaming the fixture, which would make this project's authored
+  examples answerable to a third party's vocabulary, or by matching names loosely, which would
+  eventually put one club's goals on another with no symptom. The same mechanism means a club
+  the source renames mid-scan splits its five matches across two keys and ends up short. Every
+  version of this failure produces absence, which is the point.
 - **Cost repeats every run.** 120 requests and ~134 MB in the worst case, with nothing cached
   between runs. Acceptable for a batch pipeline nobody runs in a loop; unacceptable as a
   pattern if a second collector copies it. `refresh_after_seconds` is declared at six hours so

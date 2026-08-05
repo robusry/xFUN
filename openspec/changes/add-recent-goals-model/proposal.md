@@ -67,7 +67,9 @@ beats duplicating here, and what would have to move if that dependency later gra
 **Cost of a live run.** Measured on 2026-08-04, which is close to the worst case — a
 post-World-Cup August, with most European leagues between seasons: a 212-team slate needed
 120 dates fetched to give **95%** of teams five completed matches, at ~134 MB and 120
-requests. Mid-season the early stop reaches every team in roughly 35–45 dates. Nothing
+requests. Mid-season the early stop reaches every team in roughly 35–45 dates. The live run
+that closed this change out bore that out: 246 of 261 teams covered, and 149 of a 162-match
+slate scored. Nothing
 persists between runs yet, so every pipeline run pays this again; `add-collector-corpora` is
 the change that ends that, and `refresh_after_seconds` is declared here against that day.
 
