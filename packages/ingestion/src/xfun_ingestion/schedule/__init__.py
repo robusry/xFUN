@@ -41,7 +41,9 @@ from .rights import (
 from .source import (
     SOURCE_ID,
     ScheduleSourceError,
+    fetch_page,
     fetch_window,
+    page_client,
     schedule_url,
     window_dates,
 )
@@ -59,10 +61,12 @@ __all__ = [
     "canonical_payload",
     "competition_groups",
     "default_rights_path",
+    "fetch_page",
     "fetch_window",
     "league_id",
     "load_rights",
     "match_id",
+    "page_client",
     "parse_schedule",
     "resolve_providers",
     "schedule_url",
