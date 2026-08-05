@@ -33,7 +33,7 @@ fewer than five completed matches come back with a recorded skip reason and no
 score, which is the partial-coverage path working on real data.
 
 `openspec/specs/` is the authoritative record of what the system currently
-**does** — nine capabilities, 59 requirements — while `openspec/config.yaml`
+**does** — ten capabilities, 65 requirements — while `openspec/config.yaml`
 holds the reasoning behind them. Archived changes are under
 `openspec/changes/archive/`:
 
@@ -43,7 +43,7 @@ holds the reasoning behind them. Archived changes are under
   joins
 - `2026-08-03-add-live-schedule` — real matches and US broadcasters, the
   `us-watchable` slate rule, and the six-source survey behind picking goal.com
-- `2026-08-04-add-recent-goals-model` — the first real collector and the first
+- `2026-08-05-add-recent-goals-model` — the first real collector and the first
   model with real inputs, the 120-day lookback and the coverage curve behind it,
   and why fewer than five matches must produce absence rather than a partial sum
 
