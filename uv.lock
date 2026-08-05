@@ -7,10 +7,12 @@ members = [
     "xfun",
     "xfun-api",
     "xfun-collector-fixture-signals",
+    "xfun-collector-recent-results",
     "xfun-composition",
     "xfun-ingestion",
     "xfun-model-odds-spread",
     "xfun-model-over-under-lean",
+    "xfun-model-recent-goals-total",
     "xfun-model-social-buzz",
     "xfun-scoring-contract",
     "xfun-scoring-runtime",
@@ -872,6 +874,23 @@ requires-dist = [
 ]
 
 [[package]]
+name = "xfun-collector-recent-results"
+version = "0.1.0"
+source = { editable = "packages/collectors/recent-results" }
+dependencies = [
+    { name = "httpx" },
+    { name = "xfun-ingestion" },
+    { name = "xfun-scoring-contract" },
+]
+
+[package.metadata]
+requires-dist = [
+    { name = "httpx", specifier = ">=0.27" },
+    { name = "xfun-ingestion", editable = "packages/ingestion" },
+    { name = "xfun-scoring-contract", editable = "packages/scoring-contract" },
+]
+
+[[package]]
 name = "xfun-composition"
 version = "0.1.0"
 source = { editable = "packages/composition" }
@@ -924,6 +943,17 @@ requires-dist = [{ name = "xfun-scoring-contract", editable = "packages/scoring-
 name = "xfun-model-over-under-lean"
 version = "0.1.0"
 source = { editable = "packages/models/over-under-lean" }
+dependencies = [
+    { name = "xfun-scoring-contract" },
+]
+
+[package.metadata]
+requires-dist = [{ name = "xfun-scoring-contract", editable = "packages/scoring-contract" }]
+
+[[package]]
+name = "xfun-model-recent-goals-total"
+version = "0.1.0"
+source = { editable = "packages/models/recent-goals-total" }
 dependencies = [
     { name = "xfun-scoring-contract" },
 ]

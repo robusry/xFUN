@@ -12,8 +12,16 @@ it. This page is the authoritative list. If something is not here, it is real.
 
 These are the bootstrap's actual deliverable and are expected to survive.
 
+**Real is not the same as validated.** `recent-goals-total` reads goals from matches
+that were really played, and it has never been tested against whether anyone enjoyed
+watching them, because no ground-truth label exists. That is true of every model here
+and stays true until `add-evaluation-harness`. What separates it from the rows further
+down is that its inputs are real, so it can be wrong in a way somebody can check.
+
 | What | Where |
 |---|---|
+| `recent-goals-total` — real inputs, unvalidated hypothesis | `packages/models/recent-goals-total/` |
+| `recent-results` — goals scored in each team's last five completed matches | `packages/collectors/recent-results/` |
 | The JSON Schemas and the OpenAPI document | `contracts/` |
 | Golden fixtures, including the coverage edge cases | `contracts/fixtures/` |
 | The model interface: purity, feature declaration, identity | `packages/scoring-contract/` |
@@ -30,10 +38,11 @@ These are the bootstrap's actual deliverable and are expected to survive.
 
 | | |
 |---|---|
+| **Which ones** | `over-under-lean`, `odds-spread`, and `social-buzz`. **Not** `recent-goals-total`, which is listed above as real but unvalidated. |
 | **What** | `over-under-lean` returns the over/under goals line. `odds-spread` returns the normalised entropy of vig-stripped outcome probabilities. `social-buzz` multiplies invented mention counts by an invented interest level. |
 | **Why it is a placeholder** | None has been validated against any measure of whether matches were entertaining. `over-under-lean` ignores competitiveness and will rank a 4–0 procession above a tense 1–1; `odds-spread` ignores goals and will do the reverse; `social-buzz` measures attention, which is not the same thing as quality, from data that was made up. |
 | **Why three** | To exercise multi-model fan-out and the partial-coverage path — they require different features on purpose. `social-buzz` additionally reads `signals.*` rather than canonical data, which is what makes the collector tier reachable from `scripts/demo.sh` instead of dormant. |
-| **Not in the default recipe** | `social-buzz` is deliberately absent from `packages/composition/recipes/default.yaml`; it contributes nothing to the composed score. |
+| **Not in the default recipe** | None of the three is in `packages/composition/recipes/default.yaml` any more. It names `recent-goals-total` alone, so no placeholder contributes to the composed score. Restoring a blend is one line, and Zone C. |
 | **Replaced by** | `add-market-baseline-model` for the two market models; whichever change first builds a validated social model for `social-buzz` |
 
 ### Ingestion
@@ -42,17 +51,18 @@ These are the bootstrap's actual deliverable and are expected to survive.
 |---|---|
 | **What** | Two paths. `--live` acquires real upcoming matches and their US broadcasters from goal.com. The default reads `contracts/fixtures/snapshots/*.json` from disk. |
 | **Why the fixture path stays** | A fresh clone must run with nothing configured and no network, and the default must not depend on a third party being up. |
-| **What is still placeholder** | Everything a model reads. Acquisition establishes which matches exist and where to watch them; it fetches no odds, no form, and no league table, so **no model scores anything on a live run** — every match is returned with a recorded skip reason. That is the partial-coverage path working on real data, not a regression. |
-| **Replaced by** | Whichever change gives models real input. Expected to be the collector tier, since model-facing data is what that tier exists to fetch. |
+| **What is still placeholder** | Most of what a model reads. Acquisition still fetches no odds and no league table, so `over-under-lean` and `odds-spread` skip every match on a live run. It is no longer *everything*: `recent-results` collects recent goals, and `recent-goals-total` scores a live match wherever both sides have five completed matches. Matches where they do not are still returned with a recorded skip reason, which is the partial-coverage path working on real data rather than a regression. |
+| **Replaced by** | Partly resolved by `add-recent-goals-model`, which gave the collector tier its first real source. Odds and table data are still unfetched and no change is proposed for them. |
 
 ### Collectors
 
 | | |
 |---|---|
+| **Which ones** | The three in `packages/collectors/fixture-signals/`. **Not** `recent-results`, which reads a source and is listed above as real. |
 | **What** | `fixture-match`, `fixture-team`, and `fixture-league` in `packages/collectors/fixture-signals/` read `contracts/fixtures/signals/*.json` from disk. The values are invented. |
 | **Why they exist** | To exercise all three entity joins end to end on a clone with nothing configured. `fixture-team` returns one team on purpose, so a match carries `signals.reddit.home.*` with no `away` counterpart and the partial-coverage path is real rather than theoretical. |
-| **Also missing** | Nothing persists collected signals between runs, so `refresh_after_seconds` is declared but not enforced, and a re-score requires a re-collect. No collector consumes an unkeyed corpus. |
-| **Replaced by** | Whichever change gives models real input — the collector tier is where model-facing data belongs; `add-collector-corpora` for persistence, retention, and the corpus escape hatch. Note that the **schedule source is not a collector** and does not replace these: it runs before the slate exists and produces what the slate is made of. |
+| **Also missing** | Nothing persists collected signals between runs, so `refresh_after_seconds` is declared but not enforced, and a re-score requires a re-collect. That now costs something real: `recent-results` re-walks up to 120 dates every run. No collector consumes an unkeyed corpus. |
+| **Replaced by** | The "real input" half is resolved by `add-recent-goals-model`; these three stay because they exercise all three entity joins on a clone with nothing configured. `add-collector-corpora` for persistence, retention, and the corpus escape hatch. Note that the **schedule source is not a collector** and does not replace these: it runs before the slate exists and produces what the slate is made of. |
 
 ### The slate rule
 

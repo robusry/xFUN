@@ -42,10 +42,12 @@ for the second.
 
 ## Adding a collector
 
-1. A directory here, with its own `pyproject.toml` declaring its own dependencies.
-2. One line in the root `pyproject.toml` workspace members.
-3. Implement `xfun_contract.Collector`: `collector_id`, `namespace`, `entity_kind`,
+1. A directory here, with its own `pyproject.toml` declaring its own dependencies. The
+   root workspace globs `packages/collectors/*`, so there is no list to add to.
+2. Implement `xfun_contract.Collector`: `collector_id`, `namespace`, `entity_kind`,
    `provides`, `refresh_after_seconds`, and `collect(slate)`.
+3. Register it in `scripts/pipeline.py`, which is the only place that knows collectors
+   exist.
 
 The registry composes full paths from your namespace and leaves — a team-keyed
 collector claiming `excitement` provides both `signals.<ns>.home.excitement` and
@@ -56,8 +58,13 @@ A namespace is a subject area, not your identity. Several collectors may contrib
 to one, and a signal may change producer without its path moving — which is what
 keeps the path stable for the models that declare it.
 
-## Everything here is a placeholder
+## What is real here and what is not
 
-All three collectors in this directory read files and talk to nothing, so a fresh
-clone runs with no credentials configured. Selecting a real provider is
-`add-live-ingestion`. See `docs/STUBS.md`.
+`recent-results/` reads a source: goals scored in each team's last five completed
+matches, from dated schedule pages. It is the collector the `signals.*` machinery was
+built for, and the reason a live run produces scores at all.
+
+`fixture-signals/` is three placeholder collectors that read files and talk to nothing.
+They stay, because they exercise all three entity joins — match, team, and league — on a
+clone with nothing configured, and because `fixture-team` returns one team on purpose so
+the partial-coverage path is real rather than theoretical. See `docs/STUBS.md`.

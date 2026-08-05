@@ -18,8 +18,9 @@ cd "$(dirname "$0")/.."
 BOLD=$'\033[1m'; DIM=$'\033[2m'; RESET=$'\033[0m'
 
 echo "${BOLD}xFUN — walking skeleton${RESET}"
-echo "${DIM}Placeholder models on fixture data. These scores predict nothing."
-echo "See docs/STUBS.md.${RESET}"
+echo "${DIM}Fixture matches, scored by recent-goals-total from real captured goals."
+echo "The other three models are placeholders that predict nothing, and this one"
+echo "has never been validated against whether a match was fun. See docs/STUBS.md.${RESET}"
 echo
 
 # Prefer, in order: the venv `uv sync` created, uv itself, then system python3.
