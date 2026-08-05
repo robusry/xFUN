@@ -14,6 +14,7 @@ from __future__ import annotations
 
 import argparse
 import sys
+from datetime import date
 from pathlib import Path
 
 # Make workspace packages importable without `uv sync`, so this runs on a fresh
@@ -27,11 +28,13 @@ for src in (
     sys.path.insert(0, str(src))
 
 from xfun_collector_fixture_signals import fixture_collectors
+from xfun_collector_recent_results import CapturedPages, LivePages, RecentResults
 from xfun_composition import AliasResolver, compose_all, load_recipes
 from xfun_ingestion import assemble_slate, fixture_payloads, ingest
 from xfun_ingestion.schedule import acquire_window
 from xfun_model_odds_spread import MODEL as ODDS_SPREAD
 from xfun_model_over_under_lean import MODEL as OVER_UNDER_LEAN
+from xfun_model_recent_goals_total import MODEL as RECENT_GOALS_TOTAL
 from xfun_model_social_buzz import MODEL as SOCIAL_BUZZ
 from xfun_runtime import (
     CollectorRegistry,
@@ -40,6 +43,7 @@ from xfun_runtime import (
     run_collectors,
     run_models,
 )
+from xfun_runtime.paths import fixtures_dir
 from xfun_store import (
     connect,
     latest_scores,
@@ -53,13 +57,32 @@ from xfun_store import (
 
 STAMP = "2026-08-14T04:00:00+00:00"
 
+OFFLINE_AS_OF = date(2026, 8, 14)
+"""What "now" means to `recent-results` on the fixture path.
 
-def build_collector_registry() -> CollectorRegistry:
-    """The only place that knows which collectors exist."""
+Pinned to the demo's stamp rather than read from the clock, so that the offline run is
+reproducible: the golden captures were taken walking back from this date, and a scan
+starting anywhere else would drift off the end of them as the real date moved."""
+
+
+def build_collector_registry(live: bool) -> tuple[CollectorRegistry, RecentResults]:
+    """The only place that knows which collectors exist.
+
+    `recent-results` is the same collector on both paths -- the same scan, the same
+    stopping rule, the same parsing. Only where its pages come from differs, which is
+    why that is an injected seam rather than a branch inside the collector.
+    """
     registry = CollectorRegistry()
     for collector in fixture_collectors():
         registry.register(collector)
-    return registry
+
+    recent_results = RecentResults(
+        LivePages() if live else CapturedPages(fixtures_dir() / "schedule" / "results"),
+        as_of=None if live else OFFLINE_AS_OF,
+    )
+    registry.register(recent_results)
+
+    return registry, recent_results
 
 
 def build_registry(provided_paths: frozenset[str] = frozenset()) -> Registry:
@@ -75,6 +98,7 @@ def build_registry(provided_paths: frozenset[str] = frozenset()) -> Registry:
     registry.register(OVER_UNDER_LEAN)
     registry.register(ODDS_SPREAD)
     registry.register(SOCIAL_BUZZ)
+    registry.register(RECENT_GOALS_TOTAL)
     return registry
 
 
@@ -130,15 +154,21 @@ def main() -> int:
         f"{len(slate.teams())} teams, {len(slate.leagues())} leagues "
         f"({slate.selection.rule})")
 
-    collectors = build_collector_registry()
+    collectors, recent_results = build_collector_registry(args.live)
     registry = build_registry(collectors.provided_paths())
 
     # Only what some active model actually declares gets collected. A source
     # nothing consumes is not fetched -- rate limits are real.
     required = {p for m in registry.active() for p in m.model.required_features}
-    collection = run_collectors(
-        collectors, slate, required, run_id="demo", started_at=STAMP, completed_at=STAMP
-    )
+    try:
+        collection = run_collectors(
+            collectors, slate, required, run_id="demo", started_at=STAMP, completed_at=STAMP
+        )
+    finally:
+        # A live scan holds an open connection to the source for its whole walk
+        # backwards. Nothing downstream needs it, and leaving it to the garbage
+        # collector is how a long-running caller ends up with a socket per run.
+        recent_results.close()
     write_collection_run(conn, collection, slate.selection.to_dict())
     say(f"  collection   {collection.summary()}")
     for outcome in collection.outcomes:
