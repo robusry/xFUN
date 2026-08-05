@@ -15,19 +15,22 @@ repository is deliberately minimal. Read it before assuming anything works.
 
 ## Project state
 
-**A walking skeleton.** Every tier exists and is connected end to end on fixture
-data. It runs — `./scripts/demo.sh` seeds fixtures, scores them, and serves the
-API with no database server, no container, and no credentials. But the components
-inside the tiers are placeholders by design: the deliverable so far is a structure
-the team can read and run, not working functionality.
+**A walking skeleton with one working model.** Every tier exists and is connected
+end to end. It runs — `./scripts/demo.sh` seeds fixtures, scores them, and serves
+the API with no database server, no container, and no credentials. Most components
+inside the tiers are still placeholders by design.
 
-Both models predict nothing. Three of four calibration cohorts and two of three
-composition policies return 501.
+Three of the four models predict nothing. Three of four calibration cohorts and two
+of three composition policies return 501.
 
-**Ingestion is the exception, and only half of it.** `./scripts/demo.sh --live`
-acquires real upcoming matches and their US broadcasters. Nothing a *model* reads
-is real, so on a live run every match is returned with a recorded skip reason and
-no score. That is the partial-coverage path working on real data.
+**What is real runs from the source to the score.** `./scripts/demo.sh --live`
+acquires real upcoming matches and their US broadcasters, and `recent-results`
+collects the goals each side scored in its last five completed matches, which
+`recent-goals-total` sums into the only score in this repository computed from real
+data. It is unvalidated — nothing here has been tested against whether a match was
+enjoyable, and nothing can be until there is a label. Matches where a side has
+fewer than five completed matches come back with a recorded skip reason and no
+score, which is the partial-coverage path working on real data.
 
 `openspec/specs/` is the authoritative record of what the system currently
 **does** — nine capabilities, 59 requirements — while `openspec/config.yaml`
@@ -40,6 +43,9 @@ holds the reasoning behind them. Archived changes are under
   joins
 - `2026-08-03-add-live-schedule` — real matches and US broadcasters, the
   `us-watchable` slate rule, and the six-source survey behind picking goal.com
+- `2026-08-04-add-recent-goals-model` — the first real collector and the first
+  model with real inputs, the 120-day lookback and the coverage curve behind it,
+  and why fewer than five matches must produce absence rather than a partial sum
 
 **This file does not set priorities.** "Still open" below records what is
 undecided, not a queue. Ask what the session is for rather than inferring it.
@@ -196,14 +202,18 @@ Not a queue — nothing here is claimed as next.
 
 ## Absent on purpose, not forgotten
 
-`docs/STUBS.md` is authoritative. In short: no real model, nothing real that a
-*model* reads, no evaluation harness, no mobile app, and no automated JavaScript
-test — CI covers the TS side with typecheck and build only.
+`docs/STUBS.md` is authoritative. In short: no *validated* model, no odds and no
+league table for the models that need them, no evaluation harness, no mobile app,
+and no automated JavaScript test — CI covers the TS side with typecheck and build
+only.
 
-Matches and US broadcasters ARE real on the live path, via goal.com — an
-unofficial source with no API contract, chosen from a six-way survey recorded in
-the archived `add-live-schedule` design, D2. Read that before proposing a
-replacement; most of the obvious candidates refuse automated access.
+Matches, US broadcasters, and recent goals ARE real on the live path, all via
+goal.com — an unofficial source with no API contract, chosen from a six-way survey
+recorded in the archived `add-live-schedule` design, D2. Read that before proposing
+a replacement; most of the obvious candidates refuse automated access, and
+`add-recent-goals-model` design D1 records why a *second* source is worse than it
+looks: matching another provider's team names to this project's would be silent
+when it got one wrong.
 
 Branch protection on `main` is enabled. Adding `contracts`, `ci`, and `pr-hygiene`
 as required status checks is still outstanding.

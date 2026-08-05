@@ -43,9 +43,11 @@ pnpm -r typecheck
 ./scripts/demo.sh
 ```
 
-Seeds fixture data, runs both placeholder models, writes scores, and serves the API
-at <http://localhost:8000>. No database server, no containers, no credentials — the
-database is a SQLite file at `.data/xfun.db`, and deleting it costs nothing.
+Seeds fixture data, runs every registered model over it, writes scores, and serves the
+API at <http://localhost:8000>. No database server, no containers, no credentials — the
+database is a SQLite file at `.data/xfun.db`, and deleting it costs nothing. Three of
+the four models are placeholders that predict nothing; `recent-goals-total` scores from
+real historical goals, read out of captured pages so this still works with no network.
 
 For the web page, in a second terminal:
 
