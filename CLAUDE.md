@@ -33,7 +33,7 @@ fewer than five completed matches come back with a recorded skip reason and no
 score, which is the partial-coverage path working on real data.
 
 `openspec/specs/` is the authoritative record of what the system currently
-**does** — ten capabilities, 65 requirements — while `openspec/config.yaml`
+**does** — eleven capabilities, 70 requirements — while `openspec/config.yaml`
 holds the reasoning behind them. Archived changes are under
 `openspec/changes/archive/`:
 
@@ -46,6 +46,10 @@ holds the reasoning behind them. Archived changes are under
 - `2026-08-05-add-recent-goals-model` — the first real collector and the first
   model with real inputs, the 120-day lookback and the coverage curve behind it,
   and why fewer than five matches must produce absence rather than a partial sum
+- `2026-08-23-add-collector-corpora` — persisted collector output and the
+  freshness rule that decides whether a collector runs at all, why reuse requires
+  entity coverage as well as age, and why a failed collector is not served its own
+  stale corpus
 
 **This file does not set priorities.** "Still open" below records what is
 undecided, not a queue. Ask what the session is for rather than inferring it.
