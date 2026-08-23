@@ -8,16 +8,23 @@
 # Zone C: changing these values does NOT require an OpenSpec change. The
 # composition *mechanism* is Zone A; these *values* are not. See docs/zones.md.
 #
-# Both models here are placeholders that predict nothing, so these weights are
-# arbitrary. They become a real decision when a real model lands, and the team
-# decides by pull request review.
+# One model, at weight 1.0, and that is a claim about the other two rather than
+# about this one. `over-under-lean` and `odds-spread` are placeholders that predict
+# nothing and score nothing on a live run, so blending them in would give the
+# composed number a provenance that is mostly invented.
+#
+# `recent-goals-total` is not validated either -- nothing here is, until there is a
+# ground-truth label for "entertaining" and `add-evaluation-harness` to test against
+# it. What is different is that its inputs are real goals from matches that were
+# really played, so it can be wrong in a way somebody can check by watching.
+#
+# Restoring a blend is one line. That is the point of this file.
 
 id: default
 version: 1
 
 models:
-  over-under-lean: 0.5
-  odds-spread: 0.5
+  recent-goals-total: 1.0
 
 # Required field, deliberately not defaulted: coverage gaps are routine, and
 # leaving this implicit means each recipe author resolves it differently.

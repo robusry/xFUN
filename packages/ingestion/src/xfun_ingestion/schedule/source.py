@@ -24,7 +24,9 @@ from .parse import ScheduleParseError, SourceMatch, parse_schedule
 __all__ = [
     "SOURCE_ID",
     "ScheduleSourceError",
+    "fetch_page",
     "fetch_window",
+    "page_client",
     "schedule_url",
     "window_dates",
 ]
@@ -70,7 +72,25 @@ def window_dates(start: datetime, days: int) -> tuple[date, ...]:
     return tuple(first + timedelta(days=offset) for offset in range(span + 1))
 
 
-def _fetch_one(client: httpx.Client, day: date) -> str:
+def page_client() -> httpx.Client:
+    """A client configured for this source: its headers, its timeouts, its redirects.
+
+    Public because the schedule source is no longer the only reader of these pages.
+    The `recent-results` collector reads PAST dates from the same site, and a second
+    client configured by hand would be a second place to keep the honest User-Agent
+    and the timeouts -- and a second thing to forget when the source's terms change.
+    """
+    return httpx.Client(timeout=_TIMEOUT, headers=_HEADERS, follow_redirects=True)
+
+
+def fetch_page(client: httpx.Client, day: date) -> str:
+    """One dated page, or `ScheduleSourceError`.
+
+    Public for the same reason as `page_client`. Note what travels with it: the 403
+    branch below carries a POLICY, not just an error message. Having one copy of it
+    is the point -- a second reader that quietly retried past a refusal would be
+    working around an access control on this project's behalf.
+    """
     url = schedule_url(day)
     try:
         response = client.get(url)
@@ -108,12 +128,12 @@ def fetch_window(
     """
     start = start or datetime.now(UTC)
     owned = client is None
-    client = client or httpx.Client(timeout=_TIMEOUT, headers=_HEADERS, follow_redirects=True)
+    client = client or page_client()
 
     matches: list[SourceMatch] = []
     try:
         for day in window_dates(start, days):
-            html = _fetch_one(client, day)
+            html = fetch_page(client, day)
             try:
                 matches.extend(parse_schedule(html))
             except ScheduleParseError as exc:

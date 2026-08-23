@@ -31,10 +31,20 @@ Most fixtures here are **authored contract examples**: written by us, validated
 against a schema in CI, and used by both sides of a seam. They are the contract.
 
 `fixtures/schedule/` is different. Those are **captured third-party responses** —
-reduced copies of goal.com pages, produced by `scripts/capture_schedule_fixture.py`.
-They validate against no schema, because the shape is not ours to define, and they
-may be refreshed wholesale when the source changes. They are test input for the
-schedule parsers, not an agreement between tiers.
+reduced copies of goal.com pages. They validate against no schema, because the shape
+is not ours to define, and they may be refreshed wholesale when the source changes.
+They are test input for the parsers, not an agreement between tiers. Two tools produce
+them, and neither paraphrases: each keeps the source's own bytes for a chosen subset.
+
+- `scripts/capture_schedule_fixture.py` writes the dated pages beside this file,
+  trimmed to a chosen set of competitions, keeping the schema.org blocks and the page
+  state — the two halves the schedule parsers read.
+- `scripts/capture_results_fixture.py` writes `fixtures/schedule/results/`, walking
+  backwards from a date and trimming each page to matches involving the teams in
+  `fixtures/snapshots/`. These carry no schema.org blocks, because scores live only in
+  the page state and a fixture holding data nothing reads invites a reader to believe
+  it matters. They are what lets `./scripts/demo.sh` run the real `recent-results` scan
+  over real historical results with no network.
 
 The distinction matters when one breaks. A failing authored fixture means a producer
 violated the contract. A failing captured fixture means somebody else changed their
