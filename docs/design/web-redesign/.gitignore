@@ -1,0 +1,3 @@
+# Crests fetched by fetch-crests.sh are trademarked; never commit them.
+*.png
+!mockup-*.png
