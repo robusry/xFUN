@@ -53,6 +53,23 @@ change. This one is about what gets stored, not about what "now" means.
   stale. The run record gains a `reused` outcome alongside `succeeded`, `failed`,
   and `not_invoked`.
 
+- `schedule-acquisition`: "Broadcast providers resolve from per-match data before
+  league-level rights" states explicitly that absence from the rights table does
+  not by itself keep a competition off the slate, and gains a scenario for a
+  split-rights competition the table deliberately omits.
+
+  This is unrelated to persistence and is folded in because the live verification
+  run for this change is what surfaced it. The existing requirement was already
+  correct — its first scenario resolves per-match data ahead of the table
+  "because league-level rights cannot express a split-rights competition" — but it
+  stated the slate consequence only on the negative path. The positive path left
+  it to be inferred, and the project documentation had inferred it the other way,
+  asserting as settled fact that Liga MX could never reach the slate. On
+  2026-08-23 it did, with per-match providers from the schedule source and no
+  rights-table entry, which is the outcome `us-broadcast-rights.yaml:63` predicted
+  would follow if "the source starts answering for it". Closing the asymmetry
+  makes the spec say what the code already did.
+
 ## Impact
 
 **Zone A** — `packages/scoring-runtime/collectors.py` decides invocation and

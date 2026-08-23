@@ -55,4 +55,17 @@
 - [x] 7.4 `uv run python scripts/pipeline.py --refresh`; confirm collectors are invoked despite a fresh corpus.
 - [x] 7.5 `uv run python scripts/check_api_conformance.py` and `scripts/validate_contracts.py` — no response shape should have moved.
 - [x] 7.6 `openspec validate --all --strict`.
-- [ ] 7.7 Run the live path once (`--live`, then `--live --refresh`) and record what actually happened against what this design predicted, as `add-recent-goals-model` did.
+- [x] 7.7 Run the live path once (`--live`, then `--live --refresh`) and record what actually happened against what this design predicted, as `add-recent-goals-model` did.
+
+## 8. Correct the Liga MX record (surfaced by 7.7)
+
+Unrelated to persistence. Folded in because the live verification run is what
+surfaced it, and leaving a known-false claim in the documentation until a later
+change would be worse than the scope cost.
+
+- [x] 8.1 `specs/schedule-acquisition/spec.md`: state on the requirement that absence from the rights table does not by itself keep a competition off the slate, and add a scenario for a split-rights competition the table deliberately omits. The requirement was already correct; it stated the slate consequence only on the negative path.
+- [x] 8.2 `proposal.md`: declare `schedule-acquisition` as a modified capability and say why an unrelated correction is riding along.
+- [x] 8.3 `packages/ingestion/rights/us-broadcast-rights.yaml`: the Liga MX comment claimed the source names no provider for it. It does now. Record the observation and its date, and keep the reason the entry must stay absent.
+- [x] 8.4 `docs/STUBS.md` and `CLAUDE.md`: both asserted Liga MX never reaches the slate. Correct with the date, and keep the standing caution — this rests on an unofficial source choosing to answer.
+- [x] 8.5 Test the new scenario in `packages/ingestion/tests/test_schedule_rights.py`: a table omission must not withhold a provider the source named.
+- [x] 8.6 Leave the archived `add-live-schedule` design alone. It records what was true when written; the correction belongs beside it, not inside it.

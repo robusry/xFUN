@@ -123,8 +123,9 @@ down is that its inputs are real, so it can be wrong in a way somebody can check
 | **What** | `packages/ingestion/rights/us-broadcast-rights.yaml`, hand-maintained, consulted only where the schedule source names no provider. |
 | **Why it exists** | Some US rights genuinely are league-wide — every MLS match is on Apple TV, every MLS NEXT Pro match is free on OneFootball — and no aggregator surveyed knew the second one. Where rights are constant, a verified line is more accurate than the source, whose provider data carries affiliate tracking. |
 | **Why it will go stale** | US rights move between seasons and nothing here detects it. Every entry carries `verified_on` and a link to the rights holder's own announcement, and loading fails without them, but neither makes an entry current. |
-| **What it deliberately cannot express** | Rights held per club or per match. Liga MX is the standing example: TelevisaUnivision carries most clubs, Chivas home matches are Telemundo/Peacock, Monterrey/Tijuana/Santos are FOX. It gets no entry, so **Liga MX matches never reach the slate**. |
-| **Replaced by** | Nothing proposed. No surveyed source can replace it. A per-match manual entry path is the expected next step. |
+| **What it deliberately cannot express** | Rights held per club or per match. Liga MX is the standing example: TelevisaUnivision carries most clubs, Chivas home matches are Telemundo/Peacock, Monterrey/Tijuana/Santos are FOX. It gets no entry, and must not get one — no league-wide line about it is true. |
+| **Liga MX does reach the slate now** | Corrected 2026-08-23, having previously been recorded here as permanently absent. The schedule source names per-match providers for it (ViX, TUDN, Fubo, FOX Deportes, Estrella TV), so it resolves on the per-match path and needs no table entry — which is exactly what the resolution order is for. This depends wholly on an unofficial source continuing to answer: the day it stops, those matches resolve to `unknown` and drop off the slate again. Club-level entries are still the only answer that does not depend on the source's goodwill. |
+| **Replaced by** | Nothing proposed. No surveyed source can replace it. A per-match manual entry path is still the expected next step, now for the general case rather than for Liga MX specifically. |
 
 ### The database
 

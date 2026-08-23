@@ -194,20 +194,25 @@ Not a queue — nothing here is claimed as next.
   can be evaluated and "which models at what weights" has no answerable form.
   The most consequential open question in the project, and the reason
   `add-evaluation-harness` is the follow-up worth arguing for first.
-- **Liga MX is missing from the product, and this is known.** Its US rights are
-  held per club — TelevisaUnivision carries most, Chivas home matches are
-  Telemundo/Peacock, Monterrey/Tijuana/Santos are FOX — so no league-wide entry
-  in `packages/ingestion/rights/` is true, and goal.com names no provider for it
-  either. Its matches therefore resolve to `unknown` and `us-watchable` keeps them
-  off the slate. **Do not "fix" this by adding a league-wide Liga MX entry**: it
-  would be wrong for several clubs every matchweek, and a confidently wrong
-  provider is the failure a viewer notices immediately. The two real options are
-  club-level entries, or the per-match manual-entry path below. Neither is
-  proposed yet. Full detail in `docs/STUBS.md` and the archived
-  `add-live-schedule` design, D3.
+- **Liga MX reaches the slate, but on borrowed time.** This entry previously said
+  it was permanently absent; that was corrected on 2026-08-23, when a live run
+  showed goal.com naming per-match providers for every Liga MX and Femenil fixture
+  (ViX, TUDN, Fubo, FOX Deportes, Estrella TV). They resolve on the per-match path
+  and need no rights-table entry. **Do not "fix" anything by adding a league-wide
+  Liga MX entry**: its US rights are still held per club — TelevisaUnivision
+  carries most, Chivas home matches are Telemundo/Peacock,
+  Monterrey/Tijuana/Santos are FOX — so no league-wide line is true, and a
+  confidently wrong provider is the failure a viewer notices immediately. What is
+  still open is that this rests entirely on an unofficial source choosing to
+  answer; when it stops, those matches resolve to `unknown` and drop off again.
+  Club-level entries or the per-match manual-entry path below are the durable
+  answers, and neither is proposed. Full detail in `docs/STUBS.md` and the
+  archived `add-live-schedule` design, D3.
 - **A way for a person to enter missing TV data by hand**, per match rather than
-  per league. The rights table is the league-wide case of this; Liga MX is the
-  standing example of what it cannot express.
+  per league. The rights table is the league-wide case of this. Liga MX remains
+  the standing example of what it cannot express, even though the source happens
+  to be covering that gap today — which is the argument for the manual path rather
+  than against it.
 - Global versus personalised as the headline score.
 - League scope: audience size versus entertainment density.
 - The default calibration cohort, once more than one exists.
