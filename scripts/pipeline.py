@@ -14,8 +14,10 @@ from __future__ import annotations
 
 import argparse
 import sys
+from collections.abc import Iterable, Mapping
 from datetime import date
 from pathlib import Path
+from typing import Any
 
 # Make workspace packages importable without `uv sync`, so this runs on a fresh
 # clone. With uv sync installed editable, these are already on the path.
@@ -46,11 +48,14 @@ from xfun_runtime import (
 from xfun_runtime.paths import fixtures_dir
 from xfun_store import (
     connect,
+    corpus_freshness,
     latest_scores,
     load_snapshots,
     migrate,
+    read_corpus,
     register_models,
     write_collection_run,
+    write_corpus,
     write_scores,
     write_snapshot_payload,  # noqa: F401  (re-exported for clarity)
 )
@@ -63,6 +68,45 @@ OFFLINE_AS_OF = date(2026, 8, 14)
 Pinned to the demo's stamp rather than read from the clock, so that the offline run is
 reproducible: the golden captures were taken walking back from this date, and a scan
 starting anywhere else would drift off the end of them as the real date moved."""
+
+
+class StoreCorpus:
+    """Binds the runtime's `Corpus` protocol to the store.
+
+    This adapter exists so that neither side imports the other: the runtime knows
+    nothing about SQLite, the store knows nothing about collection ordering, and
+    this script -- which already knows about both -- joins them. `check_dependencies.py`
+    enforces the half of that which is a real rule.
+    """
+
+    def __init__(self, conn: Any) -> None:
+        self._conn = conn
+
+    def freshness(self, collector_id: str) -> str | None:
+        return corpus_freshness(self._conn, collector_id)
+
+    def read(self, collector_id: str, entity_ids: Iterable[str]) -> Any:
+        return read_corpus(self._conn, collector_id, entity_ids)
+
+    def write(
+        self,
+        *,
+        run_id: str,
+        collector_id: str,
+        entity_kind: str,
+        asked: Iterable[str],
+        values: Mapping[str, Mapping[str, Any]],
+        collected_at: str,
+    ) -> None:
+        write_corpus(
+            self._conn,
+            run_id=run_id,
+            collector_id=collector_id,
+            entity_kind=entity_kind,
+            asked=asked,
+            values=values,
+            collected_at=collected_at,
+        )
 
 
 def build_collector_registry(live: bool) -> tuple[CollectorRegistry, RecentResults]:
@@ -114,6 +158,16 @@ def main() -> int:
             "clone must run with nothing configured and no external dependency."
         ),
     )
+    parser.add_argument(
+        "--refresh",
+        action="store_true",
+        help=(
+            "collect from every source regardless of what is already stored. "
+            "Without this, a collector whose persisted output is still inside its "
+            "declared refresh window and covers the whole slate is not called at "
+            "all. Use when you know the source has changed."
+        ),
+    )
     args = parser.parse_args()
 
     def say(*parts: object) -> None:
@@ -162,7 +216,14 @@ def main() -> int:
     required = {p for m in registry.active() for p in m.model.required_features}
     try:
         collection = run_collectors(
-            collectors, slate, required, run_id="demo", started_at=STAMP, completed_at=STAMP
+            collectors,
+            slate,
+            required,
+            run_id="demo",
+            started_at=STAMP,
+            completed_at=STAMP,
+            corpus=StoreCorpus(conn),
+            force=args.refresh,
         )
     finally:
         # A live scan holds an open connection to the source for its whole walk
@@ -172,12 +233,22 @@ def main() -> int:
     write_collection_run(conn, collection, slate.selection.to_dict())
     say(f"  collection   {collection.summary()}")
     for outcome in collection.outcomes:
-        detail = outcome.reason or (
-            f"{outcome.entities_with_data} with data, "
-            f"{outcome.entities_without_data} without"
-            if outcome.entities_with_data is not None
-            else "no model declared anything it provides"
-        )
+        if outcome.reason:
+            detail = outcome.reason
+        elif outcome.entities_with_data is None:
+            detail = "no model declared anything it provides"
+        else:
+            counts = (
+                f"{outcome.entities_with_data} with data, "
+                f"{outcome.entities_without_data} without"
+            )
+            # Spelling out that no request was made is the point of the outcome.
+            # Without it a reused run reads exactly like a run that re-fetched.
+            detail = (
+                f"{counts}, from the stored corpus — source not contacted"
+                if outcome.outcome == "reused"
+                else counts
+            )
         say(f"               {outcome.collector_id}: {outcome.outcome} — {detail}")
 
     # Scored matches are the SLATE, not everything in the store. Live acquisition

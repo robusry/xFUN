@@ -11,6 +11,7 @@ from .collectors import (
     CollectorOutcome,
     CollectorRegistrationError,
     CollectorRegistry,
+    Corpus,
     apply_signals,
     run_collectors,
 )
@@ -32,6 +33,7 @@ __all__ = [
     "CollectorOutcome",
     "CollectorRegistrationError",
     "CollectorRegistry",
+    "Corpus",
     "RegisteredModel",
     "RegistrationError",
     "Registry",

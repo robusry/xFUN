@@ -187,6 +187,18 @@ should follow immediately. **This ordering is worth stating in the PR**: the two
 changes are independent to review but the second one is what makes the first one
 behave as intended unattended.
 
+**`--refresh` collects, but cannot supersede the stored copy while `STAMP` is
+frozen.** → Found during implementation, not anticipated in the decisions above.
+The corpus key is `(collector_id, entity_id, collected_at)` and writes are
+`INSERT OR IGNORE` — they must be, because the append-only triggers reject the
+`DELETE` that `INSERT OR REPLACE` performs. With a constant `collected_at`, a
+forced re-collect writes rows that collide with the existing ones and are ignored.
+The run itself is unaffected: it scores from the values it just collected, not from
+the corpus. Only the persisted copy stays at the first run's values, so a *later*
+run reusing the corpus would see stale data. Harmless on the fixture path, where
+the captured pages do not change. One more thing the dates change fixes for free,
+since distinct runs will carry distinct stamps.
+
 **`run_id="demo"` is constant and `collection_run` uses `INSERT OR REPLACE`.** →
 Every run overwrites the same run row today. Corpus rows carry `run_id` as
 provenance, so they will all point at `"demo"` until the dates change gives runs

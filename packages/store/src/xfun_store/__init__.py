@@ -11,11 +11,15 @@ from .availability import (
     write_availability,
 )
 from .collection import (
+    CorpusRead,
     PathProvenance,
+    corpus_freshness,
     explain_missing_path,
     latest_run,
+    read_corpus,
     read_run,
     write_collection_run,
+    write_corpus,
 )
 from .db import DB_PATH, applied_migrations, connect, migrate
 from .entities import load_snapshots, match_leagues, write_snapshot_payload
@@ -24,12 +28,14 @@ from .scores import all_scores, latest_scores, register_models, write_scores
 
 __all__ = [
     "DB_PATH",
+    "CorpusRead",
     "MatchAvailability",
     "PathProvenance",
     "ScheduleRun",
     "all_scores",
     "applied_migrations",
     "connect",
+    "corpus_freshness",
     "explain_missing_path",
     "latest_run",
     "latest_schedule_run",
@@ -39,10 +45,12 @@ __all__ = [
     "migrate",
     "read_availability",
     "read_availability_map",
+    "read_corpus",
     "read_run",
     "register_models",
     "write_availability",
     "write_collection_run",
+    "write_corpus",
     "write_schedule_run",
     "write_scores",
     "write_snapshot_payload",

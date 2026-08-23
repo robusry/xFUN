@@ -12,11 +12,14 @@
 -- indistinguishable, and a source that was down for a week looks exactly like a
 -- source with nothing to say.
 --
--- NOT stored here: the collected signal values themselves. Signals are folded
--- into a snapshot at assembly time, and snapshots are not persisted either --
--- see docs/STUBS.md and `add-score-provenance`. Re-scoring therefore requires
--- re-collecting. That gap is inherited from snapshots rather than introduced
--- here, and closing it is `add-collector-corpora`.
+-- NOT stored here: the collected signal values themselves. Those live in
+-- `collector_corpus` (005), which is what lets a run reuse them instead of
+-- re-fetching. This table stays about what HAPPENED on a run; that one is about
+-- what was RETURNED, and the two have different lifetimes -- a corpus row
+-- outlives the run that wrote it and may be reused by many later ones.
+--
+-- Snapshots are still not persisted, so a stored score cannot be re-derived from
+-- its exact input -- see docs/STUBS.md and `add-score-provenance`.
 
 CREATE TABLE IF NOT EXISTS collection_run (
     run_id       TEXT NOT NULL PRIMARY KEY,

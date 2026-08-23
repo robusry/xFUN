@@ -93,6 +93,19 @@ look like bugs:
   omitted — "no consumer" is a different answer from "ran and found nothing".
 - **Collector failure is not absence.** Both leave the same hole in the snapshot;
   only the run record can tell them apart, so it does.
+- **Corpus freshness is measured against an injected timestamp, never the clock.**
+  `run_collectors` takes `started_at` and compares it to the stored `collected_at`.
+  Calling `datetime.now()` there would make the invocation decision depend on when
+  the test happened to run, which is the property that makes the tier testable at
+  all. It looks like an oversight; it is `add-collector-corpora` design D4.
+- **Reuse requires coverage as well as freshness.** A collector is skipped only if
+  its corpus is inside its window *and* holds a row for every entity the slate
+  asks about. Dropping the second check looks like a cheap win and would let an
+  unseen entity's gap be served as though the source had answered.
+- **A failed collector does not fall back to its stored corpus.** Tempting, and
+  deferred on purpose: a score computed from yesterday's signals is a different
+  claim from one computed today, and no score row records which it was. That needs
+  `add-score-provenance` first.
 
 ## Layout
 
@@ -130,7 +143,7 @@ Everything CI runs, in the order it runs:
 ```bash
 uv run python scripts/check_dependencies.py      # tier boundaries
 uv run ruff check .
-uv run pytest -q                                 # 28 tests
+uv run pytest -q                                 # 214 tests
 uv run python scripts/pipeline.py                # end-to-end on fixtures
 uv run python scripts/check_api_conformance.py   # responses match the contract
 uv run python scripts/validate_contracts.py      # fixtures match the schemas

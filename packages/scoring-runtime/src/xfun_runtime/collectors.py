@@ -24,7 +24,7 @@ import re
 from collections.abc import Iterable, Mapping
 from dataclasses import dataclass, field
 from datetime import UTC, datetime
-from typing import Any
+from typing import Any, Protocol, runtime_checkable
 
 from xfun_contract import CollectionResult, Collector, EntityKind, Slate
 
@@ -35,6 +35,7 @@ __all__ = [
     "CollectorOutcome",
     "CollectorRegistrationError",
     "CollectorRegistry",
+    "Corpus",
     "run_collectors",
 ]
 
@@ -136,6 +137,64 @@ class CollectorRegistry:
         return collector_id in self._collectors
 
 
+@runtime_checkable
+class Corpus(Protocol):
+    """Persisted collector output, from the runtime's point of view.
+
+    A protocol rather than an import: the store depends on nothing above it, and
+    the runtime returns the favour. `write_collection_run` already takes the
+    runtime's `CollectionRun` structurally for the same reason, so the seam is
+    symmetrical.
+
+    Passing no corpus at all is legal and means "collect everything, every time" --
+    which is what every caller did before persistence existed.
+    """
+
+    def freshness(self, collector_id: str) -> str | None:
+        """When this collector last stored anything, or None if it never has."""
+        ...
+
+    def read(self, collector_id: str, entity_ids: Iterable[str]) -> Any:
+        """Stored values for these entities. Returns an object with `values`
+        (entity id -> leaf values) and `missing` (asked entities with no row)."""
+        ...
+
+    def write(
+        self,
+        *,
+        run_id: str,
+        collector_id: str,
+        entity_kind: str,
+        asked: Iterable[str],
+        values: Mapping[str, Mapping[str, Any]],
+        collected_at: str,
+    ) -> None:
+        """Persist what a collector returned for every entity it was asked about."""
+        ...
+
+
+def _age_seconds(collected_at: str, now: str) -> float | None:
+    """Seconds between two injected ISO timestamps, or None if either is unusable.
+
+    An unparseable timestamp resolves to "stale", never to "fresh". Guessing that
+    old data is current is the failure worth avoiding; an unnecessary re-fetch is
+    merely wasteful.
+    """
+    try:
+        then_dt = datetime.fromisoformat(collected_at)
+        now_dt = datetime.fromisoformat(now)
+    except ValueError:
+        return None
+    # A naive stamp from a test is treated as UTC rather than rejected: the
+    # comparison only has to be self-consistent, and both sides come from the
+    # same caller.
+    if then_dt.tzinfo is None:
+        then_dt = then_dt.replace(tzinfo=UTC)
+    if now_dt.tzinfo is None:
+        now_dt = now_dt.replace(tzinfo=UTC)
+    return (now_dt - then_dt).total_seconds()
+
+
 @dataclass(frozen=True)
 class CollectorOutcome:
     """How one collector fared on one run."""
@@ -143,7 +202,12 @@ class CollectorOutcome:
     collector_id: str
     entity_kind: str
     outcome: str
-    """`succeeded`, `failed`, or `not_invoked`. See contracts/schemas/collection-run.json."""
+    """`succeeded`, `failed`, `not_invoked`, or `reused`. See
+    contracts/schemas/collection-run.json.
+
+    `not_invoked` and `reused` both mean the source was not contacted, and they are
+    kept apart because they answer opposite questions: the first means no active
+    model wanted this data, the second means one did and got it from the corpus."""
     provides: tuple[str, ...] = ()
     reason: str | None = None
     entities_with_data: int | None = None
@@ -217,6 +281,56 @@ class CollectionRun:
         return out
 
 
+def _reusable_corpus(
+    corpus: Corpus | None,
+    collector: Collector,
+    asked: Iterable[str],
+    stamp: str,
+    force: bool,
+) -> Any | None:
+    """The stored corpus to use instead of calling this collector, or None.
+
+    Two conditions, and the second is the one that is easy to leave out.
+
+    FRESHNESS is the obvious half: the corpus must be younger than the window the
+    collector itself declared. It is measured against the run's injected `stamp`,
+    never against the wall clock -- `run_collectors` promises reproducibility, and
+    a decision that depends on when the test happened to run would break it. This
+    reads like an oversight and is not; see design D4 of `add-collector-corpora`.
+
+    COVERAGE is the half that matters. The corpus must hold a row for every entity
+    the slate asks about. Without this check, a slate containing a team the corpus
+    has never seen would reuse anyway, that team would carry no signals, and every
+    tier downstream would read the hole as "the source has nothing for this team".
+    That is the absence-versus-failure confusion the run record exists to prevent,
+    recreated one layer below it. Missing coverage is not staleness, but it has to
+    produce the same action.
+    """
+    if force or corpus is None:
+        return None
+
+    window = collector.refresh_after_seconds
+    if window is None:
+        # No declared cadence means no basis for calling anything fresh. Collect.
+        return None
+
+    last = corpus.freshness(collector.collector_id)
+    if last is None:
+        return None
+
+    age = _age_seconds(last, stamp)
+    if age is None or age < 0 or age >= window:
+        # A negative age means the corpus was written by a run stamped later than
+        # this one. That is not freshness, it is a caller replaying history, and
+        # reusing would let the newer run's data leak backwards into the older one.
+        return None
+
+    entry = corpus.read(collector.collector_id, asked)
+    if entry.missing:
+        return None
+    return entry
+
+
 def run_collectors(
     registry: CollectorRegistry,
     slate: Slate,
@@ -225,12 +339,19 @@ def run_collectors(
     run_id: str | None = None,
     started_at: str | None = None,
     completed_at: str | None = None,
+    corpus: Corpus | None = None,
+    force: bool = False,
 ) -> CollectionRun:
     """Collect everything the declared paths need, once each, and record it.
 
     `run_id` and the timestamps are injected rather than read from the clock, for
     the same reason `run_models` injects `computed_at`: a run that reads the clock
     itself cannot be reproduced in a test.
+
+    `corpus`, when given, lets a collector be skipped entirely if what it returned
+    last time is still usable -- see `_reusable_corpus`. Omitting it restores the
+    behaviour every caller had before persistence existed: collect everything,
+    every time. `force` collects regardless of what is stored.
     """
     stamp = started_at or datetime.now(UTC).isoformat(timespec="seconds")
     identifier = run_id or f"run-{stamp.replace(':', '-')}"
@@ -259,6 +380,26 @@ def run_collectors(
 
         asked = entity_ids(slate, kind)
 
+        stored = _reusable_corpus(corpus, collector, asked, stamp, force)
+        if stored is not None:
+            served = {eid for eid in asked if stored.values.get(eid)}
+            merge_signals(
+                run.signals,
+                collector.namespace,
+                join_values(slate, kind, stored.values),
+            )
+            run.outcomes.append(
+                CollectorOutcome(
+                    collector_id=registered.collector_id,
+                    entity_kind=str(kind),
+                    outcome="reused",
+                    provides=registered.paths,
+                    entities_with_data=len(served),
+                    entities_without_data=len(asked) - len(served),
+                )
+            )
+            continue
+
         try:
             result = collector.collect(slate)
         except Exception as exc:  # noqa: BLE001 - any escape is a failure to determine
@@ -267,6 +408,11 @@ def run_collectors(
             result = CollectionResult.unavailable(f"{type(exc).__name__}: {exc}")
 
         if result.failed:
+            # Nothing is written and nothing stored is substituted. A corpus from
+            # an earlier run stays exactly where it is, unused: scoring from stale
+            # signals is a different claim from scoring from current ones, and no
+            # score row records which it was. Serving stale data on failure needs
+            # `add-score-provenance` first -- design D6.
             run.outcomes.append(
                 CollectorOutcome(
                     collector_id=registered.collector_id,
@@ -284,6 +430,16 @@ def run_collectors(
             collector.namespace,
             join_values(slate, kind, result.values),
         )
+
+        if corpus is not None:
+            corpus.write(
+                run_id=identifier,
+                collector_id=registered.collector_id,
+                entity_kind=str(kind),
+                asked=asked,
+                values=result.values,
+                collected_at=stamp,
+            )
 
         run.outcomes.append(
             CollectorOutcome(

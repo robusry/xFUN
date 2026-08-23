@@ -58,6 +58,29 @@ A namespace is a subject area, not your identity. Several collectors may contrib
 to one, and a signal may change producer without its path moving — which is what
 keeps the path stable for the models that declare it.
 
+## Your `refresh_after_seconds` decides whether you run
+
+It is not advisory. A run reads your persisted output from `collector_corpus` and
+skips calling `collect` entirely when that output is **younger than your declared
+window** and **covers every entity the slate asks about**. The run records that as
+`reused` rather than `succeeded`, so an operator can see no request was made.
+
+Both halves matter. Coverage is checked as well as age because reusing a corpus
+that has never seen some entity would present a gap as though your source had
+answered — which is the absence-versus-failure confusion this tier exists to
+prevent, one layer down.
+
+Declare `None` if your source has no meaningful cadence: that means nothing
+licenses calling your output fresh, so you run every time.
+
+Two things you do not have to think about. A row is stored for every entity the
+slate asked about, including the ones you returned nothing for — "asked, and there
+was nothing" is coverage and is stored as such, so partial coverage does not stop
+you from being reusable. And if you fail, nothing is written and your previous
+corpus is neither overwritten nor served in your place; models skip, attributably.
+
+`scripts/pipeline.py --refresh` bypasses all of this and collects regardless.
+
 ## What is real here and what is not
 
 `recent-results/` reads a source: goals scored in each team's last five completed

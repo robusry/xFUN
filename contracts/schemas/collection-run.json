@@ -43,8 +43,8 @@
         },
         "outcome": {
           "type": "string",
-          "description": "`succeeded` means the source was reached and its answer is trusted, including an answer of 'nothing for this entity'. `failed` means the collector could not determine whether data exists — transient, worth retrying, and NOT the same as absence. `not_invoked` means no active model declared anything this collector provides, so it was correctly never called.",
-          "enum": ["succeeded", "failed", "not_invoked"]
+          "description": "`succeeded` means the source was reached and its answer is trusted, including an answer of 'nothing for this entity'. `failed` means the collector could not determine whether data exists — transient, worth retrying, and NOT the same as absence. `not_invoked` means no active model declared anything this collector provides, so it was correctly never called. `reused` means a model did declare it and the source was still not called, because the collector's persisted output was inside its declared refresh window and covered the whole slate — the values came from the corpus. `not_invoked` and `reused` both mean 'no request was made' and are kept apart because they answer opposite questions: whether anyone wanted the data.",
+          "enum": ["succeeded", "failed", "not_invoked", "reused"]
         },
         "reason": {
           "type": "string",
@@ -52,7 +52,7 @@
         },
         "entities_with_data": {
           "type": "integer",
-          "description": "Entities the collector returned values for. Meaningful only when outcome is `succeeded`.",
+          "description": "Entities values were obtained for. Meaningful when outcome is `succeeded` (returned by the source) or `reused` (served from the persisted corpus).",
           "minimum": 0
         },
         "entities_without_data": {

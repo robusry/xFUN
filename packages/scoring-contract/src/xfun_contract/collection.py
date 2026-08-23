@@ -110,12 +110,18 @@ class Collector(Protocol):
     refresh_after_seconds: int | None
     """How stale this collector's output may be before it is worth re-fetching.
 
-    DECLARED BUT NOT YET ENFORCED. Nothing persists collected signals between runs
-    in this change, so there is no staleness to measure -- every run collects
-    afresh. The declaration exists now because cadence is a property of the source
-    that its author knows and a reviewer should see, and because a chatty collector
-    multiplies stored scores for every model downstream of it. Enforcement arrives
-    with persistence in `add-collector-corpora`."""
+    This decides whether the collector runs at all. A run reuses the persisted
+    corpus instead of calling `collect` when the stored output is younger than this
+    window AND covers every entity the slate asks about; otherwise it collects.
+    Coverage is checked as well as age because reusing a corpus that has never seen
+    some entity would present a gap as though the source had answered.
+
+    `None` means no declared cadence, and therefore no basis for calling anything
+    fresh: the collector runs on every run.
+
+    Cadence belongs to the collector because it is a property of the source that
+    its author knows and a reviewer should see -- and because a chatty collector
+    multiplies stored scores for every model downstream of it."""
 
     def collect(self, slate: Slate) -> CollectionResult:
         """Fetch signals for everything on the slate.
