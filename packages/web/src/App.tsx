@@ -18,10 +18,22 @@ const client = new XfunClient({
   baseUrl: import.meta.env.VITE_API_URL ?? "http://localhost:8000",
 });
 
-// The fixture data sits in this window. Real date handling arrives with real
-// ingestion.
-const FROM = "2026-08-01";
-const TO = "2026-08-31";
+/** The window the server actually served, as a human-readable line. */
+function windowLabel(window: MatchListResponse["window"]): string {
+  if (!window.from || !window.to) return "no matches in the store";
+
+  const day = (iso: string) =>
+    new Date(iso).toLocaleDateString(undefined, {
+      month: "short",
+      day: "numeric",
+      year: "numeric",
+      timeZone: "UTC",
+    });
+
+  const from = day(window.from);
+  const to = day(window.to);
+  return from === to ? from : `${from} to ${to}`;
+}
 
 function scoreColor(value: number | null): string {
   if (value === null) return "var(--muted)";
@@ -35,8 +47,12 @@ export default function App() {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
+    // No dates: the server answers over what it holds and tells us the range it
+    // served. Asking for a window computed here would put that policy in the least
+    // authoritative tier, and would blank the offline demo, whose fixture matches
+    // sit in the past.
     client
-      .listMatches({ from: FROM, to: TO })
+      .listMatches()
       .then(setData)
       .catch((e: unknown) =>
         setError(e instanceof ApiError ? e.message : String(e)),
@@ -57,12 +73,27 @@ export default function App() {
 
   if (!data) return <main><h1>xFUN</h1><p className="muted">Loading…</p></main>;
 
+  if (data.matches.length === 0) {
+    // An empty store and an empty date range look identical on the page, so say
+    // which it was. The pipeline has to run before there is anything to show.
+    return (
+      <main>
+        <h1>xFUN</h1>
+        <p className="muted">No matches scored yet.</p>
+        <p className="muted">
+          Run <code>./scripts/demo.sh</code> for fixture matches, or{" "}
+          <code>./scripts/demo.sh --live</code> for real upcoming ones.
+        </p>
+      </main>
+    );
+  }
+
   return (
     <main>
       <header>
         <h1>xFUN</h1>
         <p className="muted">
-          Which matches are worth watching, {FROM} to {TO}
+          Which matches are worth watching, {windowLabel(data.window)}
         </p>
         <p className="banner">
           Placeholder models — these scores predict nothing. See{" "}

@@ -109,12 +109,19 @@ def _resolve_alias(ctx: ApiContext, alias: str):
 @app.get("/v1/matches", operation_id="listMatches", tags=["matches"])
 def list_matches(
     ctx: Ctx,
-    date_from: Annotated[str, Query(alias="from")],
-    date_to: Annotated[str, Query(alias="to")],
+    date_from: Annotated[str | None, Query(alias="from")] = None,
+    date_to: Annotated[str | None, Query(alias="to")] = None,
     score: str = "default",
     cohort: CohortName = "window",
 ) -> dict[str, Any]:
-    """Matches in a date range, ranked by composed score."""
+    """Matches in a date range, ranked by composed score.
+
+    Both bounds are optional, and an omitted bound means unbounded on that side
+    rather than a server-chosen default window. Defaulting to something like "today
+    onward" would read well and would blank the fixture-backed demo, whose matches
+    sit in the past -- a default that works on one path and silently empties the
+    other is worse than none. The response reports whatever range it did serve.
+    """
     target = _resolve_alias(ctx, score)
     snapshots = ctx.snapshots(date_from=date_from, date_to=date_to)
     match_ids = [s.match_id for s in snapshots]
@@ -140,9 +147,18 @@ def list_matches(
     # why" is more useful than a silently shorter list.
     ranked.sort(key=lambda r: (r["composed"]["value"] is None, -(r["composed"]["value"] or 0)))
 
+    # Derived from the matches returned, not from the request. A request bounded
+    # wider than the data should report the data's range, because that is what the
+    # caller actually received. `snapshots` comes back ordered by kickoff.
+    kickoffs = [s.kickoff_utc for s in snapshots]
+
     return {
         "cohort": calibration.cohort.to_dict(),
         "score_alias": target.to_dict(),
+        "window": {
+            "from": min(kickoffs) if kickoffs else None,
+            "to": max(kickoffs) if kickoffs else None,
+        },
         "matches": ranked,
     }
 

@@ -140,8 +140,18 @@ down is that its inputs are real, so it can be wrong in a way somebody can check
 
 | | |
 |---|---|
-| **What** | One page, one hardcoded date window matching the fixtures, no routing, no date picker, no filtering. |
+| **What** | One page, no routing, no date picker, no filtering. |
+| **No longer a placeholder** | The hardcoded date window is gone. The page requests no dates and renders the window the API reports, so it follows whatever the last pipeline run stored. Resolved by `use-real-dates`. |
 | **Replaced by** | Not yet proposed. |
+
+### Fixture and live matches share one store
+
+| | |
+|---|---|
+| **What** | Runs accumulate, and nothing separates them by origin. A database that has seen both `./scripts/demo.sh` and `--live` holds the eight fixture matches alongside a few hundred real ones, and the API serves them together. |
+| **Why it is not simply a bug** | Both are real rows produced by real runs. Deciding that one should be hidden means deciding whether the two paths ought to share a store at all, which is a larger question than it looks: the fixture path exists so a fresh clone works offline, and giving it a separate database would mean the offline demo and the live product no longer exercise the same read path. |
+| **What it looks like** | A demo showing August fixture matches mixed in with this week's real ones. Harmless, and confusing the first time. |
+| **Replaced by** | Not proposed. `use-real-dates` deliberately left this alone rather than fixing it in passing. |
 
 ---
 

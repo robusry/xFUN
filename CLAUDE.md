@@ -97,6 +97,14 @@ look like bugs:
   omitted — "no consumer" is a different answer from "ran and found nothing".
 - **Collector failure is not absence.** Both leave the same hole in the snapshot;
   only the run record can tell them apart, so it does.
+- **The fixture path's timestamps are frozen and must stay frozen.**
+  `OFFLINE_STAMP`, `OFFLINE_RUN_ID`, and `OFFLINE_AS_OF` in `scripts/pipeline.py`
+  look exactly like the hardcoded dates `use-real-dates` removed from the live
+  path, and they are the opposite thing. The captured result pages exist only for a
+  bounded range of dates, so a scan anchored to today walks off the end of them and
+  reports an absence that is an artefact of the anchor. CI also compares against
+  golden output that a moving clock would invalidate daily. The offline path is a
+  *reproduction*, not a simulation of today.
 - **Corpus freshness is measured against an injected timestamp, never the clock.**
   `run_collectors` takes `started_at` and compares it to the stored `collected_at`.
   Calling `datetime.now()` there would make the invocation decision depend on when

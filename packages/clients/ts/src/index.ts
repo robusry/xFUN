@@ -75,19 +75,30 @@ export class XfunClient {
     return (await response.json()) as T;
   }
 
-  /** Matches in a date range, ranked by composed score. */
-  listMatches(args: {
-    from: string;
-    to: string;
-    score?: string;
-    cohort?: CohortName;
-  }): Promise<MatchListResponse> {
-    return this.get<MatchListResponse>("/v1/matches", {
-      from: args.from,
-      to: args.to,
+  /**
+   * Matches ranked by composed score.
+   *
+   * Both bounds are optional. An omitted bound is sent as no parameter at all
+   * rather than as an empty one, so the server sees "unbounded on that side"
+   * rather than a malformed date. Whatever range comes back is reported in
+   * `window` on the response.
+   */
+  listMatches(
+    args: {
+      from?: string;
+      to?: string;
+      score?: string;
+      cohort?: CohortName;
+    } = {},
+  ): Promise<MatchListResponse> {
+    const params: Record<string, string> = {
       score: args.score ?? "default",
       cohort: args.cohort ?? "window",
-    });
+    };
+    if (args.from !== undefined) params.from = args.from;
+    if (args.to !== undefined) params.to = args.to;
+
+    return this.get<MatchListResponse>("/v1/matches", params);
   }
 
   /** Every model's calibrated score for one match, plus the composite. */

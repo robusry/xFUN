@@ -250,6 +250,27 @@ def test_no_corpus_at_all_behaves_as_before(slate):
     assert collector.calls == 2
 
 
+def test_an_advancing_stamp_expires_the_corpus_without_being_forced(slate):
+    """The point of pairing `use-real-dates` with `add-collector-corpora`.
+
+    While the pipeline passed one frozen stamp, every corpus row read as zero
+    seconds old and no collector ever re-collected unless `--refresh` was given.
+    A stamp that advances is what turns `refresh_after_seconds` from a declaration
+    into a rule -- so this walks a run forward past the window and asserts the
+    collector runs again on its own.
+    """
+    corpus, collector = FakeCorpus(), TeamCollector()
+
+    _run(collector, corpus, slate, STAMP)
+    assert collector.calls == 1
+
+    _run(collector, corpus, slate, LATER)  # +5h, inside the 6h window
+    assert collector.calls == 1, "re-collected while still fresh"
+
+    _run(collector, corpus, slate, MUCH_LATER)  # +24h, past it
+    assert collector.calls == 2, "the window expired and nothing re-collected"
+
+
 def test_the_decision_does_not_depend_on_when_the_test_runs(slate):
     """The reproducibility property freshness-by-injected-stamp exists to protect.
 
