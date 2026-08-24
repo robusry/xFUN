@@ -1,28 +1,20 @@
 ## Why
 
-`scripts/pipeline.py` hardcodes a single timestamp and a single run identifier and
-uses both on every path, including `--live`:
+`scripts/pipeline.py` uses one constant timestamp (`STAMP`) and one constant run id
+(`run_id="demo"`) on every path, including `--live`. A live run writes scores dated
+2026-08-14 under a run id that overwrites its predecessor. `App.tsx:23` hardcodes a
+matching August window, and its own comment concedes the point.
 
-```python
-STAMP = "2026-08-14T04:00:00+00:00"        # computed_at, and the run's start and end
-run_id="demo"                               # every run, forever
-```
+Three consequences, in ascending order of how quietly they fail:
 
-A live run today therefore writes scores stamped nine days ago under a run id that
-overwrites its predecessor. `packages/web/src/App.tsx:23` hardcodes a matching
-`2026-08-01`–`2026-08-31` window, whose own comment says "Real date handling
-arrives with real ingestion".
-
-Three things are already broken by this, in ascending order of how quietly:
-
-1. The page will show an empty list on 1 September, and shows five fewer matches
-   than exist today.
-2. `add-collector-corpora` shipped a freshness rule that cannot fire. Every corpus
-   row reads as zero seconds old because it is compared against a constant, so
-   after the first run every collector reuses forever unless `--refresh` is passed.
-3. `score-store` requires serving reads to resolve the current score per model
-   "based on `computed_at`". With one constant timestamp, every generation ties,
-   and which row wins is an accident of insertion order.
+1. The page shows five fewer matches than exist, and will show none after
+   31 August.
+2. `add-collector-corpora`'s freshness rule cannot fire: every corpus row is
+   compared against a constant, so it reads as zero seconds old and collectors
+   reuse forever unless `--refresh` is passed.
+3. `score-store` requires serving reads to resolve the current score "based on
+   `computed_at`". With one constant, every generation ties and the winner is
+   insertion order.
 
 ## What Changes
 

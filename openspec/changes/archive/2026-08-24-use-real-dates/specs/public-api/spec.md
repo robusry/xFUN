@@ -45,6 +45,11 @@ Score requests SHALL accept a score alias (defaulting to `default`) and a calibr
 - **WHEN** a client requests matches for a date without specifying alias or cohort
 - **THEN** documented defaults are applied and the response names the alias and cohort used
 
+#### Scenario: A client requests a specific model's scores
+
+- **WHEN** a client requests scores under an alias that resolves to a single model
+- **THEN** that model's calibrated scores are returned in the same response shape as a composed score
+
 #### Scenario: A client requests matches without specifying anything
 
 - **WHEN** a client requests the match list supplying neither dates, nor alias, nor cohort
