@@ -33,7 +33,7 @@ fewer than five completed matches come back with a recorded skip reason and no
 score, which is the partial-coverage path working on real data.
 
 `openspec/specs/` is the authoritative record of what the system currently
-**does** — eleven capabilities, 70 requirements — while `openspec/config.yaml`
+**does** — eleven capabilities, 71 requirements — while `openspec/config.yaml`
 holds the reasoning behind them. Archived changes are under
 `openspec/changes/archive/`:
 
@@ -50,6 +50,9 @@ holds the reasoning behind them. Archived changes are under
   freshness rule that decides whether a collector runs at all, why reuse requires
   entity coverage as well as age, and why a failed collector is not served its own
   stale corpus
+- `2026-08-24-use-real-dates` — where a run's notion of "now" comes from, why the
+  fixture path's anchor stays frozen while the live path reads the clock, and why
+  an omitted date bound means unbounded rather than a server-chosen window
 
 **This file does not set priorities.** "Still open" below records what is
 undecided, not a queue. Ask what the session is for rather than inferring it.
@@ -97,6 +100,14 @@ look like bugs:
   omitted — "no consumer" is a different answer from "ran and found nothing".
 - **Collector failure is not absence.** Both leave the same hole in the snapshot;
   only the run record can tell them apart, so it does.
+- **The fixture path's timestamps are frozen and must stay frozen.**
+  `OFFLINE_STAMP`, `OFFLINE_RUN_ID`, and `OFFLINE_AS_OF` in `scripts/pipeline.py`
+  look exactly like the hardcoded dates `use-real-dates` removed from the live
+  path, and they are the opposite thing. The captured result pages exist only for a
+  bounded range of dates, so a scan anchored to today walks off the end of them and
+  reports an absence that is an artefact of the anchor. CI also compares against
+  golden output that a moving clock would invalidate daily. The offline path is a
+  *reproduction*, not a simulation of today.
 - **Corpus freshness is measured against an injected timestamp, never the clock.**
   `run_collectors` takes `started_at` and compares it to the stored `collected_at`.
   Calling `datetime.now()` there would make the invocation decision depend on when

@@ -15,7 +15,8 @@ from __future__ import annotations
 import argparse
 import sys
 from collections.abc import Iterable, Mapping
-from datetime import date
+from dataclasses import dataclass
+from datetime import UTC, date, datetime
 from pathlib import Path
 from typing import Any
 
@@ -60,14 +61,58 @@ from xfun_store import (
     write_snapshot_payload,  # noqa: F401  (re-exported for clarity)
 )
 
-STAMP = "2026-08-14T04:00:00+00:00"
+OFFLINE_STAMP = "2026-08-14T04:00:00+00:00"
+"""The fixture path's instant, and its run identifier's basis.
+
+NOT a placeholder awaiting the clock. The fixture path is a REPRODUCTION, not a
+simulation of today: two runs over unchanged fixtures must produce identical rows,
+identical timestamps and identical run ids, because CI compares against golden
+output. Making this clock-driven would end that, and would break `recent-results`
+outright -- see OFFLINE_AS_OF below."""
+
+OFFLINE_RUN_ID = "demo"
+"""Constant on purpose, so repeated offline runs are the SAME run repeated rather
+than two runs. The live path derives a distinct id per run instead."""
 
 OFFLINE_AS_OF = date(2026, 8, 14)
 """What "now" means to `recent-results` on the fixture path.
 
-Pinned to the demo's stamp rather than read from the clock, so that the offline run is
-reproducible: the golden captures were taken walking back from this date, and a scan
-starting anywhere else would drift off the end of them as the real date moved."""
+Pinned rather than read from the clock, so that the offline run is reproducible: the
+golden captures were taken walking back from this date, and a scan starting anywhere
+else would drift off the end of them as the real date moved.
+
+Like OFFLINE_STAMP, this is not waiting to be replaced by `date.today()`. Doing that
+would make the scan walk backwards from the present through pages that do not exist,
+and report an absence of results that is an artefact of the anchor rather than a fact
+about any source -- which is exactly the failure the collector tier is built to avoid."""
+
+
+@dataclass(frozen=True)
+class RunClock:
+    """When this run thinks it is, resolved once and passed down.
+
+    Sampled a single time in `main` rather than read where needed. A run that reads
+    the clock at several points can stamp a score earlier than the signals it scored,
+    and the corpus freshness check would then be comparing two independent samples.
+    One value threaded through makes the run self-consistent by construction, and
+    keeps `run_collectors` and `run_models` taking injected timestamps -- which is
+    what makes them reproducible in a test.
+    """
+
+    stamp: str
+    run_id: str
+    as_of: date | None
+    """What `recent-results` treats as today. None means the collector uses the clock,
+    which is correct only when its pages come from the live source."""
+
+    @classmethod
+    def for_run(cls, live: bool) -> RunClock:
+        if not live:
+            return cls(stamp=OFFLINE_STAMP, run_id=OFFLINE_RUN_ID, as_of=OFFLINE_AS_OF)
+        now = datetime.now(UTC).isoformat(timespec="seconds")
+        # Colons are legal in the id but awkward in a filename or a URL, and this
+        # value ends up in both. Sorting is preserved either way.
+        return cls(stamp=now, run_id=f"run-{now.replace(':', '-')}", as_of=None)
 
 
 class StoreCorpus:
@@ -109,12 +154,17 @@ class StoreCorpus:
         )
 
 
-def build_collector_registry(live: bool) -> tuple[CollectorRegistry, RecentResults]:
+def build_collector_registry(
+    live: bool, clock: RunClock
+) -> tuple[CollectorRegistry, RecentResults]:
     """The only place that knows which collectors exist.
 
     `recent-results` is the same collector on both paths -- the same scan, the same
     stopping rule, the same parsing. Only where its pages come from differs, which is
     why that is an injected seam rather than a branch inside the collector.
+
+    Where its pages come from and what it treats as today are separate arguments on
+    purpose: the first is about the source, the second about the run.
     """
     registry = CollectorRegistry()
     for collector in fixture_collectors():
@@ -122,7 +172,7 @@ def build_collector_registry(live: bool) -> tuple[CollectorRegistry, RecentResul
 
     recent_results = RecentResults(
         LivePages() if live else CapturedPages(fixtures_dir() / "schedule" / "results"),
-        as_of=None if live else OFFLINE_AS_OF,
+        as_of=clock.as_of,
     )
     registry.register(recent_results)
 
@@ -174,10 +224,14 @@ def main() -> int:
         if not args.quiet:
             print(*parts)
 
+    # Sampled once, here, and passed down. Nothing below this line reads the clock.
+    clock = RunClock.for_run(args.live)
+
     conn = connect()
 
     applied = list(migrate(conn))
     say(f"  migrations   {len(applied)} applied" if applied else "  migrations   up to date")
+    say(f"  run          {clock.run_id} at {clock.stamp}")
 
     if args.live:
         # The one step in this pipeline that touches the network, and it runs
@@ -208,7 +262,7 @@ def main() -> int:
         f"{len(slate.teams())} teams, {len(slate.leagues())} leagues "
         f"({slate.selection.rule})")
 
-    collectors, recent_results = build_collector_registry(args.live)
+    collectors, recent_results = build_collector_registry(args.live, clock)
     registry = build_registry(collectors.provided_paths())
 
     # Only what some active model actually declares gets collected. A source
@@ -219,9 +273,9 @@ def main() -> int:
             collectors,
             slate,
             required,
-            run_id="demo",
-            started_at=STAMP,
-            completed_at=STAMP,
+            run_id=clock.run_id,
+            started_at=clock.stamp,
+            completed_at=clock.stamp,
             corpus=StoreCorpus(conn),
             force=args.refresh,
         )
@@ -266,7 +320,10 @@ def main() -> int:
     register_models(conn, registry)
 
     run = run_models(
-        registry, snapshots, computed_at=STAMP, unavailable=collection.unavailable_paths()
+        registry,
+        snapshots,
+        computed_at=clock.stamp,
+        unavailable=collection.unavailable_paths(),
     )
     write_scores(conn, run.scores)
     say(f"  scoring      {run.summary()}")

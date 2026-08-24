@@ -32,11 +32,15 @@ paths:
       parameters:
         - name: from
           in: query
-          required: true
+          description: >
+            Earliest kickoff to include. Omit for no lower bound. Omitting a bound
+            means UNBOUNDED on that side, not a default window: the server does not
+            choose a range on the caller's behalf. Whatever range is actually served
+            is reported back in `window`.
           schema: { type: string, format: date }
         - name: to
           in: query
-          required: true
+          description: Latest kickoff to include. Omit for no upper bound.
           schema: { type: string, format: date }
         - name: score
           in: query
@@ -113,13 +117,34 @@ components:
   schemas:
     MatchListResponse:
       type: object
-      required: [cohort, score_alias, matches]
+      required: [cohort, score_alias, window, matches]
       properties:
         cohort: { $ref: "#/components/schemas/CohortInfo" }
         score_alias: { $ref: "#/components/schemas/AliasInfo" }
+        window: { $ref: "#/components/schemas/DateWindow" }
         matches:
           type: array
           items: { $ref: "#/components/schemas/RankedMatch" }
+
+    DateWindow:
+      type: object
+      description: >
+        The date range the response actually covers, always present. Required for
+        the same reason `cohort` and `score_alias` are: a caller that did not choose
+        the range cannot interpret the answer without being told what it got. Bounds
+        describe the matches RETURNED, not the request — a narrow request against
+        wider data reports the narrower reality, and both bounds are null when
+        nothing was returned.
+      required: [from, to]
+      properties:
+        from:
+          type: [string, "null"]
+          format: date-time
+          description: Kickoff of the earliest match returned; null if none were.
+        to:
+          type: [string, "null"]
+          format: date-time
+          description: Kickoff of the latest match returned; null if none were.
 
     MatchScoresResponse:
       type: object
