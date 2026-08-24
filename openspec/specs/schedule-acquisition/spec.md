@@ -4,7 +4,6 @@
 How the set of upcoming matches and their US broadcast providers is acquired, before
 a slate exists. Covers the source, the window, provider resolution and its precedence,
 the `us-watchable` selection rule, and what is recorded when the source cannot be read.
-
 ## Requirements
 ### Requirement: The set of upcoming matches is acquired before a slate exists
 
@@ -68,12 +67,25 @@ source names no provider for a match, resolution SHALL fall back to a configured
 `unknown`. The rights table SHALL record, per entry, the date on which it was last
 verified.
 
+A competition absent from the rights table SHALL NOT be excluded from the slate on that
+basis alone. Absence from the table is not a statement that a competition is unwatchable
+in the US; it is a statement that no single league-wide line about it is true. Where the
+source answers per match for such a competition, that answer SHALL resolve availability
+and the match SHALL be admitted on the same terms as any other.
+
 #### Scenario: The source names providers for a match
 
 - **WHEN** the source returns one or more US providers for a match whose league also appears
   in the rights table
 - **THEN** the providers from the source are used, because league-level rights cannot express
-  a split-rights competition
+  a split-rights competition, and the match is admitted to the slate
+
+#### Scenario: A split-rights competition the rights table deliberately omits
+
+- **WHEN** the source returns US providers for a match in a competition whose rights are held
+  per club, and which therefore has no rights-table entry
+- **THEN** availability is `known` with the providers the source named, and the match is
+  admitted to the slate — the absent table entry neither supplies a provider nor withholds one
 
 #### Scenario: The source names no provider but the league has constant rights
 
@@ -134,3 +146,4 @@ no credentials. Live acquisition SHALL be selected explicitly.
 - **WHEN** the pipeline is invoked with live acquisition selected
 - **THEN** the schedule source is contacted, and the run records which source produced the
   slate
+

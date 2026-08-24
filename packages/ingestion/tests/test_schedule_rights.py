@@ -186,6 +186,25 @@ def test_neither_answering_is_unknown(rights) -> None:
     assert availability.resolved_from is None
 
 
+def test_a_table_omission_does_not_withhold_a_provider(rights) -> None:
+    """A competition absent from the table is still resolvable from the source.
+
+    Absence from the table says "no league-wide line about this is true", not
+    "this is unwatchable in the US". Liga MX is the case: on 2026-08-23 the
+    source began naming per-match providers for it, and those matches resolve
+    and reach the slate with no entry here -- which is what the resolution
+    order is for. The project documentation had until then recorded the
+    omission as permanent absence from the product, which is why this is
+    asserted rather than assumed.
+    """
+    availability = resolve_providers(("ViX", "TUDN"), LIGA_MX, rights)
+
+    assert LIGA_MX not in rights, "the table must stay silent on split-rights leagues"
+    assert availability.known
+    assert availability.providers == ("ViX", "TUDN")
+    assert availability.resolved_from == "source"
+
+
 def test_unknown_is_reached_rather_than_guessed(rights) -> None:
     """The system must not substitute a plausible provider for an absent one."""
     availability = resolve_providers((), "some-league-nobody-verified", rights)

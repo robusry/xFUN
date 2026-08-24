@@ -57,12 +57,20 @@ leagues:
 #   Paramount+ carries a subset with English commentary. Naming the majority carrier
 #   would be wrong for several clubs every matchweek.
 #
-#   The consequence is deliberate and worth understanding: because the schedule
-#   source also names no provider for Liga MX, its matches resolve to `unknown` and
-#   the `us-watchable` rule keeps them off the slate. Liga MX is therefore absent
-#   from the product until either the source starts answering for it, or this file
-#   grows club-level entries -- which is a change to the rule this file encodes, not
-#   a new row in it.
+#   The source now answers for it, which is the first of the two ways out this
+#   comment originally anticipated. Observed 2026-08-23: goal.com named per-match
+#   providers for every Liga MX and Liga MX Femenil fixture on the slate -- ViX,
+#   TUDN, Fubo, FOX Deportes, Estrella TV -- so they resolve to `known` on the
+#   per-match path and reach the slate with no entry here. This file did not
+#   change and must not: the rights are still split by club, so there is still no
+#   league-wide line that is true.
+#
+#   Do not read that as permanently solved. It rests entirely on an unofficial
+#   source with no contract, and the day goal.com stops naming providers for a
+#   Liga MX match, that match resolves to `unknown` again and drops off the slate.
+#   Club-level entries remain the only answer that does not depend on the source's
+#   goodwill -- and that is a change to the rule this file encodes, not a new row
+#   in it.
 #   Evidence: https://corporate.televisaunivision.com/press/2026/05/12/televisaunivision-announces-expansive-sports-portfolio-for-2026-27/
 #
 # england-premier-league

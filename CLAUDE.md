@@ -33,7 +33,7 @@ fewer than five completed matches come back with a recorded skip reason and no
 score, which is the partial-coverage path working on real data.
 
 `openspec/specs/` is the authoritative record of what the system currently
-**does** — ten capabilities, 65 requirements — while `openspec/config.yaml`
+**does** — eleven capabilities, 70 requirements — while `openspec/config.yaml`
 holds the reasoning behind them. Archived changes are under
 `openspec/changes/archive/`:
 
@@ -46,6 +46,10 @@ holds the reasoning behind them. Archived changes are under
 - `2026-08-05-add-recent-goals-model` — the first real collector and the first
   model with real inputs, the 120-day lookback and the coverage curve behind it,
   and why fewer than five matches must produce absence rather than a partial sum
+- `2026-08-23-add-collector-corpora` — persisted collector output and the
+  freshness rule that decides whether a collector runs at all, why reuse requires
+  entity coverage as well as age, and why a failed collector is not served its own
+  stale corpus
 
 **This file does not set priorities.** "Still open" below records what is
 undecided, not a queue. Ask what the session is for rather than inferring it.
@@ -93,6 +97,19 @@ look like bugs:
   omitted — "no consumer" is a different answer from "ran and found nothing".
 - **Collector failure is not absence.** Both leave the same hole in the snapshot;
   only the run record can tell them apart, so it does.
+- **Corpus freshness is measured against an injected timestamp, never the clock.**
+  `run_collectors` takes `started_at` and compares it to the stored `collected_at`.
+  Calling `datetime.now()` there would make the invocation decision depend on when
+  the test happened to run, which is the property that makes the tier testable at
+  all. It looks like an oversight; it is `add-collector-corpora` design D4.
+- **Reuse requires coverage as well as freshness.** A collector is skipped only if
+  its corpus is inside its window *and* holds a row for every entity the slate
+  asks about. Dropping the second check looks like a cheap win and would let an
+  unseen entity's gap be served as though the source had answered.
+- **A failed collector does not fall back to its stored corpus.** Tempting, and
+  deferred on purpose: a score computed from yesterday's signals is a different
+  claim from one computed today, and no score row records which it was. That needs
+  `add-score-provenance` first.
 
 ## Layout
 
@@ -130,7 +147,7 @@ Everything CI runs, in the order it runs:
 ```bash
 uv run python scripts/check_dependencies.py      # tier boundaries
 uv run ruff check .
-uv run pytest -q                                 # 28 tests
+uv run pytest -q                                 # 214 tests
 uv run python scripts/pipeline.py                # end-to-end on fixtures
 uv run python scripts/check_api_conformance.py   # responses match the contract
 uv run python scripts/validate_contracts.py      # fixtures match the schemas
@@ -181,20 +198,25 @@ Not a queue — nothing here is claimed as next.
   can be evaluated and "which models at what weights" has no answerable form.
   The most consequential open question in the project, and the reason
   `add-evaluation-harness` is the follow-up worth arguing for first.
-- **Liga MX is missing from the product, and this is known.** Its US rights are
-  held per club — TelevisaUnivision carries most, Chivas home matches are
-  Telemundo/Peacock, Monterrey/Tijuana/Santos are FOX — so no league-wide entry
-  in `packages/ingestion/rights/` is true, and goal.com names no provider for it
-  either. Its matches therefore resolve to `unknown` and `us-watchable` keeps them
-  off the slate. **Do not "fix" this by adding a league-wide Liga MX entry**: it
-  would be wrong for several clubs every matchweek, and a confidently wrong
-  provider is the failure a viewer notices immediately. The two real options are
-  club-level entries, or the per-match manual-entry path below. Neither is
-  proposed yet. Full detail in `docs/STUBS.md` and the archived
-  `add-live-schedule` design, D3.
+- **Liga MX reaches the slate, but on borrowed time.** This entry previously said
+  it was permanently absent; that was corrected on 2026-08-23, when a live run
+  showed goal.com naming per-match providers for every Liga MX and Femenil fixture
+  (ViX, TUDN, Fubo, FOX Deportes, Estrella TV). They resolve on the per-match path
+  and need no rights-table entry. **Do not "fix" anything by adding a league-wide
+  Liga MX entry**: its US rights are still held per club — TelevisaUnivision
+  carries most, Chivas home matches are Telemundo/Peacock,
+  Monterrey/Tijuana/Santos are FOX — so no league-wide line is true, and a
+  confidently wrong provider is the failure a viewer notices immediately. What is
+  still open is that this rests entirely on an unofficial source choosing to
+  answer; when it stops, those matches resolve to `unknown` and drop off again.
+  Club-level entries or the per-match manual-entry path below are the durable
+  answers, and neither is proposed. Full detail in `docs/STUBS.md` and the
+  archived `add-live-schedule` design, D3.
 - **A way for a person to enter missing TV data by hand**, per match rather than
-  per league. The rights table is the league-wide case of this; Liga MX is the
-  standing example of what it cannot express.
+  per league. The rights table is the league-wide case of this. Liga MX remains
+  the standing example of what it cannot express, even though the source happens
+  to be covering that gap today — which is the argument for the manual path rather
+  than against it.
 - Global versus personalised as the headline score.
 - League scope: audience size versus entertainment density.
 - The default calibration cohort, once more than one exists.
