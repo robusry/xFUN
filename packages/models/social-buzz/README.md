@@ -7,8 +7,9 @@ interested the home team's following appears to be.
 
 ## Why it exists
 
-The other two models read canonical data — odds — which ingestion writes directly.
-This one reads `signals.*`, which only exists because a collector produced it and
+Every other model reads canonical data that ingestion writes directly — odds for the
+two market models, recent results for `recent-goals-total`. This one alone reads
+`signals.*`, which exists only because a collector produced it and
 the platform joined it onto the match. It is what makes the collector tier reachable
 in `scripts/demo.sh` rather than dormant, and it turns the `signals` blocks in the
 golden snapshot fixtures into something a run actually reproduces.

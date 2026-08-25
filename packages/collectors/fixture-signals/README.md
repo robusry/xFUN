@@ -25,10 +25,13 @@ rest. Three packages wrapping the same `json.load` would be ceremony.
 
 ## What makes it a placeholder
 
-The values are invented. No provider has been selected, there is no HTTP client
-here, and nothing has been validated against anything. The fixture data exists so
+The values are invented, and there is no HTTP client here. The fixture data exists so
 the join, the resolution, and the run record can be exercised — not because anyone
 believes Chelsea generate 46 posts.
 
-**Replaced by:** `add-live-ingestion`, which selects a provider and writes real
-collectors against this same interface. See `docs/STUBS.md`.
+**Not replaced by anything, and not going away.** `packages/collectors/recent-results/`
+is a real collector against this same interface, so the interface no longer needs
+proving. These three stay for the job a real collector cannot do: exercising all
+three entity joins on a clone with nothing configured and no network. Retiring them
+means having a real collector for each of the three keyings. See
+[`docs/STUBS.md`](../../../docs/STUBS.md).

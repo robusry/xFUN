@@ -31,8 +31,9 @@ the unscored match shown with its skip reason, and the
 ## Data in the mockup
 
 Matches come from `contracts/fixtures/snapshots/`. The scores and model
-weights are demo values in the fixture style. The real models predict nothing
-yet; see `docs/STUBS.md`. Broadcasters follow actual US league rights (NBC,
+weights are demo values in the fixture style — three of the four real models
+predict nothing, and `recent-goals-total` does not produce these numbers; see
+`docs/STUBS.md`. Broadcasters follow actual US league rights (NBC,
 Peacock, USA Network, ESPN+, Paramount+).
 
 ## Club crests

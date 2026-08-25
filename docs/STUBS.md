@@ -1,7 +1,8 @@
 # What is real and what is not
 
 This repository is a **walking skeleton**: every tier exists and is connected end
-to end, running on fixture data, with deliberately minimal components.
+to end — on fixture data by default, and on real data with `--live` — with
+deliberately minimal components.
 
 **An unmarked stub is worse than a missing feature**, because someone will build on
 it. This page is the authoritative list. If something is not here, it is real.

@@ -16,8 +16,11 @@ walking skeleton that exercises two of them leaves the third only unit-tested:
 `signals.reddit.home.*` and no `away` counterpart. A model requiring the away side
 skips that match with a recorded reason, which is the routine case in this system.
 
-**Replaced by:** the `add-live-ingestion` change, which selects a data provider and
-writes real collectors against this interface. See docs/STUBS.md.
+**Not replaced by anything, and not going away.** `recent-results` already shows what
+a real collector against this interface looks like. These three stay because they are
+the only thing exercising all three entity joins on a clone with nothing configured,
+which is a job a real collector cannot do. What would retire them is a second real
+collector for each of the three keyings. See docs/STUBS.md.
 """
 
 from __future__ import annotations
