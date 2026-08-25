@@ -31,7 +31,23 @@ context: |
   Schemas, the OpenAPI document, and golden fixtures. It contains no executable
   code, and every tier develops against it before the tiers around it exist.
 
-      ingestion -> store -> models -> score store -> API -> clients
+      schedule source -> slate -> collectors -> snapshots
+                                            -> models -> score store -> API -> clients
+
+  Fetching is not eliminated, it is moved earlier. **Collectors are the one tier
+  that runs after the slate exists and is allowed to touch the network**; the
+  schedule source is the other network tier, and it runs before, because it
+  produces the slate itself. A collector receives the whole slate, chooses its own
+  fan-out, and returns rows keyed by match, team, or league for the platform to
+  join on mechanically. So a source is fetched once no matter how many models read
+  it, and what a signal MEANS stays a model's judgement rather than a collector's.
+  No model package and no API package may import either network tier, and CI
+  checks it.
+
+  Collected rows persist in a corpus between runs, and a collector is invoked only
+  when its corpus is too old OR does not cover every entity the slate asks about.
+  Freshness is measured against a timestamp injected into the run, never against
+  the clock — that is what makes the decision reproducible in a test.
 
   ### Counterintuitive decisions — do not "simplify" these
 
@@ -95,6 +111,21 @@ context: |
   - **Every score response states its cohort and alias.** A calibrated score
     without its cohort is uninterpretable, and an alias can be repointed.
 
+  - **A signal path never names the collector that produced it.**
+    `signals.<namespace>.<leaf>`, where the namespace is a subject area, not a
+    source. Encoding the producer would make swapping one a breaking change for
+    every model that declares the path.
+
+  - **A collector nothing declares is not run, and that is RECORDED.** "No
+    consumer asked for this" is a different answer from "it ran and found
+    nothing", and a run record that omitted the first would make them look alike.
+
+  - **Collector failure is not absence.** Both leave the same hole in the
+    snapshot. Only the run record can tell them apart, so it must. For the same
+    reason a failed collector is NOT served its stale corpus: a score computed
+    from yesterday's signals is a different claim from one computed today, and no
+    score row can currently record which it was.
+
   - **Model weights are a judgement call, and the team is content with that.**
     Which models go into a blend, and at what weights, is decided by argument
     among the people building this and revised by editing a recipe. The weights
@@ -115,7 +146,7 @@ context: |
 
     Zone A  always specs   contracts/, scoring-contract, scoring-runtime,
                            composition/src
-    Zone B  on behaviour   api/, ingestion/, models/, evaluation/
+    Zone B  on behaviour   api/, ingestion/, models/, collectors/, evaluation/
     Zone C  none           web/, mobile/, infra/, CI, deps, refactors,
                            composition/recipes/*.yaml
 
@@ -139,17 +170,32 @@ context: |
   Decisions are made by the team as a group, with PR approval as the deciding
   gate. No individual owns any part of this project.
 
-  ## Current state — a walking skeleton
+  ## Current state — a walking skeleton with one working model
 
-  Every tier exists and is connected end to end on FIXTURE data, with
-  deliberately minimal components. The deliverable so far is a structure
-  collaborators can read and run, not working functionality.
+  Every tier exists and is connected end to end, with deliberately minimal
+  components. There are two paths. The DEFAULT path reads fixtures from disk, so
+  a fresh clone runs with no network, no daemon and no credentials. The `--live`
+  path acquires real upcoming matches and their US broadcasters, and collects the
+  goals each side scored in its last five completed matches.
+
+  One thing runs from a real source to a real score: `recent-goals-total`. It is
+  real but NOT validated, and by the decision above it is not going to be — it is
+  an argument that goals are fun to watch. Where a side has fewer than five
+  completed matches the match comes back with a recorded skip reason and no
+  score, which is the partial-coverage path working on real data rather than a
+  bug.
 
   **`docs/STUBS.md` is the authoritative list of what is placeholder.** Read it
-  before assuming anything works. Currently placeholder: both models (they
-  predict nothing), ingestion (reads files, no provider), three of four
-  calibration cohorts, two of three composition policies, broadcast
-  availability, and the database engine (SQLite, expected to become Postgres).
+  before assuming anything works. Currently placeholder: three of the four models
+  (`over-under-lean`, `odds-spread`, `social-buzz` — NOT `recent-goals-total`);
+  odds and league-table acquisition, absent, which is why the two market models
+  skip every match on a live run; the three fixture-signal collectors; three of
+  four calibration cohorts; two of three composition policies; and the database
+  engine (SQLite, expected to become Postgres).
+
+  Resolved since the bootstrap, and no longer placeholder: ingestion has a real
+  provider, broadcast availability is served from the store and may still answer
+  "unknown", and collected signals persist between runs.
 
   ## Not yet decided — do not assume
 
