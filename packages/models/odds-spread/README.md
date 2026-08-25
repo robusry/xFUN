@@ -12,10 +12,12 @@ proxy for a competitive match. But it ignores goals entirely, so it will rank a
 tense 0-0 above a 4-3 thriller.
 
 It has never been validated against any measure of whether matches were actually
-enjoyable to watch — there is no ground-truth label in this repository yet.
+enjoyable to watch, and no model here is expected to be — see
+[docs/STUBS.md](../../../docs/STUBS.md). What sinks this one is not the missing
+validation but the reasoning above, which the team can judge without a label.
 
 **Replaced by:** `add-market-baseline-model`, which folds goal expectancy and
-competitiveness into one validated model. See [docs/STUBS.md](../../../docs/STUBS.md).
+competitiveness into one model.
 
 ## Required features
 

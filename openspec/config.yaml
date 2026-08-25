@@ -95,6 +95,19 @@ context: |
   - **Every score response states its cohort and alias.** A calibrated score
     without its cohort is uninterpretable, and an alias can be repointed.
 
+  - **Model weights are a judgement call, and the team is content with that.**
+    Which models go into a blend, and at what weights, is decided by argument
+    among the people building this and revised by editing a recipe. The weights
+    are somewhat arbitrary and are not claimed otherwise. Measuring them against
+    a ground-truth label for "entertaining" is NOT a goal of this application:
+    the labels available to a project this size are proxies — engagement counts,
+    highlight views, box-score composites — and each is its own unvalidated
+    hypothesis about what fun means, so ranking models by one would trade an
+    admitted judgement call for a disguised one. A proposal whose value depends
+    on validating the formula has misread the project. What the design does owe
+    the reader is honesty about the status: a model here is an argument, not a
+    finding, and its README says so.
+
   ## Zones — when a change needs specs
 
   Requiring specs for every change is how spec-driven development dies on a
@@ -140,12 +153,10 @@ context: |
 
   ## Not yet decided — do not assume
 
-  - **What "fun" means, measured.** There is no ground-truth label. Without one
-    there is no way to tell whether a formula is any good, and "which models at
-    what weights" has no answerable form. Candidate labels: a composite
-    box-score, r/soccer match-thread engagement, highlight view counts, or user
-    ratings collected after the fact. This is the most consequential open
-    question in the project.
+  - **What "fun" means** — as a design argument, not as a measurement. The
+    formula will keep changing as the team's opinion of it changes. That it is
+    settled by opinion is decided, and recorded above; which opinion wins is
+    not.
   - Whether the headline score is GLOBAL (one number per match, shareable and
     arguable) or PERSONALISED (ranked per viewer, filtered by what they can
     actually watch). Both is possible; which one is the headline is a real

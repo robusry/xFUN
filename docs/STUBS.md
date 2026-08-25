@@ -14,9 +14,11 @@ These are the bootstrap's actual deliverable and are expected to survive.
 
 **Real is not the same as validated.** `recent-goals-total` reads goals from matches
 that were really played, and it has never been tested against whether anyone enjoyed
-watching them, because no ground-truth label exists. That is true of every model here
-and stays true until `add-evaluation-harness`. What separates it from the rows further
-down is that its inputs are real, so it can be wrong in a way somebody can check.
+watching them. That is true of every model here and is expected to stay true — the
+team weighs models by argument rather than by measurement, which is a decision
+recorded in `openspec/config.yaml`, not a gap on this page. What separates it from
+the rows further down is that its inputs are real, so it can be wrong in a way
+somebody can check by watching.
 
 | What | Where |
 |---|---|
@@ -40,10 +42,10 @@ down is that its inputs are real, so it can be wrong in a way somebody can check
 |---|---|
 | **Which ones** | `over-under-lean`, `odds-spread`, and `social-buzz`. **Not** `recent-goals-total`, which is listed above as real but unvalidated. |
 | **What** | `over-under-lean` returns the over/under goals line. `odds-spread` returns the normalised entropy of vig-stripped outcome probabilities. `social-buzz` multiplies invented mention counts by an invented interest level. |
-| **Why it is a placeholder** | None has been validated against any measure of whether matches were entertaining. `over-under-lean` ignores competitiveness and will rank a 4–0 procession above a tense 1–1; `odds-spread` ignores goals and will do the reverse; `social-buzz` measures attention, which is not the same thing as quality, from data that was made up. |
+| **Why it is a placeholder** | Not the missing validation — nothing here is validated, and that is a decision rather than a gap. These three are placeholders for reasons the team can see without a label: `over-under-lean` ignores competitiveness and will rank a 4–0 procession above a tense 1–1; `odds-spread` ignores goals and will do the reverse; `social-buzz` measures attention, which is not the same thing as quality, from data that was made up. |
 | **Why three** | To exercise multi-model fan-out and the partial-coverage path — they require different features on purpose. `social-buzz` additionally reads `signals.*` rather than canonical data, which is what makes the collector tier reachable from `scripts/demo.sh` instead of dormant. |
 | **Not in the default recipe** | None of the three is in `packages/composition/recipes/default.yaml` any more. It names `recent-goals-total` alone, so no placeholder contributes to the composed score. Restoring a blend is one line, and Zone C. |
-| **Replaced by** | `add-market-baseline-model` for the two market models; whichever change first builds a validated social model for `social-buzz` |
+| **Replaced by** | `add-market-baseline-model` for the two market models; whichever change first builds a social model over real signals for `social-buzz` |
 
 ### Ingestion
 
@@ -61,7 +63,7 @@ down is that its inputs are real, so it can be wrong in a way somebody can check
 | **Which ones** | The three in `packages/collectors/fixture-signals/`. **Not** `recent-results`, which reads a source and is listed above as real. |
 | **What** | `fixture-match`, `fixture-team`, and `fixture-league` in `packages/collectors/fixture-signals/` read `contracts/fixtures/signals/*.json` from disk. The values are invented. |
 | **Why they exist** | To exercise all three entity joins end to end on a clone with nothing configured. `fixture-team` returns one team on purpose, so a match carries `signals.reddit.home.*` with no `away` counterpart and the partial-coverage path is real rather than theoretical. |
-| **Also missing** | No collector consumes an unkeyed corpus. Retention is unbounded: `collector_corpus` rows accumulate and nothing evicts them, which is deliberate — choosing what history is worth keeping before an evaluation harness exists would be guessing. |
+| **Also missing** | No collector consumes an unkeyed corpus. Retention is unbounded: `collector_corpus` rows accumulate and nothing evicts them. Nothing has needed evicting yet, and a retention rule written before anything reads history back would be guessing at what history is for. |
 | **No longer missing** | Collected values persist between runs in `collector_corpus`, and `refresh_after_seconds` now decides whether a collector runs at all. Resolved by `add-collector-corpora`. Snapshots are still not persisted, so a stored score still cannot be re-derived from its exact input — that is `add-score-provenance`, and it is a different gap. |
 | **Replaced by** | The "real input" half is resolved by `add-recent-goals-model`; these three stay because they exercise all three entity joins on a clone with nothing configured. `add-collector-corpora` resolved persistence; retention and the unkeyed-corpus escape hatch are still unproposed. Note that the **schedule source is not a collector** and does not replace these: it runs before the slate exists and produces what the slate is made of. |
 
@@ -161,11 +163,14 @@ No package exists for these; the architecture leaves room for them.
 
 | | Change |
 |---|---|
-| Evaluation harness — ground-truth labels, backtests, the model leaderboard | `add-evaluation-harness` |
 | League scope — audience size versus entertainment density | `define-league-scope` |
 | Mobile app — the workspace slot is reserved and commented out | not yet proposed |
 
-**The evaluation harness is the most consequential item on this page.** With
-several models and configurable weights, "which models, at what weights" has no
-answerable form without a ground-truth label and a leaderboard. Until one exists,
-the team is choosing weights on argument rather than evidence.
+**An evaluation harness is not on this list, and that is deliberate.** The team
+chooses weights on argument rather than evidence, and is content to: the labels a
+project this size could actually obtain are proxies for fun rather than measures of
+it, so scoring models against one would dress a judgement call up as a finding.
+`packages/evaluation/` stays reserved in the architecture — a cheap slot to leave
+open, and expensive to reinstate once removed — but nothing is proposed to fill it.
+The obligation this trades for is honesty: every model here says in its README that
+it is an argument and not a finding, and that must stay true.

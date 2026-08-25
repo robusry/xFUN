@@ -3,9 +3,9 @@
 NOT A PLACEHOLDER, and not validated either. Every input is real: the goals come from
 completed matches that were really played, collected by `recent-results`. What has
 never been tested is the hypothesis -- that a match between two sides who have been
-scoring is worth watching -- because there is no ground-truth label for "entertaining"
-and therefore no way to be shown wrong. `add-evaluation-harness` is the change that
-makes this question answerable; until then this model is an argument, not a finding.
+scoring is worth watching -- and it is not going to be. The team weighs models by
+argument rather than against a label for "entertaining" (openspec/config.yaml), so
+this model stays an argument and not a finding, and says so on purpose.
 
 What it deliberately ignores, so that nobody has to discover it by reading the code:
 
