@@ -3,10 +3,12 @@
 Predicting which soccer matches will be entertaining to watch, for viewers in the US,
 across leagues people actually follow.
 
-> **Status: walking skeleton.** Every tier exists and is connected end to end, running
-> on fixture data. The components are deliberately minimal — this repository is
-> currently something to *read and understand*, not something that works. See
-> [`docs/STUBS.md`](docs/STUBS.md) for what is placeholder and what replaces it.
+> **Status: walking skeleton with one working model.** Every tier exists and is
+> connected end to end, and most components inside them are deliberately minimal.
+> `./scripts/demo.sh --live` acquires real matches and their US broadcasters and
+> scores them from goals really scored — everything else is placeholder. Nothing here
+> is *validated*, and by decision it will not be: see `openspec/config.yaml`. Read
+> [`docs/STUBS.md`](docs/STUBS.md) for what is real and what is not.
 
 ## Setup
 
@@ -32,7 +34,7 @@ you find out at `pnpm web:build` or in CI.
 Check the setup took:
 
 ```bash
-uv run pytest -q                                 # 28 passed
+uv run pytest -q                                 # 235 passed
 uv run python scripts/check_api_conformance.py   # 8 checks, 0 failed
 pnpm -r typecheck
 ```
@@ -49,6 +51,16 @@ database is a SQLite file at `.data/xfun.db`, and deleting it costs nothing. Thr
 the four models are placeholders that predict nothing; `recent-goals-total` scores from
 real historical goals, read out of captured pages so this still works with no network.
 
+```bash
+./scripts/demo.sh --live
+```
+
+The same pipeline against the real thing: upcoming matches and their US broadcasters
+from goal.com, and the goals each side scored in its last five completed matches.
+Needs network. Matches where a side has fewer than five completed matches come back
+with a recorded skip reason and no score — that is the partial-coverage path working,
+not a failure. The two market models skip everything, because nothing fetches odds yet.
+
 For the web page, in a second terminal:
 
 ```bash
@@ -58,11 +70,19 @@ pnpm web:dev            # http://localhost:5173
 ## What it does
 
 ```
-fixtures ──▶ ingestion ──▶ store ──▶ models ──▶ store ──▶ API ──▶ web
+schedule source ──▶ ingestion ──▶ store ──▶ slate ──▶ collectors
+ or fixture files                                          │
+                                                           │ signals, keyed by
+                                                           │ match / team / league
+                                                           ▼
+                              web ◀── API ◀── store ◀── models
                                        │
                           scores are precomputed in batch;
                           the API never runs a model
 ```
+
+Two tiers may touch the network and no others: the schedule source, which runs before
+the slate because it produces it, and collectors, which run after and enrich it.
 
 Several independently developed models each score a match. Their raw scores are the
 system's only truth — calibration and composition are derived at read time, because
@@ -91,8 +111,9 @@ to waste a week.
 
 | If you are working on | Read | Then look at |
 |---|---|---|
-| **A scoring model** | [`packages/scoring-contract/README.md`](packages/scoring-contract/README.md) | `packages/models/over-under-lean/` — copy its shape. A model is a pure function with no I/O. |
-| **Data ingestion** | [`packages/ingestion/README.md`](packages/ingestion/README.md) | `fixture_file.py` — the adapter interface, and what a real provider replaces |
+| **A scoring model** | [`packages/scoring-contract/README.md`](packages/scoring-contract/README.md) | `packages/models/recent-goals-total/` — copy its shape. A model is a pure function with no I/O. |
+| **A data source** | [`packages/collectors/README.md`](packages/collectors/README.md) | `packages/collectors/recent-results/` — a real collector; one of the two tiers allowed on the network |
+| **Data ingestion** | [`packages/ingestion/README.md`](packages/ingestion/README.md) | `schedule/` for the live path, `fixtures.py` for the offline one |
 | **The API** | [`packages/api/README.md`](packages/api/README.md) | `contracts/openapi.yaml` — the contract is the source of truth; the API is validated against it |
 | **The website** | [`packages/web/README.md`](packages/web/README.md) | `packages/web/src/App.tsx` — the whole page is one file |
 | **Anything at all** | [`docs/architecture.md`](docs/architecture.md) | the four decisions that explain most of the code |

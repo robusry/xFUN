@@ -7,8 +7,9 @@ interested the home team's following appears to be.
 
 ## Why it exists
 
-The other two models read canonical data — odds — which ingestion writes directly.
-This one reads `signals.*`, which only exists because a collector produced it and
+Every other model reads canonical data that ingestion writes directly — odds for the
+two market models, recent results for `recent-goals-total`. This one alone reads
+`signals.*`, which exists only because a collector produced it and
 the platform joined it onto the match. It is what makes the collector tier reachable
 in `scripts/demo.sh` rather than dormant, and it turns the `signals` blocks in the
 golden snapshot fixtures into something a run actually reproduces.
@@ -26,14 +27,15 @@ thriller, and the away side's following is ignored entirely because the fixture 
 deliberately covers only one side.
 
 More to the point, the underlying signals are themselves invented by
-`packages/collectors/fixture-signals/`. Nothing here has been validated against any
-measure of whether a match was actually fun to watch — which is the project's
-central unanswered question, not this model's to solve.
+`packages/collectors/fixture-signals/`. No model here is validated against a measure
+of whether a match was actually fun to watch, by decision rather than by omission
+(see [docs/STUBS.md](../../../docs/STUBS.md)); what singles this one out is that its
+inputs are made up as well.
 
 `raw_score` is deliberately unnormalised, on an arbitrary scale in the hundreds.
 Models must not normalise; the platform percentile-ranks within a caller-chosen
 cohort.
 
-**Replaced by:** whichever change first builds a validated model over social
+**Replaced by:** whichever change first builds a model over real social
 signals. Its absence from `packages/composition/recipes/default.yaml` is deliberate
 — it contributes nothing to the composed score. See `docs/STUBS.md`.

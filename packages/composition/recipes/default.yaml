@@ -13,10 +13,12 @@
 # nothing and score nothing on a live run, so blending them in would give the
 # composed number a provenance that is mostly invented.
 #
-# `recent-goals-total` is not validated either -- nothing here is, until there is a
-# ground-truth label for "entertaining" and `add-evaluation-harness` to test against
-# it. What is different is that its inputs are real goals from matches that were
-# really played, so it can be wrong in a way somebody can check by watching.
+# `recent-goals-total` is not validated either -- nothing here is, and nothing is
+# expected to be. These weights are the team's judgement about what makes a match
+# worth watching, not a measurement, and the project has decided it is content with
+# that (openspec/config.yaml). What is different about this model is that its inputs
+# are real goals from matches that were really played, so it can be wrong in a way
+# somebody can check by watching.
 #
 # Restoring a blend is one line. That is the point of this file.
 

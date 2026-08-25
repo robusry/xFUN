@@ -16,7 +16,7 @@ validated against any measure of whether such matches were entertaining, and it
 ignores goals entirely -- it will rank a tense 0-0 above a 4-3 thriller.
 
 **Replaced by:** the `add-market-baseline-model` change, which folds
-competitiveness and goal expectancy into one validated model. See docs/STUBS.md.
+competitiveness and goal expectancy into one model. See docs/STUBS.md.
 """
 
 from __future__ import annotations

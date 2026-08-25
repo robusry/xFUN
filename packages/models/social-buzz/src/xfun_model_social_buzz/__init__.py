@@ -22,7 +22,7 @@ feeding it are invented too. A heavily-discussed match between two dull teams
 outranks a quiet thriller, and the away side is ignored entirely -- because the
 fixture data covers one side on purpose, to keep the partial-coverage path honest.
 
-**Replaced by:** whichever change first builds a validated model over social
+**Replaced by:** whichever change first builds a model over real social
 signals. See docs/STUBS.md.
 """
 

@@ -19,10 +19,10 @@ produces scores instead of a page of skip reasons.
 
 ## What is not
 
-Nothing here has been tested against whether the matches were entertaining, because
-there is no ground-truth label for that — the project's central open question, recorded
-in `openspec/config.yaml`. Until `add-evaluation-harness` exists, this model is an
-argument that goals are fun to watch, not a finding.
+Nothing here has been tested against whether the matches were entertaining, and the
+project does not plan to test it: weighting models is a judgement the team makes by
+argument, recorded in `openspec/config.yaml`. So this model is an argument that goals
+are fun to watch, not a finding — which is exactly why it says so here.
 
 It is also plainly wrong in ways worth stating before somebody discovers them:
 

@@ -87,6 +87,13 @@ look like bugs:
 - **Unimplemented cohorts/policies raise rather than falling back**, and surface
   as 501.
 - **Matches with no score are still returned**, with a reason.
+- **The blend weights are somewhat arbitrary, on purpose.** The team picks which
+  models count and how much by argument, and changes its mind with a recipe diff.
+  Validating the formula against a ground-truth label for "entertaining" is not a
+  goal here, so "these weights are unjustified" is a description of the design
+  rather than a defect to open a change against. Models still say plainly in their
+  READMEs that they are arguments and not findings — that honesty is the part that
+  is load-bearing.
 - **Collectors and the schedule source are exempt from the purity check.**
   Touching the network is the purpose of those two tiers, and there are exactly
   two, separated by when they run relative to the slate: the schedule source
@@ -158,7 +165,7 @@ Everything CI runs, in the order it runs:
 ```bash
 uv run python scripts/check_dependencies.py      # tier boundaries
 uv run ruff check .
-uv run pytest -q                                 # 214 tests
+uv run pytest -q                                 # 235 tests
 uv run python scripts/pipeline.py                # end-to-end on fixtures
 uv run python scripts/check_api_conformance.py   # responses match the contract
 uv run python scripts/validate_contracts.py      # fixtures match the schemas
@@ -205,10 +212,11 @@ individual owns any part of this project.
 
 Not a queue — nothing here is claimed as next.
 
-- **What "fun" means, measured.** There is no ground-truth label, so no formula
-  can be evaluated and "which models at what weights" has no answerable form.
-  The most consequential open question in the project, and the reason
-  `add-evaluation-harness` is the follow-up worth arguing for first.
+- **What "fun" means** — as an argument to be had, not a number to be measured.
+  Which models blend at which weights is the team's call, settled by discussion
+  and changed with a one-line recipe diff. See "Do not 'fix' these" above: the
+  weights being somewhat arbitrary is accepted, not a gap awaiting an evaluation
+  harness.
 - **Liga MX reaches the slate, but on borrowed time.** This entry previously said
   it was permanently absent; that was corrected on 2026-08-23, when a live run
   showed goal.com naming per-match providers for every Liga MX and Femenil fixture
@@ -236,9 +244,10 @@ Not a queue — nothing here is claimed as next.
 ## Absent on purpose, not forgotten
 
 `docs/STUBS.md` is authoritative. In short: no *validated* model, no odds and no
-league table for the models that need them, no evaluation harness, no mobile app,
-and no automated JavaScript test — CI covers the TS side with typecheck and build
-only.
+league table for the models that need them, no mobile app, and no automated
+JavaScript test — CI covers the TS side with typecheck and build only. There is no
+evaluation harness either, but that one is a decision rather than an absence: see
+"Do not 'fix' these".
 
 Matches, US broadcasters, and recent goals ARE real on the live path, all via
 goal.com — an unofficial source with no API contract, chosen from a six-way survey

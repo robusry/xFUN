@@ -8,9 +8,10 @@ scoring-contract/    the model interface + shared types.       Python
 scoring-runtime/     registry, feature assembly, calibration.  Python
 store/               canonical entities + append-only scores.  Python
 models/<model-id>/   one independently owned package per model. Python
+collectors/<id>/     one package per data source.              Python
 composition/         recipes and composition logic.            Python
-evaluation/          labels, backtests, leaderboard.           Python  (not yet built)
-ingestion/           per-source data adapters.                 Python
+evaluation/          labels, backtests, leaderboard.           Python  (slot only)
+ingestion/           schedule acquisition + slate + entities.  Python
 api/                 read-only public API (FastAPI).           Python
 web/                 the website.                              TypeScript
 mobile/              future mobile app.                        TypeScript (slot only)
@@ -26,6 +27,11 @@ These are enforced in CI, not left to good intentions:
 - **The API depends on no model package.** It reads precomputed scores from the
   store; it never executes a model during a request.
 - **Nothing imports across a tier boundary except through `contracts/`.**
+- **`collectors/` and `ingestion/schedule/` are exempt from the purity check**, and
+  they are the only two. Touching the network is the point of both; they differ in
+  when they run relative to the slate — the schedule source produces it, collectors
+  enrich it. The rule points the other way instead: no model and no API package may
+  import either.
 
 ## Adding a model
 
