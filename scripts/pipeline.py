@@ -46,7 +46,7 @@ from xfun_runtime import (
     run_collectors,
     run_models,
 )
-from xfun_runtime.paths import fixtures_dir
+from xfun_runtime.paths import captures_dir
 from xfun_store import (
     connect,
     corpus_freshness,
@@ -171,7 +171,7 @@ def build_collector_registry(
         registry.register(collector)
 
     recent_results = RecentResults(
-        LivePages() if live else CapturedPages(fixtures_dir() / "schedule" / "results"),
+        LivePages() if live else CapturedPages(captures_dir() / "goal-com" / "results"),
         as_of=clock.as_of,
     )
     registry.register(recent_results)

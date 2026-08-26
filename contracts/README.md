@@ -25,37 +25,24 @@ A web developer with no API deployed generates a client from `openapi.yaml`, ser
 ingestion pipeline loads a snapshot fixture and iterates on a model. Neither waits
 for anyone.
 
-## Two kinds of fixture
+## Everything here is authored and schema-validated
 
-Most fixtures here are **authored contract examples**: written by us, validated
-against a schema in CI, and used by both sides of a seam. They are the contract.
+Every file under `contracts/` is written by this project, validated against a schema
+in CI, and used by both sides of a seam. That is what makes a fixture here a contract
+rather than two sets of sample data, and it is why a failing fixture means a producer
+violated an interface.
 
-`fixtures/schedule/` is different. Those are **captured third-party responses** —
-reduced copies of goal.com pages. They validate against no schema, because the shape
-is not ours to define, and they may be refreshed wholesale when the source changes.
-They are test input for the parsers, not an agreement between tiers. Two tools produce
-them, and neither paraphrases: each keeps the source's own bytes for a chosen subset.
-
-- `scripts/capture_schedule_fixture.py` writes the dated pages beside this file,
-  trimmed to a chosen set of competitions, keeping the schema.org blocks and the page
-  state — the two halves the schedule parsers read.
-- `scripts/capture_results_fixture.py` writes `fixtures/schedule/results/`, walking
-  backwards from a date and trimming each page to matches involving the teams in
-  `fixtures/snapshots/`. These carry no schema.org blocks, because scores live only in
-  the page state and a fixture holding data nothing reads invites a reader to believe
-  it matters. They are what lets `./scripts/demo.sh` run the real `recent-results` scan
-  over real historical results with no network.
-
-The distinction matters when one breaks. A failing authored fixture means a producer
-violated the contract. A failing captured fixture means somebody else changed their
-website, and the fix is usually to recapture and adapt the parser. See `docs/STUBS.md`
-for why the project depends on an unofficial source at all.
+Captured third-party responses are therefore **not** kept here. They validate against
+no schema of ours, their shape is not ours to define, and a failure in one means
+somebody else changed their website — a different problem with a different fix. They
+live in `tests/captures/`, which has its own README.
 
 ## Rules
 
 - Fixtures are validated against their schemas in CI. A producer that emits
-  non-conforming output fails before it can reach a consumer. Captured fixtures are
-  exempt, since there is no schema to validate them against.
+  non-conforming output fails before it can reach a consumer. There is no exempt
+  category: anything that cannot be schema-validated does not belong in this
+  directory.
 - The same fixture files are used by both the producing and the consuming side's
   tests — that is what makes them a contract rather than two sets of sample data.
 - `openapi.yaml` is the source of truth for the API. The API is validated *against*

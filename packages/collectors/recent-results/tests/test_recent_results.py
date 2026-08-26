@@ -22,7 +22,7 @@ from xfun_contract import LeagueRef, MatchRef, Selection, Slate, TeamRef
 from xfun_ingestion.schedule import ScheduleSourceError
 
 CAPTURES = (
-    Path(__file__).resolve().parents[4] / "contracts" / "fixtures" / "schedule" / "results"
+    Path(__file__).resolve().parents[4] / "tests" / "captures" / "goal-com" / "results"
 )
 CAPTURE_AS_OF = date(2026, 8, 14)
 """The date the offline demo scans back from. Fixed, so the fixture path is
@@ -374,7 +374,7 @@ itself."""
 
 
 def fixture_teams() -> set[tuple[str, str]]:
-    fixtures = CAPTURES.parent.parent / "snapshots"
+    fixtures = Path(__file__).resolve().parents[4] / "contracts" / "fixtures" / "snapshots"
     return {
         (payload[side]["id"], payload[side]["name"])
         for path in sorted(fixtures.glob("*.json"))

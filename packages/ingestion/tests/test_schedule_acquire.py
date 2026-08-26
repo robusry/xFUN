@@ -24,11 +24,11 @@ from xfun_ingestion.schedule import (
     schedule_url,
     window_dates,
 )
-from xfun_runtime.paths import fixtures_dir
+from xfun_runtime.paths import captures_dir
 from xfun_store import connect, latest_schedule_run, migrate, read_availability
 
-DENSE = fixtures_dir() / "schedule" / "2026-08-22-dense.html"
-MALFORMED = fixtures_dir() / "schedule" / "malformed-state.html"
+DENSE = captures_dir() / "goal-com" / "2026-08-22-dense.html"
+MALFORMED = captures_dir() / "goal-com" / "malformed-state.html"
 
 NOW = datetime(2026, 8, 20, 12, 0, tzinfo=UTC)
 

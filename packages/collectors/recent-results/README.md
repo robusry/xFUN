@@ -61,7 +61,7 @@ Two consequences worth knowing before you debug a missing value:
 ## Running it without a network
 
 `collect` takes an injected `PageSource` and an `as_of` date. `CapturedPages` reads
-reduced golden captures from `contracts/fixtures/schedule/results/`, which is what
+reduced golden captures from `tests/captures/goal-com/results/`, which is what
 `./scripts/demo.sh` uses when `--live` is absent, and what every test here uses.
 `LivePages` is the network one.
 

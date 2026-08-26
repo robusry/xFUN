@@ -1,24 +1,24 @@
 ## 1. Relocate the captured pages
 
-- [ ] 1.1 Move `contracts/fixtures/schedule/*.html` (3 files) and
-      `contracts/fixtures/schedule/results/*.html` (51 files) to
+- [x] 1.1 Move `contracts/fixtures/schedule/*.html` (3 files) and
+      `contracts/fixtures/schedule/results/*.html` (49 files) to
       `tests/captures/goal-com/` and `tests/captures/goal-com/results/`, preserving
       filenames. Use `git mv` so the history follows.
-- [ ] 1.2 Write `tests/captures/README.md`: what these are, that they are captured
+- [x] 1.2 Write `tests/captures/README.md`: what these are, that they are captured
       third-party bytes rather than an authored contract, which script regenerates
       each set, and that nothing a user runs reads them.
-- [ ] 1.3 Update `scripts/capture_schedule_fixture.py` and
+- [x] 1.3 Update `scripts/capture_schedule_fixture.py` and
       `scripts/capture_results_fixture.py` to write to the new paths, and update
       their module docstrings, which currently describe the output as fixtures for
       the offline demo.
-- [ ] 1.4 Add a `captures_dir()` helper beside `fixtures_dir()` in
+- [x] 1.4 Add a `captures_dir()` helper beside `fixtures_dir()` in
       `packages/scoring-runtime/src/xfun_runtime/paths.py`, and repoint
       `packages/ingestion/tests/test_schedule_parse.py` and
       `packages/collectors/recent-results/tests/test_recent_results.py` at it.
-- [ ] 1.5 Remove the "Two kinds of fixture" section from `contracts/README.md` and
+- [x] 1.5 Remove the "Two kinds of fixture" section from `contracts/README.md` and
       replace it with one sentence stating that everything under `contracts/` is
       authored and schema-validated, pointing at `tests/captures/` for the rest.
-- [ ] 1.6 Confirm `uv run pytest -q` still passes (235 tests) before any behaviour
+- [x] 1.6 Confirm `uv run pytest -q` still passes (235 tests) before any behaviour
       changes. This task is a pure move; a failure here is a wiring mistake, not a
       design consequence.
 

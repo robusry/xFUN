@@ -91,7 +91,7 @@ behaviour that is not already specified elsewhere.
   production caller and is consumed by the test harness.
 - `packages/collectors/fixture-signals/` — stays, no longer registered in production.
 - `packages/models/social-buzz/` — stays, no longer registered in production.
-- `contracts/fixtures/schedule/` (54 files) — moves to a test-only location, with
+- `contracts/fixtures/schedule/` (52 files) — moves to a test-only location, with
   `packages/ingestion/tests/test_schedule_parse.py` and
   `packages/collectors/recent-results/tests/test_recent_results.py` following it.
 - `packages/api/tests/test_offline_reproducibility.py` — becomes the end-to-end test

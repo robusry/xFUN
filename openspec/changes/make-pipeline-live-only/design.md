@@ -87,7 +87,7 @@ restored mode.
 
 ### D3: Captured pages move to `tests/captures/`, at the repository root
 
-The 54 captured goal.com pages move out of `contracts/fixtures/schedule/` to
+The 52 captured goal.com pages move out of `contracts/fixtures/schedule/` to
 `tests/captures/goal-com/`, carrying a README stating what they are, which script
 regenerates them, and that they are parser input rather than a contract.
 
@@ -109,7 +109,7 @@ is mildly surprising and needs its README to stay honest. `contracts/README.md` 
 its "two kinds of fixture" section, which was good writing doing the job a directory
 boundary should have been doing.
 
-### D4: All 51 result captures are kept
+### D4: All 49 result captures are kept
 
 They were sized by `capture_results_fixture.py` to satisfy the same stopping rule the
 collector uses — five completed matches for each of the sixteen teams in the eight

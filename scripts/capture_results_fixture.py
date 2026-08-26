@@ -1,10 +1,13 @@
 #!/usr/bin/env python3
-"""Capture past goal.com pages into golden fixtures of completed matches.
+"""Capture past goal.com pages into test captures of completed matches.
 
 A development tool, not part of the pipeline and not run by CI. Its output is what
-lets `./scripts/demo.sh` run the real `recent-results` scan over real historical
-results with no network, which is the bargain every default path in this repository
-makes: a fresh clone works with nothing configured.
+lets the end-to-end test run the real `recent-results` scan over real historical
+results with no network, so that CI exercises the whole pipeline without depending
+on a third party being reachable.
+
+Its output is test input and nothing else. No path a user runs reads it -- the
+pipeline always acquires from the live source.
 
 Walks backwards from a date, keeping only matches involving a named set of teams, and
 stops as soon as each of them has five completed matches -- the same stopping rule the
@@ -44,7 +47,7 @@ from pathlib import Path
 from typing import Any
 
 ROOT = Path(__file__).resolve().parent.parent
-OUT_DIR = ROOT / "contracts" / "fixtures" / "schedule" / "results"
+OUT_DIR = ROOT / "tests" / "captures" / "goal-com" / "results"
 SNAPSHOT_DIR = ROOT / "contracts" / "fixtures" / "snapshots"
 
 sys.path.insert(0, str(ROOT / "packages" / "ingestion" / "src"))

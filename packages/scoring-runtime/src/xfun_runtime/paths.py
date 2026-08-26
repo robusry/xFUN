@@ -9,7 +9,14 @@ from __future__ import annotations
 
 from pathlib import Path
 
-__all__ = ["contracts_dir", "data_dir", "fixtures_dir", "repo_root", "schemas_dir"]
+__all__ = [
+    "captures_dir",
+    "contracts_dir",
+    "data_dir",
+    "fixtures_dir",
+    "repo_root",
+    "schemas_dir",
+]
 
 _MARKERS = ("contracts", "openspec", "pyproject.toml")
 
@@ -34,6 +41,17 @@ def schemas_dir() -> Path:
 
 def fixtures_dir() -> Path:
     return contracts_dir() / "fixtures"
+
+
+def captures_dir() -> Path:
+    """Captured third-party responses, read only by tests.
+
+    Deliberately NOT under `contracts/`. Everything in that directory is authored
+    by this project and validated against a schema; these are somebody else's bytes,
+    validated against nothing, and the distinction has to be visible from a file's
+    location rather than from a paragraph someone has to find first.
+    """
+    return repo_root() / "tests" / "captures"
 
 
 def data_dir() -> Path:
