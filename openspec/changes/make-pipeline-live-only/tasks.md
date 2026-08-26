@@ -58,7 +58,7 @@
 - [x] 3.3 Replace the `End-to-end pipeline on fixtures` step in
       `.github/workflows/ci.yml:59`. The `pytest` step already covers it; delete the
       step and note in the workflow why the end-to-end check now lives in the suite.
-- [ ] 3.4 Confirm the check still fails when it should: temporarily break a scoring
+- [x] 3.4 Confirm the check still fails when it should: temporarily break a scoring
       path and verify this test goes red, then revert. An end-to-end test that passes
       unconditionally is worse than none.
 

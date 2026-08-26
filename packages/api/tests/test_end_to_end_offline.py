@@ -36,23 +36,27 @@ from harness import (
     offline_arguments,
 )
 
-EXPECTED_RANKING = [
-    "epl-2026-08-18-che-mun",
-    "epl-2026-08-15-ars-liv",
-    "laliga-2026-08-16-rma-get",
-    "epl-2026-08-15-bha-eve",
-    "epl-2026-08-16-new-bre",
-    "epl-2026-08-17-mci-tot",
-    "epl-2026-08-16-bur-shu",
-]
-"""What the pipeline produces from the captured inputs, most fun first.
+EXPECTED_SCORES = {
+    "epl-2026-08-18-che-mun": 23.0,
+    "epl-2026-08-15-ars-liv": 19.0,
+    "laliga-2026-08-16-rma-get": 18.0,
+    "epl-2026-08-15-bha-eve": 17.0,
+    "epl-2026-08-16-new-bre": 15.0,
+    "epl-2026-08-17-mci-tot": 14.0,
+    "epl-2026-08-16-bur-shu": 12.0,
+}
+"""`recent-goals-total`'s raw scores from the captured pages -- goals both sides
+scored across their last five completed matches, added.
 
-Asserted so this check covers correctness and not only stability -- three runs that
-agree on the wrong answer would otherwise pass. `seriea-2026-08-16-int-tor` is absent
-on purpose: the source calls Inter `Inter` and the snapshot calls them
-`Internazionale`, so the scan cannot recognise them and the match comes back with a
-recorded reason and no score. That is the partial-coverage path, exercised on real
-captured data."""
+The VALUES are asserted, not merely which matches got one. Asserting coverage alone
+lets a broken arithmetic change through: swapping the model's `+` for a `-` leaves
+exactly this set of matches scored, and an earlier version of this test passed
+against that. Three runs agreeing on a wrong answer is still a wrong answer.
+
+`seriea-2026-08-16-int-tor` is absent on purpose: the source calls Inter `Inter` and
+the snapshot calls them `Internazionale`, so the scan cannot recognise them and the
+match comes back with a recorded reason and no score. That is the partial-coverage
+path, exercised on real captured data."""
 
 STORED = {
     "scores": "SELECT match_id, model_id, model_version, snapshot_hash, raw_score, "
@@ -95,13 +99,16 @@ def three_runs(tmp_path_factory):
     return states
 
 
-def test_the_pipeline_produces_the_expected_ranking(three_runs):
+def test_the_pipeline_produces_the_expected_scores(three_runs):
     """Correctness, not only stability. Three runs agreeing proves nothing alone."""
-    scores = three_runs[0]["scores"]
-    scored = {row[0] for row in scores if row[4] is not None}
+    produced = {
+        row[0]: row[4]
+        for row in three_runs[0]["scores"]
+        if row[1] == "recent-goals-total" and row[4] is not None
+    }
 
-    assert scored == set(EXPECTED_RANKING)
-    assert "seriea-2026-08-16-int-tor" not in scored, (
+    assert produced == EXPECTED_SCORES
+    assert "seriea-2026-08-16-int-tor" not in produced, (
         "Inter is unrecognisable to the source by the snapshot's name; this match "
         "must come back unscored rather than scored from a partial sum"
     )
