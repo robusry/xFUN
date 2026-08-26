@@ -42,7 +42,7 @@ you find out at `pnpm web:build` or in CI.
 Check the setup took:
 
 ```bash
-uv run pytest -q                                 # 250 passed, no network needed
+uv run pytest -q                                 # 252 passed, no network needed
 uv run python scripts/check_api_conformance.py   # 8 checks, 0 failed
 pnpm -r typecheck
 ```
@@ -76,11 +76,20 @@ Then serve it, in a second terminal:
 uv run uvicorn xfun_api:app --port 8000     # http://localhost:8000/docs
 ```
 
+The API is read-only and never writes. Against an empty database it returns 500 on
+the first request rather than an empty list, because the schema is created by the
+pipeline's migrations — so run the pipeline first.
+
 For the web page, in a third terminal:
 
 ```bash
 pnpm web:dev            # http://localhost:5173
 ```
+
+Keep both ports as they are unless you change both: the page defaults to
+`http://localhost:8000` (override with `VITE_API_URL`) and the API allows
+cross-origin requests from `http://localhost:5173` alone. Changing one gives you a
+CORS error in the browser and an empty page, with nothing wrong in either log.
 
 ## What it does
 

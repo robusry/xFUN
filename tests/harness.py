@@ -16,6 +16,8 @@ from __future__ import annotations
 
 import importlib.util
 import sys
+from collections.abc import Iterator
+from contextlib import contextmanager
 from datetime import date
 from pathlib import Path
 from typing import Any
@@ -105,7 +107,49 @@ def offline_arguments(pipeline: Any, *, quiet: bool = True) -> dict[str, Any]:
     }
 
 
-def run_offline(*, quiet: bool = True) -> int:
-    """Run the whole pipeline against captured inputs. Returns its exit code."""
+@contextmanager
+def offline_database(db_path: Path) -> Iterator[Any]:
+    """Point the pipeline at one throwaway database, and put it back afterwards.
+
+    Patching `xfun_store.db.connect` alone is NOT enough, and getting this wrong is
+    silent. `connect` is re-exported by `xfun_store/__init__.py`, and every consumer
+    does `from xfun_store import connect`, which copies the reference at import time.
+    Rebinding the definition therefore leaves every existing importer -- the pipeline,
+    and `xfun_api.context` -- still holding the original, so they open the real
+    `.data/xfun.db` while the caller believes everything was redirected. Both symptoms
+    have been seen: fixture matches written into a developer's live database, and a
+    conformance run reading an empty one it had just created.
+
+    So this rebinds the definition, the package re-export (which covers anything
+    imported later), and every module already holding a copy. `db_path` is required:
+    there is no default that silently means "the real one".
+    """
+    import xfun_store
+    import xfun_store.db as db_module
+
     pipeline = load_pipeline()
-    return pipeline.run_pipeline(**offline_arguments(pipeline, quiet=quiet))
+    real_connect = db_module.connect
+
+    def connect(path: Any = None) -> Any:
+        return real_connect(db_path)
+
+    # Every module currently holding its own reference to the real `connect`, found
+    # rather than listed, so a new importer does not silently escape the redirect.
+    holders = [
+        module
+        for module in list(sys.modules.values())
+        if getattr(module, "connect", None) is real_connect
+    ]
+    for module in (db_module, xfun_store, pipeline, *holders):
+        module.connect = connect
+    try:
+        yield pipeline
+    finally:
+        for module in (db_module, xfun_store, pipeline, *holders):
+            module.connect = real_connect
+
+
+def run_offline(db_path: Path, *, quiet: bool = True) -> int:
+    """Run the whole pipeline against captured inputs. Returns its exit code."""
+    with offline_database(db_path) as pipeline:
+        return pipeline.run_pipeline(**offline_arguments(pipeline, quiet=quiet))

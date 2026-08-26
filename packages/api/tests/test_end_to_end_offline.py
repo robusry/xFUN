@@ -34,6 +34,7 @@ from harness import (
     OFFLINE_STAMP,
     load_pipeline,
     offline_arguments,
+    offline_database,
 )
 
 EXPECTED_SCORES = {
@@ -82,20 +83,11 @@ def _snapshot(db: Path) -> dict[str, list]:
 def three_runs(tmp_path_factory):
     """Run the real pipeline three times against one throwaway database."""
     db = tmp_path_factory.mktemp("repro") / "xfun.db"
-    pipeline = load_pipeline()
-
-    import xfun_store.db as db_module
-
-    real_connect = db_module.connect
     states = []
-    try:
-        db_module.connect = lambda path=None: real_connect(db)
-        pipeline.connect = db_module.connect
+    with offline_database(db) as pipeline:
         for _ in range(3):
             assert pipeline.run_pipeline(**offline_arguments(pipeline)) == 0
             states.append(_snapshot(db))
-    finally:
-        db_module.connect = real_connect
     return states
 
 
@@ -186,3 +178,44 @@ def test_the_pipeline_offers_no_offline_mode():
     assert "--live" not in result.stdout
     assert "--offline" not in result.stdout
     assert "--fixtures" not in result.stdout
+
+
+def test_the_offline_harness_never_touches_the_real_database(tmp_path):
+    """Regression: the harness must not write to `.data/xfun.db`.
+
+    Redirecting the pipeline's database is easy to get wrong in a way nothing reports.
+    `scripts/pipeline.py` does `from xfun_store import connect`, so patching
+    `xfun_store.db.connect` alone leaves the pipeline bound to the original function
+    and the run quietly writes to the developer's real database. That happened: a
+    conformance check seeded fixture matches into `.data/xfun.db`, and the only
+    symptom was eight August matches appearing in live API responses.
+
+    `offline_database` rebinds both names, and this asserts it.
+    """
+    from xfun_runtime.paths import repo_root
+
+    real_db = repo_root() / ".data" / "xfun.db"
+    before = real_db.stat().st_mtime_ns if real_db.exists() else None
+
+    db = tmp_path / "throwaway.db"
+    with offline_database(db) as pipeline:
+        assert pipeline.run_pipeline(**offline_arguments(pipeline)) == 0
+
+    assert db.exists(), "the run should have written to the database it was given"
+
+    after = real_db.stat().st_mtime_ns if real_db.exists() else None
+    assert after == before, (
+        f"the offline harness wrote to {real_db}; it must only ever touch the "
+        f"database it is handed"
+    )
+
+
+def test_the_pipelines_connect_is_restored_afterwards():
+    """A leaked patch would send a later real run to a temporary file."""
+    pipeline = load_pipeline()
+    original = pipeline.connect
+
+    with offline_database(Path("/tmp/xfun-never-written.db")):
+        assert pipeline.connect is not original
+
+    assert pipeline.connect is original

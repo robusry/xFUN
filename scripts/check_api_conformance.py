@@ -47,19 +47,26 @@ def main() -> int:
 
     import tempfile
 
-    import xfun_store.db as db_module
-    from harness import run_offline
+    from harness import offline_database, run_offline
 
     # Seed before importing the API: its context opens a connection on first request,
     # and pointing that at an empty database is what used to be avoided by CI running
     # the fixture-backed pipeline in a step before this one.
+    #
+    # The redirection lives in the harness because doing it by hand is silently wrong:
+    # patching xfun_store.db.connect alone leaves scripts/pipeline.py using its own
+    # import-time binding, and this check then writes fixture matches into the
+    # developer's real .data/xfun.db.
     tmp = tempfile.TemporaryDirectory()
     db = Path(tmp.name) / "xfun.db"
-    real_connect = db_module.connect
-    db_module.connect = lambda path=None: real_connect(db)
-    if run_offline() != 0:
+    if run_offline(db) != 0:
         print("Could not seed the database for conformance checking.", file=sys.stderr)
         return 2
+
+    # The API opens its own connection when it first serves a request, so the
+    # redirection has to still be in force while the checks below run.
+    seeded = offline_database(db)
+    seeded.__enter__()
 
     from xfun_api import app
 

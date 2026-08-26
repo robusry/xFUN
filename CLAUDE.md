@@ -189,7 +189,7 @@ Everything CI runs, in the order it runs:
 ```bash
 uv run python scripts/check_dependencies.py      # tier boundaries
 uv run ruff check .
-uv run pytest -q                                 # 250 tests, includes the offline
+uv run pytest -q                                 # 252 tests, includes the offline
                                                  # end-to-end pipeline run
 uv run python scripts/check_api_conformance.py   # responses match the contract
 uv run python scripts/validate_contracts.py      # fixtures match the schemas

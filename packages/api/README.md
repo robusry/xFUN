@@ -1,11 +1,28 @@
 # api
 
-**Real, not placeholder** — over placeholder data.
+**Real, not placeholder.**
 
 Read-only FastAPI service. Reads precomputed scores; applies calibration and
 composition, both of which are arithmetic over stored rows.
 
-    uvicorn xfun_api:app --reload
+```bash
+uv run uvicorn xfun_api:app --port 8000        # http://localhost:8000/docs
+uv run uvicorn xfun_api:app --port 8000 --reload   # while editing this package
+```
+
+`uv run` matters unless the virtualenv is already active — a bare `uvicorn` will
+either be missing or be the wrong one.
+
+It reads whatever is in `.data/xfun.db` and never writes. Against an empty database
+every endpoint returns 500 on the first request — the schema is created by the
+pipeline's migrations, so there is no `model_registry` table to read yet. Run
+`uv run python scripts/pipeline.py` first to acquire and score something; that needs
+network access to the schedule source.
+
+Port 8000 is not arbitrary: the web page defaults to `http://localhost:8000`, and
+this service allows cross-origin requests from `http://localhost:5173` alone. Moving
+either without the other breaks the page in the browser and nowhere else. See
+`packages/web/README.md`.
 
 ## It never runs a model
 
