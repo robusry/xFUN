@@ -16,21 +16,28 @@ repository is deliberately minimal. Read it before assuming anything works.
 ## Project state
 
 **A walking skeleton with one working model.** Every tier exists and is connected
-end to end. It runs — `./scripts/demo.sh` seeds fixtures, scores them, and serves
-the API with no database server, no container, and no credentials. Most components
-inside the tiers are still placeholders by design.
+end to end. `uv run python scripts/pipeline.py` acquires real matches, scores them,
+and writes to a SQLite file with no database server, no container, and no
+credentials. Most components inside the tiers are still placeholders by design.
 
-Three of the four models predict nothing. Three of four calibration cohorts and two
-of three composition policies return 501.
+**There is no offline mode, and that is the design.** A run acquires from goal.com or
+it produces nothing. The pipeline's varying inputs — the clock, the collector's page
+source, how canonical matches reach the store, and the slate rule — are arguments to
+`run_pipeline(...)`, not a flag. `main()` supplies live ones; `tests/harness.py`
+supplies captured ones for CI. That is the whole difference, and it exists so the
+thing a person runs and the thing CI exercises cannot become two systems.
 
-**What is real runs from the source to the score.** `./scripts/demo.sh --live`
-acquires real upcoming matches and their US broadcasters, and `recent-results`
-collects the goals each side scored in its last five completed matches, which
-`recent-goals-total` sums into the only score in this repository computed from real
-data. It is unvalidated — nothing here has been tested against whether a match was
-enjoyable, and nothing can be until there is a label. Matches where a side has
-fewer than five completed matches come back with a recorded skip reason and no
-score, which is the partial-coverage path working on real data.
+Two of the three registered models predict nothing. Three of four calibration cohorts
+and two of three composition policies return 501.
+
+**What is real runs from the source to the score.** Acquisition brings in real
+upcoming matches and their US broadcasters, and `recent-results` collects the goals
+each side scored in its last five completed matches, which `recent-goals-total` sums
+into the only score in this repository computed from real data. It is unvalidated —
+nothing here has been tested against whether a match was enjoyable, and nothing can be
+until there is a label. Matches where a side has fewer than five completed matches
+come back with a recorded skip reason and no score, which is the partial-coverage path
+working on real data.
 
 `openspec/specs/` is the authoritative record of what the system currently
 **does** — eleven capabilities, 71 requirements — while `openspec/config.yaml`
@@ -51,8 +58,11 @@ holds the reasoning behind them. Archived changes are under
   entity coverage as well as age, and why a failed collector is not served its own
   stale corpus
 - `2026-08-24-use-real-dates` — where a run's notion of "now" comes from, why the
-  fixture path's anchor stays frozen while the live path reads the clock, and why
-  an omitted date bound means unbounded rather than a server-chosen window
+  offline anchor stays frozen while a real run reads the clock, and why an omitted
+  date bound means unbounded rather than a server-chosen window
+- `2026-08-25-make-pipeline-live-only` — why the demo concept was removed, why the
+  offline path became injected arguments rather than a flag, why captured
+  third-party bytes left `contracts/`, and what the loss of the offline clone bought
 
 **This file does not set priorities.** "Still open" below records what is
 undecided, not a queue. Ask what the session is for rather than inferring it.
@@ -107,14 +117,26 @@ look like bugs:
   omitted — "no consumer" is a different answer from "ran and found nothing".
 - **Collector failure is not absence.** Both leave the same hole in the snapshot;
   only the run record can tell them apart, so it does.
-- **The fixture path's timestamps are frozen and must stay frozen.**
-  `OFFLINE_STAMP`, `OFFLINE_RUN_ID`, and `OFFLINE_AS_OF` in `scripts/pipeline.py`
-  look exactly like the hardcoded dates `use-real-dates` removed from the live
-  path, and they are the opposite thing. The captured result pages exist only for a
-  bounded range of dates, so a scan anchored to today walks off the end of them and
-  reports an absence that is an artefact of the anchor. CI also compares against
-  golden output that a moving clock would invalidate daily. The offline path is a
-  *reproduction*, not a simulation of today.
+- **The offline harness's timestamps are frozen and must stay frozen.**
+  `OFFLINE_STAMP`, `OFFLINE_RUN_ID`, and `OFFLINE_AS_OF` in `tests/harness.py` look
+  exactly like the hardcoded dates `use-real-dates` removed from the live path, and
+  they are the opposite thing. The captured result pages exist only for a bounded
+  range of dates, so a scan anchored to today walks off the end of them and reports an
+  absence that is an artefact of the anchor. The end-to-end test also compares
+  successive runs against each other, which a moving clock would break daily. The
+  offline harness is a *reproduction*, not a simulation of today.
+- **The pipeline has no `--offline` flag and must not grow one.** A mode a person can
+  select is a mode that drifts away from the one CI exercises, which is exactly the
+  state `make-pipeline-live-only` ended: the fixture path was what everyone ran and
+  what CI checked, while the live path — the actual product — was tested by nothing.
+  `test_the_pipeline_offers_no_offline_mode` fails if a flag reappears.
+- **`fixture-signals` and `social-buzz` are registered by nothing that runs.** They
+  are not dead code awaiting deletion. They exercise all three entity joins, and
+  `fixture-team` returns one team on purpose so the partial-coverage path has a case
+  where a match carries `signals.reddit.home.*` with no `away` counterpart — nothing
+  else in the repository produces that shape. They are registered only by
+  `tests/harness.py`, because a collector that invents its values must never write
+  into the same corpus as one that collected them: no row records which kind it is.
 - **Corpus freshness is measured against an injected timestamp, never the clock.**
   `run_collectors` takes `started_at` and compares it to the stored `collected_at`.
   Calling `datetime.now()` there would make the invocation decision depend on when
@@ -149,7 +171,9 @@ packages/
   clients/ts/         generated from openapi.yaml
 infra/migrations/   plain .sql, applied in filename order
 docs/               architecture, workflow, zones, STUBS
-scripts/            demo, pipeline, and the CI check scripts
+scripts/            pipeline, capture tools, and the CI check scripts
+tests/              captures/  third-party bytes, read only by tests
+                    harness.py the one description of "the pipeline, offline"
 ```
 
 ## Setup and verification
@@ -165,8 +189,8 @@ Everything CI runs, in the order it runs:
 ```bash
 uv run python scripts/check_dependencies.py      # tier boundaries
 uv run ruff check .
-uv run pytest -q                                 # 235 tests
-uv run python scripts/pipeline.py                # end-to-end on fixtures
+uv run pytest -q                                 # 250 tests, includes the offline
+                                                 # end-to-end pipeline run
 uv run python scripts/check_api_conformance.py   # responses match the contract
 uv run python scripts/validate_contracts.py      # fixtures match the schemas
 pnpm -r typecheck && pnpm web:build
@@ -249,13 +273,15 @@ JavaScript test — CI covers the TS side with typecheck and build only. There i
 evaluation harness either, but that one is a decision rather than an absence: see
 "Do not 'fix' these".
 
-Matches, US broadcasters, and recent goals ARE real on the live path, all via
+Matches, US broadcasters, and recent goals ARE real — there is no other path — all via
 goal.com — an unofficial source with no API contract, chosen from a six-way survey
 recorded in the archived `add-live-schedule` design, D2. Read that before proposing
 a replacement; most of the obvious candidates refuse automated access, and
 `add-recent-goals-model` design D1 records why a *second* source is worse than it
 looks: matching another provider's team names to this project's would be silent
-when it got one wrong.
+when it got one wrong. The project now depends on it wholly: with the fixture-backed
+path gone, a goal.com outage means a run produces nothing and there is no local
+workaround. That was accepted knowingly in `make-pipeline-live-only`, D7.
 
 Branch protection on `main` is enabled. Adding `contracts`, `ci`, and `pr-hygiene`
 as required status checks is still outstanding.

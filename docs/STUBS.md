@@ -1,8 +1,9 @@
 # What is real and what is not
 
 This repository is a **walking skeleton**: every tier exists and is connected end
-to end — on fixture data by default, and on real data with `--live` — with
-deliberately minimal components.
+to end, on real data, with deliberately minimal components. There is one path and it
+acquires from goal.com; the offline material below is read by the test suite and by
+nothing a person runs.
 
 **An unmarked stub is worse than a missing feature**, because someone will build on
 it. This page is the authoritative list. If something is not here, it is real.
@@ -27,6 +28,8 @@ somebody can check by watching.
 | `recent-results` — goals scored in each team's last five completed matches | `packages/collectors/recent-results/` |
 | The JSON Schemas and the OpenAPI document | `contracts/` |
 | Golden fixtures, including the coverage edge cases | `contracts/fixtures/` |
+| Captured goal.com pages, read only by tests | `tests/captures/` |
+| The one description of "the pipeline, offline" | `tests/harness.py` |
 | The model interface: purity, feature declaration, identity | `packages/scoring-contract/` |
 | Registry, feature assembly, snapshot hashing, the model runner | `packages/scoring-runtime/` |
 | Append-only score storage, enforced by database trigger | `infra/migrations/002_score_store.sql` |
@@ -41,27 +44,29 @@ somebody can check by watching.
 
 | | |
 |---|---|
-| **Which ones** | `over-under-lean`, `odds-spread`, and `social-buzz`. **Not** `recent-goals-total`, which is listed above as real but unvalidated. |
+| **Which ones** | `over-under-lean`, `odds-spread`, and `social-buzz`. **Not** `recent-goals-total`, which is listed above as real but unvalidated. `social-buzz` is a different case from the other two — see its row below. |
 | **What** | `over-under-lean` returns the over/under goals line. `odds-spread` returns the normalised entropy of vig-stripped outcome probabilities. `social-buzz` multiplies invented mention counts by an invented interest level. |
 | **Why it is a placeholder** | Not the missing validation — nothing here is validated, and that is a decision rather than a gap. These three are placeholders for reasons the team can see without a label: `over-under-lean` ignores competitiveness and will rank a 4–0 procession above a tense 1–1; `odds-spread` ignores goals and will do the reverse; `social-buzz` measures attention, which is not the same thing as quality, from data that was made up. |
-| **Why three** | To exercise multi-model fan-out and the partial-coverage path — they require different features on purpose. `social-buzz` additionally reads `signals.*` rather than canonical data, which is what makes the collector tier reachable from `scripts/demo.sh` instead of dormant. |
+| **Why three** | To exercise multi-model fan-out and the partial-coverage path — they require different features on purpose. `social-buzz` additionally reads `signals.*` rather than canonical data, which is what keeps all three entity joins exercised in the end-to-end test. |
 | **Not in the default recipe** | None of the three is in `packages/composition/recipes/default.yaml` any more. It names `recent-goals-total` alone, so no placeholder contributes to the composed score. Restoring a blend is one line, and Zone C. |
+| **`social-buzz` is not registered at all** | The other two are registered and skip every match with a recorded reason, which is the partial-coverage path working. `social-buzz` reads `signals.*` fed by collectors that invent their values, so registering it would mean writing fabricated rows into the same corpus as collected ones — and no row records which kind it is. It is registered only by `tests/harness.py`. **It is not dead code**: with the three `fixture-signals` collectors it is what exercises all three entity joins. |
 | **Replaced by** | `add-market-baseline-model` for the two market models; whichever change first builds a social model over real signals for `social-buzz` |
 
 ### Ingestion
 
 | | |
 |---|---|
-| **What** | Two paths. `--live` acquires real upcoming matches and their US broadcasters from goal.com. The default reads `contracts/fixtures/snapshots/*.json` from disk. |
-| **Why the fixture path stays** | A fresh clone must run with nothing configured and no network, and the default must not depend on a third party being up. |
+| **What** | One path. A run acquires real upcoming matches and their US broadcasters from goal.com, or it produces nothing. |
+| **The fixture path is gone** | `contracts/fixtures/snapshots/*.json` are still read — by the test suite, as authored contract examples, and by the end-to-end check as its slate. They are no longer something a run can be pointed at. Resolved by `make-pipeline-live-only`; the property traded away was that a fresh clone worked with no network, and that trade is recorded in that change's D1 and its risk section. |
 | **What is still placeholder** | Most of what a model reads. Acquisition still fetches no odds and no league table, so `over-under-lean` and `odds-spread` skip every match on a live run. It is no longer *everything*: `recent-results` collects recent goals, and `recent-goals-total` scores a live match wherever both sides have five completed matches. Matches where they do not are still returned with a recorded skip reason, which is the partial-coverage path working on real data rather than a regression. |
-| **Replaced by** | Partly resolved by `add-recent-goals-model`, which gave the collector tier its first real source. Odds and table data are still unfetched and no change is proposed for them. |
+| **Replaced by** | Partly resolved by `add-recent-goals-model`, which gave the collector tier its first real source, and by `make-pipeline-live-only`, which removed the fixture-backed alternative. Odds and table data are still unfetched and no change is proposed for them. |
 
 ### Collectors
 
 | | |
 |---|---|
 | **Which ones** | The three in `packages/collectors/fixture-signals/`. **Not** `recent-results`, which reads a source and is listed above as real. |
+| **Not registered by anything that runs** | They invent their values, and a corpus cannot record whether a row was collected or fabricated — so once both are written by the same run, nothing downstream can tell them apart. `tests/harness.py` is their only caller. **Do not delete them as dead code**: `fixture-team` returns one team on purpose, so a match carries `signals.reddit.home.*` with no `away` counterpart, and nothing else in the repository produces that shape. |
 | **What** | `fixture-match`, `fixture-team`, and `fixture-league` in `packages/collectors/fixture-signals/` read `contracts/fixtures/signals/*.json` from disk. The values are invented. |
 | **Why they exist** | To exercise all three entity joins end to end on a clone with nothing configured. `fixture-team` returns one team on purpose, so a match carries `signals.reddit.home.*` with no `away` counterpart and the partial-coverage path is real rather than theoretical. |
 | **Also missing** | No collector consumes an unkeyed corpus. Retention is unbounded: `collector_corpus` rows accumulate and nothing evicts them. Nothing has needed evicting yet, and a retention rule written before anything reads history back would be guessing at what history is for. |
@@ -110,6 +115,15 @@ somebody can check by watching.
 | **Why "unknown" survives** | It is still a first-class answer. A confidently wrong provider is worse than an admitted gap — telling someone a match is on a service that does not carry it is the failure users notice immediately. |
 | **No longer a placeholder** | Resolved by `add-live-schedule`. |
 
+### Nothing detects the schedule source changing shape
+
+| | |
+|---|---|
+| **What** | The fetching code — client construction, headers, timeouts, redirects, and the translation of transport and status failures — is covered by `packages/ingestion/tests/test_schedule_fetch.py` against a recorded exchange. That is new; until `make-pipeline-live-only` it was covered by nothing at all, while being the only path a real run takes. |
+| **What is still missing** | The recording goes stale silently. It establishes that the shipped client works against bytes shaped like goal.com's, **not** that goal.com is reachable or still sends them. A source shape change is caught by the parser failing loudly during a real run, and by nothing earlier. |
+| **Why not a live check in CI** | It would make every build depend on a third party being up, which is the dependency this project is already uneasy about. |
+| **Replaced by** | A nightly, non-blocking live check. Argued for in `make-pipeline-live-only` design D5 and deliberately excluded from it; not yet proposed. |
+
 ### The schedule source
 
 | | |
@@ -151,10 +165,8 @@ somebody can check by watching.
 
 | | |
 |---|---|
-| **What** | Runs accumulate, and nothing separates them by origin. A database that has seen both `./scripts/demo.sh` and `--live` holds the eight fixture matches alongside a few hundred real ones, and the API serves them together. |
-| **Why it is not simply a bug** | Both are real rows produced by real runs. Deciding that one should be hidden means deciding whether the two paths ought to share a store at all, which is a larger question than it looks: the fixture path exists so a fresh clone works offline, and giving it a separate database would mean the offline demo and the live product no longer exercise the same read path. |
-| **What it looks like** | A demo showing August fixture matches mixed in with this week's real ones. Harmless, and confusing the first time. |
-| **Replaced by** | Not proposed. `use-real-dates` deliberately left this alone rather than fixing it in passing. |
+| **No longer a placeholder** | Resolved by `make-pipeline-live-only`, and by removal rather than by separation: with no fixture-backed path, no run writes fixture matches, so nothing accumulates them beside real ones. The end-to-end check writes to a throwaway database and leaves `.data/xfun.db` alone. |
+| **A database predating that change still holds them** | Nothing migrates them out, deliberately — the store is append-only and there is no delete path. A `.data/xfun.db` created before 2026-08-25 holds eight August fixture matches that no current code path would produce, and the API will keep serving them. **Deleting `.data/xfun.db` is the fix**; it costs nothing, because a run rebuilds what it needs. |
 
 ---
 

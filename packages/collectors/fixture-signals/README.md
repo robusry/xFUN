@@ -1,10 +1,22 @@
 # fixture-signals
 
-**PLACEHOLDER.** Three collectors that read `contracts/fixtures/signals/*.json` from
-disk and talk to nothing.
+**PLACEHOLDER, AND TEST-ONLY.** Three collectors that read
+`contracts/fixtures/signals/*.json` from disk and talk to nothing. The values are
+invented.
 
-They exist to demonstrate all three entity joins end to end, on a clone with no
-credentials configured:
+> **Nothing that runs registers these.** `tests/harness.py` is their only caller.
+> A corpus row does not record whether its value was collected or fabricated, so once
+> both are written by the same run nothing downstream — no snapshot, no score, no run
+> record — can tell them apart, and the distinction cannot be recovered afterwards.
+> That is why they are kept away from the pipeline rather than merely marked.
+>
+> **Do not delete them as dead code.** They are what exercises all three entity joins,
+> and `fixture-team` returns one team on purpose so a match carries
+> `signals.reddit.home.*` with no `away` counterpart. Nothing else in this repository
+> produces that shape, so removing them silently reduces what the end-to-end check
+> covers. See `make-pipeline-live-only` design D6.
+
+They demonstrate all three entity joins end to end:
 
 | Collector | Keys by | Namespace | Joins onto |
 |---|---|---|---|

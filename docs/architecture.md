@@ -8,7 +8,7 @@
 │  ├ schedule source  which matches exist, and who carries them.    │
 │  │                  TOUCHES THE NETWORK — runs before the slate,  │
 │  │                  because it produces what the slate is made of │
-│  └ fixture files    the default path; no network, no credentials  │
+│                     the ONLY way matches enter; no offline mode  │
 └────────────────────────────┬─────────────────────────────────────┘
                              │ canonical entities
                              ▼

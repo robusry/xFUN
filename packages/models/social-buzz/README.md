@@ -2,6 +2,16 @@
 
 ⚠️ **PLACEHOLDER MODEL. Predicts nothing.**
 
+> **Not registered by anything that runs.** `tests/harness.py` registers it, and only
+> there. It is the one model reading `signals.*`, and the only collectors providing
+> those paths are `fixture-signals`, which invent their values — so a real run
+> registering this model would be scoring matches from fabricated input. The registry
+> also fails a model whose declared paths nothing provides, which is why this model and
+> those collectors move together or not at all.
+>
+> **Do not delete it as dead code.** With `fixture-signals` it is what keeps the
+> signal-reading path exercised end to end. See `make-pipeline-live-only` design D6.
+
 Scores a match from two collected signals: how many times it was mentioned, and how
 interested the home team's following appears to be.
 
@@ -11,7 +21,7 @@ Every other model reads canonical data that ingestion writes directly — odds f
 two market models, recent results for `recent-goals-total`. This one alone reads
 `signals.*`, which exists only because a collector produced it and
 the platform joined it onto the match. It is what makes the collector tier reachable
-in `scripts/demo.sh` rather than dormant, and it turns the `signals` blocks in the
+in the end-to-end check rather than dormant, and it turns the `signals` blocks in the
 golden snapshot fixtures into something a run actually reproduces.
 
 It also demonstrates the point of the whole tier: **this model has no idea a

@@ -11,7 +11,8 @@ pnpm client:generate   # types from contracts/openapi.yaml
 pnpm web:dev           # http://localhost:5173
 ```
 
-Needs the API running — `./scripts/demo.sh`.
+Needs the API running — `uv run python scripts/pipeline.py` to populate the
+store, then `uv run uvicorn xfun_api:app --port 8000`.
 
 ## The cohort is displayed on purpose
 

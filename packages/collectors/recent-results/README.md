@@ -62,7 +62,7 @@ Two consequences worth knowing before you debug a missing value:
 
 `collect` takes an injected `PageSource` and an `as_of` date. `CapturedPages` reads
 reduced golden captures from `tests/captures/goal-com/results/`, which is what
-`./scripts/demo.sh` uses when `--live` is absent, and what every test here uses.
+the end-to-end check uses, and what every test here uses.
 `LivePages` is the network one.
 
 ## Cost

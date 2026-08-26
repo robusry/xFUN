@@ -11,10 +11,11 @@ Start here if you are new to the project.
 
 ## Reading order
 
-If you have ten minutes, read `architecture.md` and then run the demo:
+If you have ten minutes, read `architecture.md` and then run the pipeline (this needs
+network access to goal.com — there is no offline mode):
 
 ```bash
-./scripts/demo.sh
+uv run python scripts/pipeline.py
 ```
 
 If you are about to contribute, read `workflow.md` and `zones.md` first — they

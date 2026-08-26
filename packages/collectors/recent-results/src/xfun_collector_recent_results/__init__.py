@@ -164,8 +164,8 @@ class PageSource(Protocol):
 
     An injected seam, for the same reason `acquire_window` takes a `Fetcher`: a test
     that reached the live source would be slow, dependent on somebody else's uptime,
-    and unable to exercise the failure paths at all. It is also what lets the default
-    `./scripts/demo.sh` run this collector with no network.
+    and unable to exercise the failure paths at all. It is also what lets CI run this
+    collector end to end with no network, over captured pages.
 
     `dates` rather than "try each day and see" is deliberate. A source backed by a
     finite capture must be able to say it has run out, and running out of captures is

@@ -79,35 +79,35 @@
 
 ## 5. Documentation
 
-- [ ] 5.1 Rewrite `README.md`. Network access to the schedule source is now a
+- [x] 5.1 Rewrite `README.md`. Network access to the schedule source is now a
       requirement to run anything, and it belongs in the first paragraph rather than
       in a caveat. Remove every reference to `./scripts/demo.sh`.
-- [ ] 5.2 Rewrite the affected parts of `CLAUDE.md`: the project-state paragraph, the
+- [x] 5.2 Rewrite the affected parts of `CLAUDE.md`: the project-state paragraph, the
       setup-and-verification command list (the `pipeline.py` line goes), the layout
       block, and the "Do not fix these" entries covering `OFFLINE_STAMP` and the
       frozen fixture path — which stay true but now describe a test.
-- [ ] 5.3 Update `docs/STUBS.md`: mark "Fixture and live matches share one store"
+- [x] 5.3 Update `docs/STUBS.md`: mark "Fixture and live matches share one store"
       resolved, rewrite the "Ingestion" entry now that there is one path, and rewrite
       the "Collectors" and `social-buzz` entries to say those packages are
       verification material rather than placeholders awaiting a real implementation.
       Add the note that a database predating this change holds eight matches nothing
       would now produce, and that deleting `.data/xfun.db` is the fix.
-- [ ] 5.4 Add a README line to `packages/collectors/fixture-signals/` and
+- [x] 5.4 Add a README line to `packages/collectors/fixture-signals/` and
       `packages/models/social-buzz/` stating that they are registered only by the
       end-to-end test, what coverage they provide, and what would be lost by deleting
       them. Design decision D6 rests entirely on these two lines surviving.
-- [ ] 5.5 Update `docs/architecture.md` and `docs/workflow.md` wherever they describe
+- [x] 5.5 Update `docs/architecture.md` and `docs/workflow.md` wherever they describe
       a fixture-backed default or the demo script.
 
 ## 6. Verification
 
-- [ ] 6.1 Run the full CI sequence from `CLAUDE.md` in order, with the
+- [x] 6.1 Run the full CI sequence from `CLAUDE.md` in order, with the
       `scripts/pipeline.py` step removed, and confirm each passes.
-- [ ] 6.2 Confirm no offline mode survived: search the tree for `--live`, `demo.sh`,
+- [x] 6.2 Confirm no offline mode survived: search the tree for `--live`, `demo.sh`,
       `OFFLINE_`, and `fixture_payloads` and check every remaining hit is either a
       test, a capture tool, or documentation describing history.
 - [ ] 6.3 Run the pipeline against the live source on a machine with network access
       and confirm it produces a slate, scores, and served API responses. This is the
       only manual step, and it is unavoidable: nothing in CI can prove the source is
       still answering.
-- [ ] 6.4 Run `openspec validate --all --strict`.
+- [x] 6.4 Run `openspec validate --all --strict`.

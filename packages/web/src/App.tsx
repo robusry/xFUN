@@ -81,8 +81,8 @@ export default function App() {
         <h1>xFUN</h1>
         <p className="muted">No matches scored yet.</p>
         <p className="muted">
-          Run <code>./scripts/demo.sh</code> for fixture matches, or{" "}
-          <code>./scripts/demo.sh --live</code> for real upcoming ones.
+          Run <code>uv run python scripts/pipeline.py</code> to acquire and score
+          upcoming matches. It needs network access to the schedule source.
         </p>
       </main>
     );
