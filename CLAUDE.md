@@ -40,7 +40,7 @@ come back with a recorded skip reason and no score, which is the partial-coverag
 working on real data.
 
 `openspec/specs/` is the authoritative record of what the system currently
-**does** — eleven capabilities, 71 requirements — while `openspec/config.yaml`
+**does** — eleven capabilities, 74 requirements — while `openspec/config.yaml`
 holds the reasoning behind them. Archived changes are under
 `openspec/changes/archive/`:
 
@@ -60,7 +60,7 @@ holds the reasoning behind them. Archived changes are under
 - `2026-08-24-use-real-dates` — where a run's notion of "now" comes from, why the
   offline anchor stays frozen while a real run reads the clock, and why an omitted
   date bound means unbounded rather than a server-chosen window
-- `2026-08-25-make-pipeline-live-only` — why the demo concept was removed, why the
+- `2026-08-26-make-pipeline-live-only` — why the demo concept was removed, why the
   offline path became injected arguments rather than a flag, why captured
   third-party bytes left `contracts/`, and what the loss of the offline clone bought
 

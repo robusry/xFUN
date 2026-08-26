@@ -166,7 +166,7 @@ somebody can check by watching.
 | | |
 |---|---|
 | **No longer a placeholder** | Resolved by `make-pipeline-live-only`, and by removal rather than by separation: with no fixture-backed path, no run writes fixture matches, so nothing accumulates them beside real ones. The end-to-end check writes to a throwaway database and leaves `.data/xfun.db` alone. |
-| **A database predating that change still holds them** | Nothing migrates them out, deliberately — the store is append-only and there is no delete path. A `.data/xfun.db` created before 2026-08-25 holds eight August fixture matches that no current code path would produce, and the API will keep serving them. **Deleting `.data/xfun.db` is the fix**; it costs nothing, because a run rebuilds what it needs. |
+| **A database predating that change still holds them** | Nothing migrates them out, deliberately — the store is append-only and there is no delete path. A `.data/xfun.db` created before 2026-08-26 holds eight August fixture matches that no current code path would produce, and the API will keep serving them. **Deleting `.data/xfun.db` is the fix**; it costs nothing, because a run rebuilds what it needs. |
 
 ---
 
