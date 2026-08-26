@@ -1,6 +1,6 @@
 """Parsing a schedule page, against captured responses.
 
-These run on the golden captures in `contracts/fixtures/schedule/`, so they exercise
+These run on the golden captures in `tests/captures/goal-com/`, so they exercise
 the source's real shape without the network. That matters more here than for an
 authored fixture: the thing under test is somebody else's page structure, and the
 only honest way to test a parser for it is against bytes that structure actually
@@ -21,9 +21,9 @@ from xfun_ingestion.schedule import (
     parse_schedule,
     sports_events,
 )
-from xfun_runtime.paths import fixtures_dir
+from xfun_runtime.paths import captures_dir
 
-SCHEDULE_FIXTURES = fixtures_dir() / "schedule"
+SCHEDULE_FIXTURES = captures_dir() / "goal-com"
 
 EPL_ENGLAND = "2kwbbcootiqqgmrzs6o5inle5"
 PL_KAZAKHSTAN = "9ikchyu9fb8bvx0s673jofj6s"

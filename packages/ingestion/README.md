@@ -6,11 +6,15 @@
 2. **Slate assembly** — deciding which matches a collection run is about.
 3. **Canonical entity writing** — turning match payloads into rows.
 
-Two paths in. `schedule/` acquires real upcoming matches and their US broadcasters
+One path in. `schedule/` acquires real upcoming matches and their US broadcasters
 from goal.com — this is one of exactly two tiers permitted to touch the network, and
-it runs *before* the slate because it produces what the slate is made of.
-`fixture_payloads()` loads `contracts/fixtures/snapshots/*.json` instead, and stays
-the default so a fresh clone runs with no network, no daemon and no credentials.
+it runs *before* the slate because it produces what the slate is made of. A run
+acquires or it produces nothing; there is no offline alternative.
+
+`fixture_payloads()` loads `contracts/fixtures/snapshots/*.json` and is **test-only**.
+It is what `tests/harness.py` passes where a real run passes acquisition, so CI can
+exercise the whole pipeline without contacting anyone. It is not a fallback and no
+path a person runs reaches it.
 
 The provider is real but it is not a vendor: goal.com publishes no API and no
 stability promise, so the parser is written to break loudly rather than to return an

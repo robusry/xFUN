@@ -11,18 +11,21 @@ import json
 from datetime import date, timedelta
 from pathlib import Path
 
+import httpx
 import pytest
 from xfun_collector_recent_results import (
     BOUND_DAYS,
     CapturedPages,
+    LivePages,
     RecentResults,
     completed_matches,
 )
 from xfun_contract import LeagueRef, MatchRef, Selection, Slate, TeamRef
 from xfun_ingestion.schedule import ScheduleSourceError
+from xfun_ingestion.schedule.source import page_client
 
 CAPTURES = (
-    Path(__file__).resolve().parents[4] / "contracts" / "fixtures" / "schedule" / "results"
+    Path(__file__).resolve().parents[4] / "tests" / "captures" / "goal-com" / "results"
 )
 CAPTURE_AS_OF = date(2026, 8, 14)
 """The date the offline demo scans back from. Fixed, so the fixture path is
@@ -374,7 +377,7 @@ itself."""
 
 
 def fixture_teams() -> set[tuple[str, str]]:
-    fixtures = CAPTURES.parent.parent / "snapshots"
+    fixtures = Path(__file__).resolve().parents[4] / "contracts" / "fixtures" / "snapshots"
     return {
         (payload[side]["id"], payload[side]["name"])
         for path in sorted(fixtures.glob("*.json"))
@@ -410,3 +413,58 @@ def test_a_team_the_source_names_differently_is_absent_rather_than_wrong():
         slate_of(*sorted(fixture_teams()))
     )
     assert not (NAMED_DIFFERENTLY_BY_THE_SOURCE & set(result.values))
+
+
+# --- the live fetch path -----------------------------------------------------
+#
+# `LivePages` is what a real run uses, and until this existed nothing constructed it.
+# Same limit as packages/ingestion/tests/test_schedule_fetch.py: this establishes that
+# the collector drives the shipped client correctly, NOT that goal.com is reachable or
+# still answers in this shape.
+
+
+def _mock_client(handler):
+    return page_client(transport=httpx.MockTransport(handler))
+
+
+def test_live_pages_fetches_the_dated_page_through_the_shipped_client():
+    seen = []
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        seen.append(request)
+        return httpx.Response(200, text=page(match("A", "B", 1, 1, kickoff="2026-08-13T12:00:00Z")))
+
+    pages = LivePages(client=_mock_client(handler))
+    try:
+        body = pages.page(date(2026, 8, 13))
+    finally:
+        pages.close()
+
+    assert "liveScores" in body
+    assert str(seen[0].url).endswith("/fixtures/2026-08-13")
+    assert seen[0].headers["user-agent"].startswith("xfun-schedule-acquisition/")
+
+
+def test_live_pages_walks_backwards_from_the_anchor():
+    pages = LivePages(client=None)
+    walked = list(pages.dates(date(2026, 8, 14), 3))
+
+    assert walked == [
+        date(2026, 8, 14),
+        date(2026, 8, 13),
+        date(2026, 8, 12),
+        date(2026, 8, 11),
+    ]
+
+
+def test_a_failed_fetch_stops_the_scan_rather_than_reporting_no_matches():
+    """The property that makes a collector failure distinguishable from absence."""
+    def handler(request: httpx.Request) -> httpx.Response:
+        raise httpx.ConnectError("no route to host")
+
+    pages = LivePages(client=_mock_client(handler))
+    try:
+        with pytest.raises(ScheduleSourceError):
+            pages.page(date(2026, 8, 13))
+    finally:
+        pages.close()

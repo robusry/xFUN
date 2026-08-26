@@ -1,0 +1,39 @@
+{
+  "recorded_on": "2026-08-25",
+  "note": "A real exchange with goal.com, recorded by hand. The response BODY is not stored here -- it is 142 KB of markup and the reduced page beside this directory already serves as parser input. What is kept is the exchange: the status, the response headers, and the request headers the shipped client actually sent. This goes stale silently; see README.md.",
+  "url": "https://www.goal.com/en-us/fixtures/2026-08-26",
+  "status": 200,
+  "response_headers": {
+    "content-type": "text/html; charset=utf-8",
+    "x-app-version": "1.1484.0",
+    "last-modified": "Wed, 26 Aug 2026 00:50:40 GMT",
+    "etag": "\"h96qnfqw9qjqr3\"",
+    "content-encoding": "gzip",
+    "content-length": "142146",
+    "referrer-policy": "strict-origin-when-cross-origin",
+    "cache-control": "private, max-age=592",
+    "expires": "Wed, 26 Aug 2026 01:00:41 GMT",
+    "date": "Wed, 26 Aug 2026 00:50:49 GMT",
+    "alt-svc": "h3=\":443\"; ma=93600",
+    "connection": "keep-alive",
+    "vary": "Accept-Encoding",
+    "web-crawler": "FALSE",
+    "experience-type": "full",
+    "accept-ch": "ECT",
+    "user-age": "unknown",
+    "user-region": "GA",
+    "user-country": "US",
+    "x-frame-options": "SAMEORIGIN",
+    "permissions-policy": "geolocation=(), camera=(), microphone=()",
+    "x-content-type-options": "nosniff",
+    "content-security-policy": "default-src https:; script-src https: 'unsafe-inline' 'unsafe-eval'; style-src https: 'unsafe-inline'; img-src https: data:; connect-src https: wss:; font-src https: data:; media-src https: blob: data:; worker-src https: blob:; object-src 'none';"
+  },
+  "request_headers": {
+    "host": "www.goal.com",
+    "accept-encoding": "gzip, deflate",
+    "connection": "keep-alive",
+    "user-agent": "xfun-schedule-acquisition/0.1 (+https://github.com/robusry/xFUN)",
+    "accept": "text/html"
+  },
+  "body_bytes": 921297
+}

@@ -29,10 +29,10 @@ from xfun_ingestion.schedule import (
     slugify,
     team_id,
 )
-from xfun_runtime.paths import fixtures_dir, schemas_dir
+from xfun_runtime.paths import captures_dir, schemas_dir
 from xfun_store import connect, migrate
 
-DENSE = fixtures_dir() / "schedule" / "2026-08-22-dense.html"
+DENSE = captures_dir() / "goal-com" / "2026-08-22-dense.html"
 
 EPL_ENGLAND = "2kwbbcootiqqgmrzs6o5inle5"
 PL_KAZAKHSTAN = "9ikchyu9fb8bvx0s673jofj6s"

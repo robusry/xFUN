@@ -52,11 +52,14 @@ jobs:
       - name: Lint
         run: uv run ruff check .
 
-      - name: Tests
+      # Includes the end-to-end check. It used to be a separate step invoking
+      # scripts/pipeline.py, back when the pipeline had a fixture-backed mode a
+      # caller could select. It has none now -- a run acquires from the schedule
+      # source or produces nothing -- so the offline end-to-end check lives in
+      # packages/api/tests/test_end_to_end_offline.py, where it can supply the
+      # pipeline's inputs directly. CI still contacts nothing.
+      - name: Tests (including the offline end-to-end pipeline check)
         run: uv run pytest -q
-
-      - name: End-to-end pipeline on fixtures
-        run: uv run python scripts/pipeline.py --quiet
 
       # contracts/openapi.yaml is the source of truth. Without this the claim is
       # aspirational: the document and the implementation could drift apart and

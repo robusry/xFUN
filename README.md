@@ -5,10 +5,18 @@ across leagues people actually follow.
 
 > **Status: walking skeleton with one working model.** Every tier exists and is
 > connected end to end, and most components inside them are deliberately minimal.
-> `./scripts/demo.sh --live` acquires real matches and their US broadcasters and
-> scores them from goals really scored — everything else is placeholder. Nothing here
-> is *validated*, and by decision it will not be: see `openspec/config.yaml`. Read
+> The pipeline acquires real upcoming matches and their US broadcasters and scores
+> them from goals really scored — everything else is placeholder. Nothing here is
+> *validated*, and by decision it will not be: see `openspec/config.yaml`. Read
 > [`docs/STUBS.md`](docs/STUBS.md) for what is real and what is not.
+
+> **Running this needs network access to goal.com.** There is no offline or
+> fixture-backed mode: a run acquires from the schedule source or it produces nothing.
+> That is deliberate — the thing you run and the thing CI checks are the same code,
+> rather than two systems that drift apart. The test suite is fully offline and needs
+> no network at all. goal.com is an unofficial source with no API and no stability
+> promise, so when it changes shape a run fails loudly; see
+> [`docs/STUBS.md`](docs/STUBS.md).
 
 ## Setup
 
@@ -34,44 +42,60 @@ you find out at `pnpm web:build` or in CI.
 Check the setup took:
 
 ```bash
-uv run pytest -q                                 # 235 passed
+uv run pytest -q                                 # 252 passed, no network needed
 uv run python scripts/check_api_conformance.py   # 8 checks, 0 failed
 pnpm -r typecheck
 ```
 
 ## Run it
 
-```bash
-./scripts/demo.sh
-```
-
-Seeds fixture data, runs every registered model over it, writes scores, and serves the
-API at <http://localhost:8000>. No database server, no containers, no credentials — the
-database is a SQLite file at `.data/xfun.db`, and deleting it costs nothing. Three of
-the four models are placeholders that predict nothing; `recent-goals-total` scores from
-real historical goals, read out of captured pages so this still works with no network.
+**Needs network access to goal.com.**
 
 ```bash
-./scripts/demo.sh --live
+uv run python scripts/pipeline.py
 ```
 
-The same pipeline against the real thing: upcoming matches and their US broadcasters
-from goal.com, and the goals each side scored in its last five completed matches.
-Needs network. Matches where a side has fewer than five completed matches come back
-with a recorded skip reason and no score — that is the partial-coverage path working,
-not a failure. The two market models skip everything, because nothing fetches odds yet.
+Acquires upcoming matches and their US broadcasters, collects the goals each side
+scored in its last five completed matches, runs every registered model, and writes
+scores. No database server, no containers, no credentials — the database is a SQLite
+file at `.data/xfun.db`, and deleting it costs nothing.
 
-For the web page, in a second terminal:
+Two of the three registered models are placeholders that skip every match, because
+nothing fetches odds or league tables yet; they report a reason rather than
+disappearing. `recent-goals-total` is the one that scores. Matches where a side has
+fewer than five completed matches also come back with a recorded skip reason and no
+score — that is the partial-coverage path working, not a failure.
+
+If the source cannot be read, the run says so and stops. It does not fall back to
+anything, because a score from yesterday's matches is a different claim from a score
+from today's, and no stored row could tell you which it was.
+
+Then serve it, in a second terminal:
+
+```bash
+uv run uvicorn xfun_api:app --port 8000     # http://localhost:8000/docs
+```
+
+The API is read-only and never writes. Against an empty database it returns 500 on
+the first request rather than an empty list, because the schema is created by the
+pipeline's migrations — so run the pipeline first.
+
+For the web page, in a third terminal:
 
 ```bash
 pnpm web:dev            # http://localhost:5173
 ```
 
+Keep both ports as they are unless you change both: the page defaults to
+`http://localhost:8000` (override with `VITE_API_URL`) and the API allows
+cross-origin requests from `http://localhost:5173` alone. Changing one gives you a
+CORS error in the browser and an empty page, with nothing wrong in either log.
+
 ## What it does
 
 ```
 schedule source ──▶ ingestion ──▶ store ──▶ slate ──▶ collectors
- or fixture files                                          │
+   (goal.com)                                              │
                                                            │ signals, keyed by
                                                            │ match / team / league
                                                            ▼
@@ -113,7 +137,7 @@ to waste a week.
 |---|---|---|
 | **A scoring model** | [`packages/scoring-contract/README.md`](packages/scoring-contract/README.md) | `packages/models/recent-goals-total/` — copy its shape. A model is a pure function with no I/O. |
 | **A data source** | [`packages/collectors/README.md`](packages/collectors/README.md) | `packages/collectors/recent-results/` — a real collector; one of the two tiers allowed on the network |
-| **Data ingestion** | [`packages/ingestion/README.md`](packages/ingestion/README.md) | `schedule/` for the live path, `fixtures.py` for the offline one |
+| **Data ingestion** | [`packages/ingestion/README.md`](packages/ingestion/README.md) | `schedule/` acquires the slate; `fixtures.py` is test-only input |
 | **The API** | [`packages/api/README.md`](packages/api/README.md) | `contracts/openapi.yaml` — the contract is the source of truth; the API is validated against it |
 | **The website** | [`packages/web/README.md`](packages/web/README.md) | `packages/web/src/App.tsx` — the whole page is one file |
 | **Anything at all** | [`docs/architecture.md`](docs/architecture.md) | the four decisions that explain most of the code |
@@ -123,8 +147,7 @@ Everything CI runs, in order — worth running before you open a PR:
 ```bash
 uv run python scripts/check_dependencies.py      # tier boundaries
 uv run ruff check .
-uv run pytest -q
-uv run python scripts/pipeline.py                # end-to-end on fixtures
+uv run pytest -q                                 # includes the offline end-to-end run
 uv run python scripts/check_api_conformance.py   # responses match the contract
 uv run python scripts/validate_contracts.py      # fixtures match the schemas
 pnpm -r typecheck && pnpm web:build

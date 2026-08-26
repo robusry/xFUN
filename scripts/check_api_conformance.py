@@ -8,6 +8,12 @@ symptom would be a client breaking in production.
 
 OpenAPI 3.1 schemas are JSON Schema 2020-12, so the component schemas can be
 validated directly once internal $refs can resolve.
+
+Validating responses needs rows to respond with, and the pipeline has no offline mode
+that would produce some -- a run acquires from the schedule source or produces
+nothing. So this seeds a throwaway database through `tests/harness.py`, the one place
+that knows how to run the pipeline against captured inputs. This check contacts
+nothing.
 """
 
 from __future__ import annotations
@@ -16,8 +22,13 @@ import sys
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
-for src in sorted(ROOT.glob("packages/*/src")) + sorted(ROOT.glob("packages/models/*/src")):
+for src in (
+    sorted(ROOT.glob("packages/*/src"))
+    + sorted(ROOT.glob("packages/models/*/src"))
+    + sorted(ROOT.glob("packages/collectors/*/src"))
+):
     sys.path.insert(0, str(src))
+sys.path.insert(0, str(ROOT / "tests"))
 
 
 def main() -> int:
@@ -33,6 +44,29 @@ def main() -> int:
     except ImportError:
         print("FastAPI is not installed. Run: uv sync", file=sys.stderr)
         return 2
+
+    import tempfile
+
+    from harness import offline_database, run_offline
+
+    # Seed before importing the API: its context opens a connection on first request,
+    # and pointing that at an empty database is what used to be avoided by CI running
+    # the fixture-backed pipeline in a step before this one.
+    #
+    # The redirection lives in the harness because doing it by hand is silently wrong:
+    # patching xfun_store.db.connect alone leaves scripts/pipeline.py using its own
+    # import-time binding, and this check then writes fixture matches into the
+    # developer's real .data/xfun.db.
+    tmp = tempfile.TemporaryDirectory()
+    db = Path(tmp.name) / "xfun.db"
+    if run_offline(db) != 0:
+        print("Could not seed the database for conformance checking.", file=sys.stderr)
+        return 2
+
+    # The API opens its own connection when it first serves a request, so the
+    # redirection has to still be in force while the checks below run.
+    seeded = offline_database(db)
+    seeded.__enter__()
 
     from xfun_api import app
 

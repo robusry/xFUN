@@ -1,10 +1,13 @@
 #!/usr/bin/env python3
-"""Capture a goal.com schedule page into a golden fixture.
+"""Capture a goal.com schedule page into a test capture.
 
 A development tool, not part of the pipeline and not run by CI. It exists so the
-fixtures in `contracts/fixtures/schedule/` can be refreshed reproducibly instead of
+captures in `tests/captures/goal-com/` can be refreshed reproducibly instead of
 hand-pasted, because they are captured third-party responses whose upstream will
 change without notice.
+
+Its output is test input and nothing else. No path a user runs reads it -- the
+pipeline always acquires from the live source.
 
 The capture is REDUCED, not raw. A live page is roughly 3 MB, almost all of it
 markup, advertising, and competitions nobody in this product cares about. What is
@@ -38,7 +41,7 @@ from pathlib import Path
 from typing import Any
 
 ROOT = Path(__file__).resolve().parent.parent
-OUT_DIR = ROOT / "contracts" / "fixtures" / "schedule"
+OUT_DIR = ROOT / "tests" / "captures" / "goal-com"
 
 SOURCE_URL = "https://www.goal.com/en-us/fixtures/{date}"
 
