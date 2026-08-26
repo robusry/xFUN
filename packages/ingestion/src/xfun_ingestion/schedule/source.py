@@ -72,15 +72,22 @@ def window_dates(start: datetime, days: int) -> tuple[date, ...]:
     return tuple(first + timedelta(days=offset) for offset in range(span + 1))
 
 
-def page_client() -> httpx.Client:
+def page_client(transport: httpx.BaseTransport | None = None) -> httpx.Client:
     """A client configured for this source: its headers, its timeouts, its redirects.
 
     Public because the schedule source is no longer the only reader of these pages.
     The `recent-results` collector reads PAST dates from the same site, and a second
     client configured by hand would be a second place to keep the honest User-Agent
     and the timeouts -- and a second thing to forget when the source's terms change.
+
+    `transport` exists so a test can drive this exact configuration against a recorded
+    response. It is the seam that makes the fetch path checkable at all: without it a
+    test can only exercise a client it built itself, which proves nothing about the
+    one that runs.
     """
-    return httpx.Client(timeout=_TIMEOUT, headers=_HEADERS, follow_redirects=True)
+    return httpx.Client(
+        timeout=_TIMEOUT, headers=_HEADERS, follow_redirects=True, transport=transport
+    )
 
 
 def fetch_page(client: httpx.Client, day: date) -> str:

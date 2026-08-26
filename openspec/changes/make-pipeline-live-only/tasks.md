@@ -64,16 +64,16 @@
 
 ## 4. Cover the fetch path
 
-- [ ] 4.1 Record one real goal.com exchange — request headers and response — into
+- [x] 4.1 Record one real goal.com exchange — request headers and response — into
       `tests/captures/goal-com/http/`, with a short note stating when it was recorded
       and that it will go stale silently.
-- [ ] 4.2 Add a test driving the real `LivePages` and the real schedule-source client
+- [x] 4.2 Add a test driving the real `LivePages` and the real schedule-source client
       through `httpx.MockTransport` replaying that exchange, asserting the client is
       configured as expected and that bytes reach the parser.
-- [ ] 4.3 Add failure-path cases: a transport error and a non-success status each
+- [x] 4.3 Add failure-path cases: a transport error and a non-success status each
       translate into a recorded source failure naming the problem, not into an empty
       set of matches.
-- [ ] 4.4 State in the test's module docstring what it does not establish — that the
+- [x] 4.4 State in the test's module docstring what it does not establish — that the
       source is reachable, or still publishes this shape. The spec requires this
       limit to be visible where someone might otherwise over-trust the test.
 
