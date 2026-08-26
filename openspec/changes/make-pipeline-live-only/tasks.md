@@ -106,7 +106,7 @@
 - [x] 6.2 Confirm no offline mode survived: search the tree for `--live`, `demo.sh`,
       `OFFLINE_`, and `fixture_payloads` and check every remaining hit is either a
       test, a capture tool, or documentation describing history.
-- [ ] 6.3 Run the pipeline against the live source on a machine with network access
+- [x] 6.3 Run the pipeline against the live source on a machine with network access
       and confirm it produces a slate, scores, and served API responses. This is the
       only manual step, and it is unavoidable: nothing in CI can prove the source is
       still answering.
