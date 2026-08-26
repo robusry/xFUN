@@ -8,6 +8,12 @@ symptom would be a client breaking in production.
 
 OpenAPI 3.1 schemas are JSON Schema 2020-12, so the component schemas can be
 validated directly once internal $refs can resolve.
+
+Validating responses needs rows to respond with, and the pipeline has no offline mode
+that would produce some -- a run acquires from the schedule source or produces
+nothing. So this seeds a throwaway database through `tests/harness.py`, the one place
+that knows how to run the pipeline against captured inputs. This check contacts
+nothing.
 """
 
 from __future__ import annotations
@@ -16,8 +22,13 @@ import sys
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
-for src in sorted(ROOT.glob("packages/*/src")) + sorted(ROOT.glob("packages/models/*/src")):
+for src in (
+    sorted(ROOT.glob("packages/*/src"))
+    + sorted(ROOT.glob("packages/models/*/src"))
+    + sorted(ROOT.glob("packages/collectors/*/src"))
+):
     sys.path.insert(0, str(src))
+sys.path.insert(0, str(ROOT / "tests"))
 
 
 def main() -> int:
@@ -32,6 +43,22 @@ def main() -> int:
         from fastapi.testclient import TestClient
     except ImportError:
         print("FastAPI is not installed. Run: uv sync", file=sys.stderr)
+        return 2
+
+    import tempfile
+
+    import xfun_store.db as db_module
+    from harness import run_offline
+
+    # Seed before importing the API: its context opens a connection on first request,
+    # and pointing that at an empty database is what used to be avoided by CI running
+    # the fixture-backed pipeline in a step before this one.
+    tmp = tempfile.TemporaryDirectory()
+    db = Path(tmp.name) / "xfun.db"
+    real_connect = db_module.connect
+    db_module.connect = lambda path=None: real_connect(db)
+    if run_offline() != 0:
+        print("Could not seed the database for conformance checking.", file=sys.stderr)
         return 2
 
     from xfun_api import app

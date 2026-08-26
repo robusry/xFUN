@@ -24,38 +24,38 @@
 
 ## 2. Split the pipeline into an entry point and an injectable run
 
-- [ ] 2.1 Extract everything below the `live` branches in `scripts/pipeline.py:main`
+- [x] 2.1 Extract everything below the `live` branches in `scripts/pipeline.py:main`
       into `run_pipeline(...)`, taking a `RunClock`, a page source, a slate producer,
       and a slate rule as parameters. No behaviour change yet — `main()` still
       branches and calls it with either set of arguments.
-- [ ] 2.2 Confirm `uv run python scripts/pipeline.py --quiet` and
+- [x] 2.2 Confirm `uv run python scripts/pipeline.py --quiet` and
       `--live` both still behave as before. This is the checkpoint that proves the
       extraction was faithful; everything after it removes things.
-- [ ] 2.3 Delete the `--live` flag and the fixture branch from `main()`. The entry
+- [x] 2.3 Delete the `--live` flag and the fixture branch from `main()`. The entry
       point constructs `LivePages`, a clock-derived `RunClock`, `acquire_window`, and
       the `us-watchable` rule unconditionally. Keep `--quiet` and `--refresh`.
-- [ ] 2.4 Move `OFFLINE_STAMP`, `OFFLINE_RUN_ID`, and `OFFLINE_AS_OF` out of
+- [x] 2.4 Move `OFFLINE_STAMP`, `OFFLINE_RUN_ID`, and `OFFLINE_AS_OF` out of
       `scripts/pipeline.py` into `packages/api/tests/test_offline_reproducibility.py`,
       carrying their docstrings across verbatim. They explain why the anchor is not a
       bug and are the most likely thing in this change to be "fixed" later.
-- [ ] 2.5 Delete `RunClock.for_run`'s `live` parameter; the entry point builds the
+- [x] 2.5 Delete `RunClock.for_run`'s `live` parameter; the entry point builds the
       live clock directly and the test builds the frozen one directly.
-- [ ] 2.6 Remove the `fixture_collectors()` registration from
+- [x] 2.6 Remove the `fixture_collectors()` registration from
       `build_collector_registry`, and remove `SOCIAL_BUZZ` from `build_registry`.
       Both move to the test harness in task 3.
-- [ ] 2.7 Delete `scripts/demo.sh`.
+- [x] 2.7 Delete `scripts/demo.sh`.
 
 ## 3. Rebuild the offline end-to-end check as a test
 
-- [ ] 3.1 Grow `packages/api/tests/test_offline_reproducibility.py` into the
+- [x] 3.1 Grow `packages/api/tests/test_offline_reproducibility.py` into the
       end-to-end check: it constructs the frozen clock, `CapturedPages` over
       `tests/captures/goal-com/results/`, `fixture_payloads()` as the slate producer,
       and the `league-allowlist` rule, registers the `fixture-signals` collectors and
       `social-buzz`, and calls `run_pipeline(...)`.
-- [ ] 3.2 Keep its existing assertions (identical scores, timestamps, and run ids
+- [x] 3.2 Keep its existing assertions (identical scores, timestamps, and run ids
       across runs two and three) and add an assertion that the first run produces the
       expected score set, so the test covers correctness and not only stability.
-- [ ] 3.3 Replace the `End-to-end pipeline on fixtures` step in
+- [x] 3.3 Replace the `End-to-end pipeline on fixtures` step in
       `.github/workflows/ci.yml:59`. The `pytest` step already covers it; delete the
       step and note in the workflow why the end-to-end check now lives in the suite.
 - [ ] 3.4 Confirm the check still fails when it should: temporarily break a scoring

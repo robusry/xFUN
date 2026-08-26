@@ -1,11 +1,17 @@
 #!/usr/bin/env python3
-"""Run the whole pipeline: migrate, ingest, score, persist.
+"""Run the whole pipeline: acquire, collect, score, persist.
 
-This is the script the demo calls, and it is deliberately readable end to end --
-a collaborator should be able to follow data from a fixture file to a stored score
-without opening anything else.
+The entry point to the system, and deliberately readable end to end -- a collaborator
+should be able to follow data from the schedule source to a stored score without
+opening anything else.
 
-Note where the tiers meet. Ingestion knows nothing about models. Models know
+This requires network access to the schedule source. There is no offline or
+fixture-backed mode: `run_pipeline` takes its inputs as arguments, `main` supplies the
+live ones, and the end-to-end test supplies captured ones. That is the whole of the
+difference, and it exists so the thing a person runs and the thing CI exercises are
+the same code rather than two systems that must be kept in step.
+
+Note where the tiers meet. Acquisition knows nothing about models. Models know
 nothing about the store. The API (started separately) knows nothing about either;
 it reads rows.
 """
@@ -30,15 +36,13 @@ for src in (
 ):
     sys.path.insert(0, str(src))
 
-from xfun_collector_fixture_signals import fixture_collectors
-from xfun_collector_recent_results import CapturedPages, LivePages, RecentResults
+from xfun_collector_recent_results import LivePages, RecentResults
 from xfun_composition import AliasResolver, compose_all, load_recipes
-from xfun_ingestion import assemble_slate, fixture_payloads, ingest
+from xfun_ingestion import assemble_slate
 from xfun_ingestion.schedule import acquire_window
 from xfun_model_odds_spread import MODEL as ODDS_SPREAD
 from xfun_model_over_under_lean import MODEL as OVER_UNDER_LEAN
 from xfun_model_recent_goals_total import MODEL as RECENT_GOALS_TOTAL
-from xfun_model_social_buzz import MODEL as SOCIAL_BUZZ
 from xfun_runtime import (
     CollectorRegistry,
     Registry,
@@ -46,7 +50,6 @@ from xfun_runtime import (
     run_collectors,
     run_models,
 )
-from xfun_runtime.paths import captures_dir
 from xfun_store import (
     connect,
     corpus_freshness,
@@ -60,31 +63,6 @@ from xfun_store import (
     write_scores,
     write_snapshot_payload,  # noqa: F401  (re-exported for clarity)
 )
-
-OFFLINE_STAMP = "2026-08-14T04:00:00+00:00"
-"""The fixture path's instant, and its run identifier's basis.
-
-NOT a placeholder awaiting the clock. The fixture path is a REPRODUCTION, not a
-simulation of today: two runs over unchanged fixtures must produce identical rows,
-identical timestamps and identical run ids, because CI compares against golden
-output. Making this clock-driven would end that, and would break `recent-results`
-outright -- see OFFLINE_AS_OF below."""
-
-OFFLINE_RUN_ID = "demo"
-"""Constant on purpose, so repeated offline runs are the SAME run repeated rather
-than two runs. The live path derives a distinct id per run instead."""
-
-OFFLINE_AS_OF = date(2026, 8, 14)
-"""What "now" means to `recent-results` on the fixture path.
-
-Pinned rather than read from the clock, so that the offline run is reproducible: the
-golden captures were taken walking back from this date, and a scan starting anywhere
-else would drift off the end of them as the real date moved.
-
-Like OFFLINE_STAMP, this is not waiting to be replaced by `date.today()`. Doing that
-would make the scan walk backwards from the present through pages that do not exist,
-and report an absence of results that is an artefact of the anchor rather than a fact
-about any source -- which is exactly the failure the collector tier is built to avoid."""
 
 
 @dataclass(frozen=True)
@@ -106,9 +84,14 @@ class RunClock:
     which is correct only when its pages come from the live source."""
 
     @classmethod
-    def for_run(cls, live: bool) -> RunClock:
-        if not live:
-            return cls(stamp=OFFLINE_STAMP, run_id=OFFLINE_RUN_ID, as_of=OFFLINE_AS_OF)
+    def now(cls) -> RunClock:
+        """A run's clock, read once at the start of that run.
+
+        `as_of` is None because a live scan walks backwards from today, and today is
+        whatever the collector finds when it looks. The end-to-end test builds a
+        RunClock directly with a fixed anchor instead -- see that test for why the
+        anchor there is not a placeholder awaiting this method.
+        """
         now = datetime.now(UTC).isoformat(timespec="seconds")
         # Colons are legal in the id but awkward in a filename or a URL, and this
         # value ends up in both. Sorting is preserved either way.
@@ -155,31 +138,35 @@ class StoreCorpus:
 
 
 def build_collector_registry(
-    live: bool, clock: RunClock
+    pages: Any, clock: RunClock, extra: Iterable[Any] = ()
 ) -> tuple[CollectorRegistry, RecentResults]:
     """The only place that knows which collectors exist.
 
-    `recent-results` is the same collector on both paths -- the same scan, the same
-    stopping rule, the same parsing. Only where its pages come from differs, which is
-    why that is an injected seam rather than a branch inside the collector.
+    `recent-results` is the same collector wherever its bytes come from -- the same
+    scan, the same stopping rule, the same parsing. Only the page source differs, which
+    is why that is a parameter rather than a branch inside the collector.
 
     Where its pages come from and what it treats as today are separate arguments on
     purpose: the first is about the source, the second about the run.
+
+    `extra` exists for collectors that invent their values. Nothing that runs writes
+    fabricated rows into the same corpus as collected ones, so the only caller that
+    passes anything here is the end-to-end test, where the invented values are the
+    point.
     """
     registry = CollectorRegistry()
-    for collector in fixture_collectors():
+    for collector in extra:
         registry.register(collector)
 
-    recent_results = RecentResults(
-        LivePages() if live else CapturedPages(captures_dir() / "goal-com" / "results"),
-        as_of=clock.as_of,
-    )
+    recent_results = RecentResults(pages, as_of=clock.as_of)
     registry.register(recent_results)
 
     return registry, recent_results
 
 
-def build_registry(provided_paths: frozenset[str] = frozenset()) -> Registry:
+def build_registry(
+    provided_paths: frozenset[str] = frozenset(), extra: Iterable[Any] = ()
+) -> Registry:
     """The only place that knows which models exist.
 
     Adding a model is one import and one register() call -- nothing else in the
@@ -191,41 +178,54 @@ def build_registry(provided_paths: frozenset[str] = frozenset()) -> Registry:
     registry = Registry(provided_paths=provided_paths)
     registry.register(OVER_UNDER_LEAN)
     registry.register(ODDS_SPREAD)
-    registry.register(SOCIAL_BUZZ)
     registry.register(RECENT_GOALS_TOTAL)
+    for model in extra:
+        registry.register(model)
     return registry
 
 
-def main() -> int:
-    parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--quiet", action="store_true")
-    parser.add_argument(
-        "--live",
-        action="store_true",
-        help=(
-            "acquire real upcoming matches and their US broadcasters from the "
-            "network instead of reading fixture files. Off by default: a fresh "
-            "clone must run with nothing configured and no external dependency."
-        ),
-    )
-    parser.add_argument(
-        "--refresh",
-        action="store_true",
-        help=(
-            "collect from every source regardless of what is already stored. "
-            "Without this, a collector whose persisted output is still inside its "
-            "declared refresh window and covers the whole slate is not called at "
-            "all. Use when you know the source has changed."
-        ),
-    )
-    args = parser.parse_args()
+def acquire_live(conn: Any, say: Any) -> bool:
+    """Put canonical matches in the store by asking the schedule source.
+
+    The one step in this pipeline that touches the network, and it runs before the
+    slate exists because it produces what the slate is made of.
+    """
+    run = acquire_window(conn)
+    say(f"  acquisition  {run.summary()}")
+    if run.failed:
+        # Stop rather than continue into an empty slate. Carrying on would
+        # produce a run that looks exactly like a quiet week, which is the
+        # confusion the schedule_run record exists to prevent -- and printing
+        # the reason here is what makes it visible without querying for it.
+        say("\n  The schedule source could not be read, so there is no slate.")
+        say("  This is a source failure, NOT a window with nothing worth watching.")
+        return False
+    return True
+
+
+def run_pipeline(
+    *,
+    clock: RunClock,
+    pages: Any,
+    acquire: Any,
+    rule: str,
+    quiet: bool = False,
+    refresh: bool = False,
+    extra_collectors: Iterable[Any] = (),
+    extra_models: Iterable[Any] = (),
+) -> int:
+    """Migrate, acquire, collect, score, persist -- the whole run.
+
+    Everything that varies between a live run and the end-to-end test is a parameter,
+    and everything below them is shared. That is deliberate: the value of the offline
+    test is that it exercises the code a live run executes, so a seam added here for
+    convenience quietly reduces what CI covers. A new parameter on this function needs
+    a reason.
+    """
 
     def say(*parts: object) -> None:
-        if not args.quiet:
+        if not quiet:
             print(*parts)
-
-    # Sampled once, here, and passed down. Nothing below this line reads the clock.
-    clock = RunClock.for_run(args.live)
 
     conn = connect()
 
@@ -233,27 +233,9 @@ def main() -> int:
     say(f"  migrations   {len(applied)} applied" if applied else "  migrations   up to date")
     say(f"  run          {clock.run_id} at {clock.stamp}")
 
-    if args.live:
-        # The one step in this pipeline that touches the network, and it runs
-        # before the slate exists because it produces what the slate is made of.
-        run = acquire_window(conn)
-        say(f"  acquisition  {run.summary()}")
-        if run.failed:
-            # Stop rather than continue into an empty slate. Carrying on would
-            # produce a run that looks exactly like a quiet week, which is the
-            # confusion the schedule_run record exists to prevent -- and printing
-            # the reason here is what makes it visible without querying for it.
-            say("\n  The schedule source could not be read, so there is no slate.")
-            say("  This is a source failure, NOT a window with nothing worth watching.")
-            conn.close()
-            return 1
-        rule = "us-watchable"
-    else:
-        result = ingest(conn, fixture_payloads())
-        say(f"  ingestion    {result.summary()}")
-        # Fixture snapshots carry no availability, so `us-watchable` would
-        # correctly admit none of them and the demo would show an empty slate.
-        rule = "league-allowlist"
+    if not acquire(conn, say):
+        conn.close()
+        return 1
 
     # The slate is decided before any collector runs, because collectors fan out
     # from it -- a team-keyed collector needs to know which teams are in play.
@@ -262,8 +244,8 @@ def main() -> int:
         f"{len(slate.teams())} teams, {len(slate.leagues())} leagues "
         f"({slate.selection.rule})")
 
-    collectors, recent_results = build_collector_registry(args.live, clock)
-    registry = build_registry(collectors.provided_paths())
+    collectors, recent_results = build_collector_registry(pages, clock, extra_collectors)
+    registry = build_registry(collectors.provided_paths(), extra_models)
 
     # Only what some active model actually declares gets collected. A source
     # nothing consumes is not fetched -- rate limits are real.
@@ -277,7 +259,7 @@ def main() -> int:
             started_at=clock.stamp,
             completed_at=clock.stamp,
             corpus=StoreCorpus(conn),
-            force=args.refresh,
+            force=refresh,
         )
     finally:
         # A live scan holds an open connection to the source for its whole walk
@@ -299,11 +281,11 @@ def main() -> int:
             # Spelling out that no request was made is the point of the outcome.
             # Without it a reused run reads exactly like a run that re-fetched.
             detail = (
-                f"{counts}, from the stored corpus — source not contacted"
+                f"{counts}, from the stored corpus \u2014 source not contacted"
                 if outcome.outcome == "reused"
                 else counts
             )
-        say(f"               {outcome.collector_id}: {outcome.outcome} — {detail}")
+        say(f"               {outcome.collector_id}: {outcome.outcome} \u2014 {detail}")
 
     # Scored matches are the SLATE, not everything in the store. Live acquisition
     # writes every match the source returned worldwide so that "we asked and nobody
@@ -330,9 +312,8 @@ def main() -> int:
     for skip in run.skips:
         say(f"               skipped {skip.match_id} / {skip.model_id}: {skip.reason}")
 
-    # Calibration and composition are shown here for the demo, but they are NOT
-    # persisted -- the caller picks the cohort per request, so these are derived
-    # at read time by the API.
+    # Calibration and composition are shown here, but they are NOT persisted -- the
+    # caller picks the cohort per request, so these are derived at read time by the API.
     calibration = calibrate(latest_scores(conn), cohort="window")
     recipes = load_recipes(known_model_ids={m.model_id for m in registry.all()})
     AliasResolver(recipes, model_ids={m.model_id: m.model_id for m in registry.all()})
@@ -349,11 +330,41 @@ def main() -> int:
         key=lambda kv: (kv[1].value is None, -(kv[1].value or 0)),
     )
     for match_id, score in ordered:
-        value = f"{score.value:5.1f}" if score.value is not None else "    —"
+        value = f"{score.value:5.1f}" if score.value is not None else "    \u2014"
         say(f"    {value}  {match_id}")
 
     conn.close()
     return 0
+
+
+def main() -> int:
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("--quiet", action="store_true")
+    parser.add_argument(
+        "--refresh",
+        action="store_true",
+        help=(
+            "collect from every source regardless of what is already stored. "
+            "Without this, a collector whose persisted output is still inside its "
+            "declared refresh window and covers the whole slate is not called at "
+            "all. Use when you know the source has changed."
+        ),
+    )
+    args = parser.parse_args()
+
+    # There is no offline mode. A run acquires from the schedule source or it
+    # produces nothing -- deliberately, so that the thing a person runs and the
+    # thing CI exercises cannot drift into being two different systems. CI runs
+    # this same pipeline with its inputs supplied; see
+    # packages/api/tests/test_end_to_end_offline.py.
+    return run_pipeline(
+        clock=RunClock.now(),
+        pages=LivePages(),
+        acquire=acquire_live,
+        rule="us-watchable",
+        quiet=args.quiet,
+        refresh=args.refresh,
+    )
 
 
 if __name__ == "__main__":
